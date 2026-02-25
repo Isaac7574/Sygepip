@@ -35,9 +35,9 @@
           Déconnexion
         </button>
       } @else {
-        <a routerLink="/auth/login" class="ml-2 text-xs md:text-sm font-bold uppercase tracking-widest text-white bg-green-700 hover:bg-green-800 px-5 py-2 rounded shadow transition-colors duration-300">
+        <button (click)="login()" class="ml-2 text-xs md:text-sm font-bold uppercase tracking-widest text-white bg-green-700 hover:bg-green-800 px-5 py-2 rounded shadow transition-colors duration-300 cursor-pointer">
           Connexion
-        </a>
+        </button>
       }
     </li>
   </ul>

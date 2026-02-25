@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://172.21.224.1:8085/api',
-  keycloakUrl: 'http://172.21.224.1:8180'
+  apiUrl: 'http://localhost:8085/api',
+  keycloakUrl: 'http://localhost:8180'
 };

@@ -99,6 +99,10 @@ export class AccueilComponent implements OnInit, OnDestroy {
     this.startSlideshow();
   }
 
+  login(): void {
+    this.authService.login().subscribe();
+  }
+
   logout(): void {
     this.authService.logout();
   }
