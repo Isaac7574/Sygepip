@@ -1,0 +1,275 @@
+<!-- Header Navigation -->
+<header class="header">
+  <div class="container mx-auto px-4">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <div class="flex items-center gap-3">
+        <img src="assets/images/armoirie-bf.png" alt="Armoirie" class="h-10 w-10 object-contain">
+        <div>
+          <h1 class="text-lg font-bold text-bf-green-600">SYGEPIP</h1>
+          <p class="text-xs text-gray-500">Burkina Faso</p>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="hidden md:flex items-center gap-6">
+        <a routerLink="/" class="nav-link">Accueil</a>
+        <a routerLink="/actualites" class="nav-link">Actualités</a>
+        <a routerLink="/mediatheque" class="nav-link">Médiathèque</a>
+        <a routerLink="/textes-reglementaires" class="nav-link active">Textes</a>
+        <a routerLink="/ministre" class="nav-link">Le Ministre</a>
+      </nav>
+
+      <!-- Auth Buttons -->
+      <div class="flex items-center gap-3">
+        <a routerLink="/auth/login" class="btn-outline btn-sm">Connexion</a>
+        <a routerLink="/auth/register" class="btn-primary btn-sm">S'inscrire</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Burkina Flag Bar -->
+  <div class="h-1 bg-gradient-bf"></div>
+</header>
+
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container mx-auto px-4">
+    <div class="max-w-3xl">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">Textes Réglementaires</h1>
+      <p class="text-xl text-green-100">
+        Consultez l'ensemble des textes juridiques régissant la gestion des investissements publics au Burkina Faso.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Search & Filters Section -->
+<section class="search-section">
+  <div class="container mx-auto px-4 py-6">
+    <!-- Search Bar -->
+    <div class="mb-4">
+      <div class="search-bar">
+        <div class="search-icon">
+          <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </div>
+        <input type="text"
+               [(ngModel)]="searchQuery"
+               (ngModelChange)="applyFilters()"
+               placeholder="Rechercher un texte par titre, numéro ou contenu..."
+               class="search-input">
+      </div>
+    </div>
+
+    <!-- Type Filters -->
+    <div class="flex flex-wrap items-center gap-3">
+      <button (click)="filterByType('')" [class]="selectedType() === '' ? 'filter-btn active' : 'filter-btn'">
+        Tous ({{ textes().length }})
+      </button>
+      <button (click)="filterByType('Loi')" [class]="selectedType() === 'Loi' ? 'filter-btn active' : 'filter-btn'">
+        Lois ({{ countByType('Loi') }})
+      </button>
+      <button (click)="filterByType('Décret')" [class]="selectedType() === 'Décret' ? 'filter-btn active' : 'filter-btn'">
+        Décrets ({{ countByType('Décret') }})
+      </button>
+      <button (click)="filterByType('Arrêté')" [class]="selectedType() === 'Arrêté' ? 'filter-btn active' : 'filter-btn'">
+        Arrêtés ({{ countByType('Arrêté') }})
+      </button>
+      <button (click)="filterByType('Circulaire')" [class]="selectedType() === 'Circulaire' ? 'filter-btn active' : 'filter-btn'">
+        Circulaires ({{ countByType('Circulaire') }})
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Textes List -->
+<section class="py-12 bg-gray-50">
+  <div class="container mx-auto px-4">
+    @if (loading()) {
+      <div class="loading-container">
+        <svg class="animate-spin w-12 h-12 text-bf-green-600" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+      </div>
+    } @else if (filteredTextes().length === 0) {
+      <div class="empty-state">
+        <svg class="w-24 h-24 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">Aucun texte trouvé</h3>
+        <p class="text-gray-500">Aucun texte ne correspond à vos critères de recherche.</p>
+      </div>
+    } @else {
+      <div class="space-y-4 max-w-5xl mx-auto">
+        @for (texte of filteredTextes(); track texte.id) {
+          <article class="texte-card">
+            <div class="flex items-start gap-6">
+              <!-- Icon -->
+              <div class="flex-shrink-0">
+                <div [class]="getTypeColorClass(texte.type)">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between mb-3">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                      <span [class]="getTypeBadgeClass(texte.type)">{{ texte.type }}</span>
+                      <span class="numero-badge">{{ texte.numero }}</span>
+                      <span [class]="getStatutBadgeClass(texte.statut)">{{ texte.statut }}</span>
+                    </div>
+                    <h3 class="texte-title">{{ texte.titre }}</h3>
+                    <p class="texte-description">{{ texte.description }}</p>
+                  </div>
+                </div>
+
+                <div class="texte-footer">
+                  <div class="texte-date">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span>Publié le {{ formatDate(texte.datePublication) }}</span>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <button (click)="selectTexte(texte)" class="view-btn">
+                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                      </svg>
+                      Consulter
+                    </button>
+                    @if (texte.documentUrl) {
+                      <a [href]="texte.documentUrl" target="_blank" class="download-btn">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Télécharger
+                      </a>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </div>
+</section>
+
+<!-- Texte Detail Modal -->
+@if (selectedTexte()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <!-- Close Button -->
+      <button (click)="closeModal()" class="modal-close">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <!-- Header -->
+      <div class="modal-header">
+        <div class="flex items-center gap-3 mb-3">
+          <span [class]="getTypeBadgeClass(selectedTexte()!.type)">{{ selectedTexte()!.type }}</span>
+          <span class="numero-badge">{{ selectedTexte()!.numero }}</span>
+          <span [class]="getStatutBadgeClass(selectedTexte()!.statut)">{{ selectedTexte()!.statut }}</span>
+        </div>
+        <h2 class="modal-title">{{ selectedTexte()!.titre }}</h2>
+        <p class="modal-date">Publié le {{ formatDate(selectedTexte()!.datePublication) }}</p>
+      </div>
+
+      <!-- Content -->
+      <div class="modal-content">
+        <div class="prose prose-lg max-w-none">
+          <h3 class="text-xl font-bold text-gray-900 mb-4">Description</h3>
+          <p class="text-gray-700 leading-relaxed mb-6">{{ selectedTexte()!.description }}</p>
+
+          @if (selectedTexte()!.contenu) {
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Contenu</h3>
+            <div class="text-gray-700 leading-relaxed space-y-4">{{ selectedTexte()!.contenu }}</div>
+          }
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button (click)="closeModal()" class="close-btn">Fermer</button>
+        @if (selectedTexte()!.documentUrl) {
+          <a [href]="selectedTexte()!.documentUrl" target="_blank" class="download-full-btn">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Télécharger le document complet
+          </a>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container mx-auto px-4">
+    <div class="grid md:grid-cols-4 gap-12">
+      <!-- About -->
+      <div class="md:col-span-2">
+        <div class="flex items-center gap-3 mb-6">
+          <img src="assets/images/armoirie-bf.png" alt="Armoirie" class="h-12 w-12 object-contain brightness-0 invert">
+          <div>
+            <h3 class="text-xl font-bold">SYGEPIP</h3>
+            <p class="text-gray-400 text-sm">Burkina Faso</p>
+          </div>
+        </div>
+        <p class="text-gray-400 leading-relaxed mb-6">
+          Système de Gestion Intégrée des Projets et Programmes d'Investissements Publics du Burkina Faso.
+          Une plateforme moderne pour la gestion efficace des investissements publics.
+        </p>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h4 class="text-lg font-semibold mb-6">Liens Rapides</h4>
+        <ul class="space-y-3">
+          <li><a routerLink="/" class="footer-link">Accueil</a></li>
+          <li><a routerLink="/actualites" class="footer-link">Actualités</a></li>
+          <li><a routerLink="/mediatheque" class="footer-link">Médiathèque</a></li>
+          <li><a routerLink="/textes-reglementaires" class="footer-link">Textes Réglementaires</a></li>
+          <li><a routerLink="/ministre" class="footer-link">Le Ministre</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <h4 class="text-lg font-semibold mb-6">Contact</h4>
+        <ul class="space-y-3 text-gray-400">
+          <li class="flex items-start gap-3">
+            <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span>Ouagadougou, Burkina Faso</span>
+          </li>
+          <li class="flex items-center gap-3">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <span>contact&#64;sygepip.gov.bf</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400 text-sm">
+      <p>© {{ currentYear }} SYGEPIP - Ministère de l'Économie, des Finances et de la Prospective</p>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,154 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Documents</h1>
+      <p class="text-gray-500">Gestion des documents de projet</p>
+    </div>
+    <button (click)="openModal()" class="btn-primary">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Nouveau Document
+    </button>
+  </div>
+
+  <!-- Search -->
+  <div class="card p-4">
+    <div class="flex gap-4">
+      <div class="flex-1">
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher un document..." class="form-input">
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Titre</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Idée Projet</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Taille</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Version</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date upload</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        @for (item of filteredItems(); track item.id) {
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span class="font-medium text-gray-900">{{ item.titre }}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-gray-500">{{ getIdeeProjetNom(item.ideeProjetId) }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ item.typeDocument || '-' }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ formatFileSize(item.tailleFichier) }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ item.version ?? 1 }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ formatDate(item.dateUpload) }}</td>
+            <td class="px-6 py-4 text-right">
+              @if (item.fichierUrl) {
+                <a [href]="item.fichierUrl" target="_blank" class="text-bf-green-600 hover:text-bf-green-800 mr-3">Télécharger</a>
+              }
+              <button (click)="edit(item)" class="text-primary-600 hover:text-primary-800 mr-2" title="Modifier">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <button (click)="confirmDelete(item)" class="text-bf-red-600 hover:text-bf-red-800" title="Supprimer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="px-6 py-12 text-center text-gray-500">Aucun document trouvé</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal -->
+@if (modalOpen()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content max-w-4xl" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier' : 'Nouveau' }} Document</h3>
+        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body space-y-4">
+        <div class="form-group">
+          <label class="form-label">Idée Projet</label>
+          <select [(ngModel)]="formData.ideeProjetId" class="form-input">
+            <option [ngValue]="undefined">-- Sélectionner une idée projet --</option>
+            @for (ip of ideesProjet(); track ip.id) {
+              <option [ngValue]="ip.id">{{ ip.code }} - {{ ip.titre }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Titre *</label>
+          <input type="text" [(ngModel)]="formData.titre" class="form-input" placeholder="Titre du document">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type de document *</label>
+          <select [(ngModel)]="formData.typeDocument" class="form-input">
+            <option value="">-- Sélectionner --</option>
+            @for (t of typesDocument; track t) {
+              <option [value]="t">{{ t }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea [(ngModel)]="formData.description" class="form-input" rows="2" placeholder="Description du document"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fichier</label>
+          <div class="flex items-center gap-2">
+            <label class="flex-1 flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary-500 hover:bg-gray-50 transition-colors">
+              <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <span class="text-sm text-gray-600">Choisir un fichier</span>
+              <input type="file" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" class="hidden">
+            </label>
+          </div>
+          @if (formData.fichierUrl) {
+            <p class="mt-1 text-xs text-green-600 truncate">{{ formData.fichierUrl }}</p>
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button (click)="closeModal()" class="btn-outline">Annuler</button>
+        <button (click)="save()" [disabled]="saving() || uploading()" class="btn-primary">
+          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  [visible]="confirmDialogVisible()"
+  [title]="confirmDialogTitle"
+  [message]="confirmDialogMessage"
+  type="danger"
+  confirmText="Supprimer"
+  (confirm)="onConfirmDelete()"
+  (cancel)="onCancelDelete()">
+</app-confirm-dialog>
+
+<app-toast
+  [visible]="toastVisible()"
+  [message]="toastMessage"
+  [type]="toastType"
+  (close)="toastVisible.set(false)">
+</app-toast>

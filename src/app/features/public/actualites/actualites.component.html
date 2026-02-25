@@ -1,0 +1,271 @@
+<!-- Header Navigation -->
+<header class="header">
+  <div class="container mx-auto px-4">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <div class="flex items-center gap-3">
+        <img src="assets/images/armoirie-bf.png" alt="Armoirie" class="h-10 w-10 object-contain">
+        <div>
+          <h1 class="text-lg font-bold text-bf-green-600">SYGEPIP</h1>
+          <p class="text-xs text-gray-500">Burkina Faso</p>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="hidden md:flex items-center gap-6">
+        <a routerLink="/" class="nav-link">Accueil</a>
+        <a routerLink="/actualites" class="nav-link active">Actualités</a>
+        <a routerLink="/mediatheque" class="nav-link">Médiathèque</a>
+        <a routerLink="/textes-reglementaires" class="nav-link">Textes</a>
+        <a routerLink="/ministre" class="nav-link">Le Ministre</a>
+      </nav>
+
+      <!-- Auth Buttons -->
+      <div class="flex items-center gap-3">
+        <a routerLink="/auth/login" class="btn-outline btn-sm">Connexion</a>
+        <a routerLink="/auth/register" class="btn-primary btn-sm">S'inscrire</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Burkina Flag Bar -->
+  <div class="h-1 bg-gradient-bf"></div>
+</header>
+
+@if (!selectedActualite()) {
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container mx-auto px-4">
+      <div class="max-w-3xl">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">Actualités</h1>
+        <p class="text-xl text-green-100">
+          Suivez les dernières nouvelles et événements du système de gestion des investissements publics du Burkina Faso.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filters Section -->
+  <section class="filters-section">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex flex-wrap items-center gap-3">
+        <button (click)="filterByCategory('')"
+                [class]="selectedCategory() === '' ? 'filter-btn active' : 'filter-btn'">
+          Toutes
+        </button>
+        <button (click)="filterByCategory('Programme')"
+                [class]="selectedCategory() === 'Programme' ? 'filter-btn active' : 'filter-btn'">
+          Programmes
+        </button>
+        <button (click)="filterByCategory('Infrastructure')"
+                [class]="selectedCategory() === 'Infrastructure' ? 'filter-btn active' : 'filter-btn'">
+          Infrastructures
+        </button>
+        <button (click)="filterByCategory('Financement')"
+                [class]="selectedCategory() === 'Financement' ? 'filter-btn active' : 'filter-btn'">
+          Financement
+        </button>
+        <button (click)="filterByCategory('Événement')"
+                [class]="selectedCategory() === 'Événement' ? 'filter-btn active' : 'filter-btn'">
+          Événements
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Actualités List -->
+  <section class="py-12 bg-gray-50">
+    <div class="container mx-auto px-4">
+      @if (loading()) {
+        <div class="flex justify-center py-16">
+          <svg class="animate-spin w-12 h-12 text-bf-green-600" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+        </div>
+      } @else if (filteredActualites().length === 0) {
+        <div class="empty-state">
+          <svg class="w-24 h-24 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">Aucune actualité trouvée</h3>
+          <p class="text-gray-500">Il n'y a pas encore d'actualités dans cette catégorie.</p>
+        </div>
+      } @else {
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          @for (actualite of filteredActualites(); track actualite.id) {
+            <article class="actualite-card" (click)="selectActualite(actualite)">
+              <!-- Image -->
+              <div class="card-image">
+                <img [src]="actualite.imageUrl || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800'"
+                     [alt]="actualite.titre"
+                     class="w-full h-full object-cover">
+                <div class="category-badge">
+                  <span>{{ actualite.categorie || 'Actualité' }}</span>
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div class="card-content">
+                <div class="card-date">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  <span>{{ formatDate(actualite.datePublication) }}</span>
+                </div>
+
+                <h3 class="card-title">{{ actualite.titre }}</h3>
+
+                <p class="card-description">{{ actualite.description || actualite.contenu }}</p>
+
+                <button class="read-more-btn">
+                  Lire la suite
+                  <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                  </svg>
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </div>
+  </section>
+} @else {
+  <!-- Actualité Detail View -->
+  <article class="detail-view">
+    <div class="container mx-auto px-4">
+      <!-- Back Button -->
+      <button (click)="selectedActualite.set(null)" class="back-btn">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        Retour aux actualités
+      </button>
+
+      <div class="max-w-4xl mx-auto">
+        <!-- Hero Image -->
+        <div class="detail-hero">
+          <img [src]="selectedActualite()!.imageUrl || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200'"
+               [alt]="selectedActualite()!.titre"
+               class="w-full h-full object-cover">
+          <div class="detail-hero-overlay"></div>
+
+          <div class="detail-hero-content">
+            <span class="detail-category">{{ selectedActualite()!.categorie || 'Actualité' }}</span>
+            <h1 class="detail-title">{{ selectedActualite()!.titre }}</h1>
+            <div class="detail-meta">
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>{{ formatDate(selectedActualite()!.datePublication) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="detail-content">
+          <div class="prose prose-lg max-w-none">
+            <p class="detail-description">{{ selectedActualite()!.description }}</p>
+            <div class="detail-body">{{ selectedActualite()!.contenu || selectedActualite()!.description }}</div>
+          </div>
+
+          @if (selectedActualite()!.documentUrl) {
+            <div class="document-section">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">Documents joints</h3>
+              <a [href]="selectedActualite()!.documentUrl" target="_blank" class="download-btn">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Télécharger le document
+              </a>
+            </div>
+          }
+        </div>
+
+        <!-- Related News -->
+        @if (relatedActualites().length > 0) {
+          <div class="related-section">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6">Actualités similaires</h3>
+            <div class="grid md:grid-cols-3 gap-6">
+              @for (actualite of relatedActualites(); track actualite.id) {
+                <article class="related-card" (click)="selectActualite(actualite)">
+                  <div class="related-image">
+                    <img [src]="actualite.imageUrl || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400'"
+                         [alt]="actualite.titre"
+                         class="w-full h-full object-cover">
+                  </div>
+                  <div class="p-4">
+                    <span class="text-xs text-bf-green-600 font-semibold">{{ actualite.categorie }}</span>
+                    <h4 class="text-lg font-bold text-gray-900 mt-2 line-clamp-2">{{ actualite.titre }}</h4>
+                    <p class="text-sm text-gray-500 mt-2">{{ formatDate(actualite.datePublication) }}</p>
+                  </div>
+                </article>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </article>
+}
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container mx-auto px-4">
+    <div class="grid md:grid-cols-4 gap-12">
+      <!-- About -->
+      <div class="md:col-span-2">
+        <div class="flex items-center gap-3 mb-6">
+          <img src="assets/images/armoirie-bf.png" alt="Armoirie" class="h-12 w-12 object-contain brightness-0 invert">
+          <div>
+            <h3 class="text-xl font-bold">SYGEPIP</h3>
+            <p class="text-gray-400 text-sm">Burkina Faso</p>
+          </div>
+        </div>
+        <p class="text-gray-400 leading-relaxed mb-6">
+          Système de Gestion Intégrée des Projets et Programmes d'Investissements Publics du Burkina Faso.
+          Une plateforme moderne pour la gestion efficace des investissements publics.
+        </p>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h4 class="text-lg font-semibold mb-6">Liens Rapides</h4>
+        <ul class="space-y-3">
+          <li><a routerLink="/" class="footer-link">Accueil</a></li>
+          <li><a routerLink="/actualites" class="footer-link">Actualités</a></li>
+          <li><a routerLink="/mediatheque" class="footer-link">Médiathèque</a></li>
+          <li><a routerLink="/textes-reglementaires" class="footer-link">Textes Réglementaires</a></li>
+          <li><a routerLink="/ministre" class="footer-link">Le Ministre</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <h4 class="text-lg font-semibold mb-6">Contact</h4>
+        <ul class="space-y-3 text-gray-400">
+          <li class="flex items-start gap-3">
+            <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span>Ouagadougou, Burkina Faso</span>
+          </li>
+          <li class="flex items-center gap-3">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <span>contact&#64;sygepip.gov.bf</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400 text-sm">
+      <p>© {{ currentYear }} SYGEPIP - Ministère de l'Économie, des Finances et de la Prospective</p>
+    </div>
+  </div>
+</footer>

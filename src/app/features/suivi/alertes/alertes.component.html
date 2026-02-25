@@ -1,0 +1,137 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Alertes</h1>
+      <p class="text-gray-500">Gestion des alertes et notifications des projets</p>
+    </div>
+    <button (click)="openModal()" class="btn-primary">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nouvelle Alerte
+    </button>
+  </div>
+  <div class="card p-4">
+    <div class="flex gap-4">
+      <div class="flex-1">
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher une alerte..." class="form-input">
+      </div>
+    </div>
+  </div>
+  <div class="card overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Projet</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Niveau</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        @for (item of filteredItems(); track item.id) {
+          <tr class="hover:bg-gray-50" [ngClass]="{'bg-red-50': item.niveau === 'CRITICAL' && !item.traitee}">
+            <td class="px-6 py-4 text-gray-900">{{ getProjetNom(item.projetId) }}</td>
+            <td class="px-6 py-4 font-medium text-gray-900">{{ getTypeLabel(item.typeAlerte) }}</td>
+            <td class="px-6 py-4"><span class="badge" [ngClass]="getNiveauBadgeClass(item.niveau)">{{ getNiveauLabel(item.niveau) }}</span></td>
+            <td class="px-6 py-4 text-gray-500 max-w-xs truncate">{{ item.message || '-' }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ formatDate(item.dateAlerte) }}</td>
+            <td class="px-6 py-4">
+              <button (click)="toggleTraitee(item)" class="badge cursor-pointer" [ngClass]="item.traitee ? 'badge-success' : 'badge-warning'">
+                {{ item.traitee ? 'Traitée' : 'Non traitée' }}
+              </button>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button (click)="edit(item)" class="text-primary-600 hover:text-primary-800 mr-2" title="Modifier">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <button (click)="confirmDelete(item)" class="text-bf-red-600 hover:text-bf-red-800" title="Supprimer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7" class="px-6 py-12 text-center text-gray-500">Aucune alerte trouvée</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (modalOpen()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content max-w-4xl" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier' : 'Nouvelle' }} Alerte</h3>
+        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <div class="modal-body space-y-4">
+        <div class="form-group">
+          <label class="form-label">Projet *</label>
+          <select [(ngModel)]="formData.projetId" class="form-input" required>
+            <option [ngValue]="undefined">-- Sélectionner un projet --</option>
+            @for (p of projets(); track p.id) {
+              <option [ngValue]="p.id">{{ p.code }} - {{ p.titre }}</option>
+            }
+          </select>
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+          <div class="form-group">
+            <label class="form-label">Type d'alerte *</label>
+            <select [(ngModel)]="formData.typeAlerte" class="form-input">
+              @for (t of typesAlerte; track t.value) {
+                <option [value]="t.value">{{ t.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Niveau *</label>
+            <select [(ngModel)]="formData.niveau" class="form-input">
+              @for (n of niveaux; track n.value) {
+                <option [value]="n.value">{{ n.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" [(ngModel)]="formData.dateAlerte" class="form-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message *</label>
+          <textarea [(ngModel)]="formData.message" class="form-input" rows="3" placeholder="Description de l'alerte" required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Action prise</label>
+          <textarea [(ngModel)]="formData.actionPrise" class="form-input" rows="2" placeholder="Action corrective prise"></textarea>
+        </div>
+        <div class="form-group flex items-center gap-2">
+          <input type="checkbox" [(ngModel)]="formData.traitee" id="traitee" class="rounded border-gray-300">
+          <label for="traitee" class="text-sm text-gray-700">Alerte traitée</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button (click)="closeModal()" class="btn-outline">Annuler</button>
+        <button (click)="save()" [disabled]="saving()" class="btn-primary">{{ saving() ? 'Enregistrement...' : 'Enregistrer' }}</button>
+      </div>
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  [visible]="confirmDialogVisible()"
+  [title]="confirmDialogTitle"
+  [message]="confirmDialogMessage"
+  type="danger"
+  confirmText="Supprimer"
+  (confirm)="onConfirmDelete()"
+  (cancel)="onCancelDelete()">
+</app-confirm-dialog>
+
+<app-toast
+  [visible]="toastVisible()"
+  [message]="toastMessage"
+  [type]="toastType"
+  (close)="toastVisible.set(false)">
+</app-toast>

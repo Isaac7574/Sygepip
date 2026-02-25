@@ -1,0 +1,176 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Tableau de bord</h1>
+      <p class="text-gray-500">Vue d'ensemble du Programme d'Investissement Public</p>
+    </div>
+    <div class="flex gap-3">
+      <button class="btn-outline">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Exporter
+      </button>
+      <a routerLink="/app/maturation/idees-projet" class="btn-primary">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nouveau Projet
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="card p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-500">Total Projets</p>
+          <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats()?.totalProjets || 0 }}</p>
+        </div>
+        <div class="w-12 h-12 bg-bf-green-100 rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-bf-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center text-sm">
+        <span class="text-bf-green-600 font-medium">+12%</span>
+        <span class="text-gray-500 ml-2">vs mois dernier</span>
+      </div>
+    </div>
+
+    <div class="card p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-500">En Cours</p>
+          <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats()?.projetsEnCours || 0 }}</p>
+        </div>
+        <div class="w-12 h-12 bg-bf-yellow-100 rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-bf-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center text-sm">
+        <span class="text-bf-yellow-600 font-medium">{{ stats()?.projetsEnCours || 0 }}</span>
+        <span class="text-gray-500 ml-2">projets actifs</span>
+      </div>
+    </div>
+
+    <div class="card p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-500">Budget Total</p>
+          <p class="text-3xl font-bold text-gray-900 mt-1">{{ formatBudget(stats()?.budgetTotal) }}</p>
+        </div>
+        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center text-sm">
+        <span class="text-blue-600 font-medium">{{ stats()?.tauxExecutionGlobal || 0 }}%</span>
+        <span class="text-gray-500 ml-2">exécuté</span>
+      </div>
+    </div>
+
+    <div class="card p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-500">Alertes</p>
+          <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats()?.alertesActives || 0 }}</p>
+        </div>
+        <div class="w-12 h-12 bg-bf-red-100 rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-bf-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center text-sm">
+        <span class="text-bf-red-600 font-medium">{{ stats()?.alertesActives || 0 }}</span>
+        <span class="text-gray-500 ml-2">à traiter</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Répartition par Secteur</h3>
+      <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+        <div class="text-center text-gray-400">
+          <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+          </svg>
+          <p>Graphique Camembert</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Évolution du Budget</h3>
+      <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+        <div class="text-center text-gray-400">
+          <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+          </svg>
+          <p>Graphique Linéaire</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Projects -->
+  <div class="card">
+    <div class="p-6 border-b border-gray-100">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">Projets Récents</h3>
+        <a routerLink="/app/pip/projets" class="text-primary-600 hover:underline text-sm">Voir tout</a>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Projet</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ministère</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Budget</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Progression</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (projet of projets(); track projet.id) {
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-4">
+                <div class="font-medium text-gray-900">{{ projet.intitule }}</div>
+                <div class="text-sm text-gray-500">{{ projet.code }}</div>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-500">{{ getMinistereNom(projet) }}</td>
+              <td class="px-6 py-4 text-sm text-gray-900">{{ formatBudget(projet.coutTotal) }}</td>
+              <td class="px-6 py-4">
+                <span class="badge" [class]="getStatusClass(projet.statut)">{{ projet.statut }}</span>
+              </td>
+              <td class="px-6 py-4">
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-bf-green-500 h-2 rounded-full" [style.width.%]="projet.tauxExecution || 0"></div>
+                </div>
+                <span class="text-xs text-gray-500">{{ projet.tauxExecution || 0 }}%</span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                Aucun projet récent
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

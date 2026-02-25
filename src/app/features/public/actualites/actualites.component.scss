@@ -1,0 +1,167 @@
+// Header
+.header {
+  @apply bg-white shadow-sm sticky top-0 z-50;
+}
+
+.nav-link {
+  @apply text-gray-600 hover:text-bf-green-600 transition-colors;
+
+  &.active {
+    @apply text-bf-green-600 font-medium;
+  }
+}
+
+// Hero Section
+.hero-section {
+  @apply bg-gradient-to-br from-bf-green-600 to-bf-green-800 text-white py-16;
+}
+
+// Filters
+.filters-section {
+  @apply bg-white border-b sticky top-16 z-40;
+}
+
+.filter-btn {
+  @apply px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors;
+
+  &.active {
+    @apply bg-bf-green-600 text-white;
+  }
+}
+
+// Actualité Card
+.actualite-card {
+  @apply bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow cursor-pointer;
+
+  .card-image {
+    @apply relative h-48 overflow-hidden bg-gray-200;
+
+    img {
+      @apply w-full h-full object-cover transition-transform duration-300;
+    }
+
+    .category-badge {
+      @apply absolute top-4 left-4;
+
+      span {
+        @apply px-3 py-1 bg-bf-yellow-500 text-bf-green-800 text-sm font-semibold rounded-full;
+      }
+    }
+  }
+
+  &:hover .card-image img {
+    @apply scale-105;
+  }
+
+  .card-content {
+    @apply p-6;
+  }
+
+  .card-date {
+    @apply flex items-center gap-2 text-sm text-gray-500 mb-3;
+  }
+
+  .card-title {
+    @apply text-xl font-bold text-gray-900 mb-3 line-clamp-2 transition-colors;
+  }
+
+  &:hover .card-title {
+    @apply text-bf-green-600;
+  }
+
+  .card-description {
+    @apply text-gray-600 leading-relaxed line-clamp-3 mb-4;
+  }
+
+  .read-more-btn {
+    @apply inline-flex items-center text-bf-green-600 hover:text-bf-green-700 font-semibold;
+
+    svg {
+      @apply transition-transform;
+    }
+  }
+
+  &:hover .read-more-btn svg {
+    @apply translate-x-1;
+  }
+}
+
+// Empty State
+.empty-state {
+  @apply text-center py-16;
+}
+
+// Detail View
+.detail-view {
+  @apply bg-gray-50 py-12;
+}
+
+.back-btn {
+  @apply inline-flex items-center text-gray-600 hover:text-bf-green-600 mb-8 font-medium transition-colors;
+}
+
+.detail-hero {
+  @apply relative h-96 rounded-2xl overflow-hidden mb-8 shadow-xl;
+
+  .detail-hero-overlay {
+    @apply absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent;
+  }
+
+  .detail-hero-content {
+    @apply absolute bottom-8 left-8 right-8;
+  }
+
+  .detail-category {
+    @apply inline-block px-4 py-2 bg-bf-yellow-500 text-bf-green-800 text-sm font-semibold rounded-full mb-4;
+  }
+
+  .detail-title {
+    @apply text-4xl md:text-5xl font-bold text-white mb-4;
+  }
+
+  .detail-meta {
+    @apply flex items-center gap-4 text-white/90;
+  }
+}
+
+.detail-content {
+  @apply bg-white rounded-2xl p-8 md:p-12 shadow-sm;
+
+  .detail-description {
+    @apply text-xl text-gray-600 leading-relaxed mb-8;
+  }
+
+  .detail-body {
+    @apply text-gray-700 leading-relaxed space-y-4;
+  }
+}
+
+.document-section {
+  @apply mt-8 pt-8 border-t;
+}
+
+.download-btn {
+  @apply inline-flex items-center px-6 py-3 bg-bf-green-600 text-white rounded-lg hover:bg-bf-green-700 transition-colors;
+}
+
+// Related Section
+.related-section {
+  @apply mt-12;
+}
+
+.related-card {
+  @apply bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow cursor-pointer;
+
+  .related-image {
+    @apply relative h-40 overflow-hidden bg-gray-200;
+  }
+}
+
+// Footer
+.footer {
+  @apply bg-gray-900 text-white py-16;
+}
+
+.footer-link {
+  @apply text-gray-400 hover:text-white transition-colors;
+}

@@ -1,0 +1,30 @@
+:host {
+  @apply block;
+}
+
+.modal-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  @apply bg-white rounded-xl shadow-xl w-full max-w-lg mx-4;
+}
+
+.modal-header {
+  @apply flex items-center justify-between p-6 border-b border-gray-100;
+}
+
+.modal-body {
+  @apply p-6 space-y-4;
+}
+
+.modal-footer {
+  @apply flex justify-end gap-3 p-6 border-t border-gray-100;
+}
+
+.form-group {
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+}

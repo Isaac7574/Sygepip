@@ -1,0 +1,168 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Gestion des Textes Réglementaires</h1>
+      <p class="text-gray-500">Gérer les textes de loi, décrets, arrêtés et circulaires</p>
+    </div>
+    <button (click)="openModal()" class="btn-primary">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Nouveau Texte
+    </button>
+  </div>
+
+  <!-- Search -->
+  <div class="card p-4">
+    <div class="flex gap-4">
+      <div class="flex-1">
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher un texte réglementaire..." class="form-input">
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Numéro</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Titre</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date Publication</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actif</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        @for (item of filteredItems(); track item.id) {
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 font-medium text-gray-900">{{ item.numero }}</td>
+            <td class="px-6 py-4 text-gray-900">{{ item.titre }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ getTypeLabel(item.type) }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ formatDate(item.datePublication) }}</td>
+            <td class="px-6 py-4">
+              <span class="badge" [class.badge-success]="item.actif" [class.badge-secondary]="!item.actif">
+                {{ item.actif ? 'Actif' : 'Inactif' }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button (click)="edit(item)" class="text-primary-600 hover:text-primary-800 mr-2" title="Modifier">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <button (click)="confirmDelete(item)" class="text-bf-red-600 hover:text-bf-red-800" title="Supprimer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center text-gray-500">Aucun texte réglementaire trouvé</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal -->
+@if (modalOpen()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content max-w-4xl" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier' : 'Nouveau' }} Texte Réglementaire</h3>
+        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="form-label">Numéro *</label>
+            <input type="text" [(ngModel)]="formData.numero" class="form-input" placeholder="Ex: 2024-001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type *</label>
+            <select [(ngModel)]="formData.type" class="form-input">
+              @for (t of types; track t.value) {
+                <option [value]="t.value">{{ t.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Titre *</label>
+          <input type="text" [(ngModel)]="formData.titre" class="form-input" placeholder="Titre du texte réglementaire">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea [(ngModel)]="formData.description" class="form-input" rows="3" placeholder="Description du texte"></textarea>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="form-label">Date de publication</label>
+            <input type="date" [(ngModel)]="formData.datePublication" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date d'entrée en vigueur</label>
+            <input type="date" [(ngModel)]="formData.dateEntreeVigueur" class="form-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fichier</label>
+          <div class="flex items-center gap-2">
+            <label class="flex-1 flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary-500 hover:bg-gray-50 transition-colors">
+              <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <span class="text-sm text-gray-600">Choisir un fichier</span>
+              <input type="file" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" class="hidden">
+            </label>
+          </div>
+          @if (formData.fichierUrl) {
+            <p class="mt-1 text-xs text-green-600 truncate">{{ formData.fichierUrl }}</p>
+          }
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="form-label">Catégorie</label>
+            <input type="text" [(ngModel)]="formData.categorie" class="form-input" placeholder="Catégorie du texte">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mots-clés</label>
+            <input type="text" [(ngModel)]="formData.motsCles" class="form-input" placeholder="Mots-clés séparés par des virgules">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="flex items-center">
+            <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
+            <span class="ml-2">Actif</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button (click)="closeModal()" class="btn-outline">Annuler</button>
+        <button (click)="save()" [disabled]="saving() || uploading()" class="btn-primary">
+          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  [visible]="confirmDialogVisible()"
+  [title]="confirmDialogTitle"
+  [message]="confirmDialogMessage"
+  type="danger"
+  confirmText="Supprimer"
+  (confirm)="onConfirmDelete()"
+  (cancel)="onCancelDelete()">
+</app-confirm-dialog>
+
+<app-toast
+  [visible]="toastVisible()"
+  [message]="toastMessage"
+  [type]="toastType"
+  (close)="toastVisible.set(false)">
+</app-toast>

@@ -1,0 +1,214 @@
+// Header
+.header {
+  @apply bg-white shadow-sm sticky top-0 z-50;
+}
+
+.nav-link {
+  @apply text-gray-600 hover:text-bf-green-600 transition-colors;
+
+  &.active {
+    @apply text-bf-green-600 font-medium;
+  }
+}
+
+// Loading
+.loading-container {
+  @apply flex justify-center items-center py-32;
+}
+
+// Hero Section
+.hero-section {
+  @apply relative bg-gradient-to-br from-bf-green-600 to-bf-green-800 text-white py-24;
+
+  .hero-pattern {
+    @apply absolute inset-0 opacity-10;
+    background-image: radial-gradient(circle, white 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+}
+
+.photo-container {
+  @apply relative;
+
+  .photo-background {
+    @apply absolute -top-4 -left-4 w-full h-full bg-bf-yellow-500 rounded-3xl;
+  }
+
+  .photo-image {
+    @apply relative rounded-3xl w-full h-[500px] object-cover shadow-2xl;
+  }
+}
+
+.hero-info {
+  .status-badge {
+    @apply inline-block px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-semibold mb-4;
+  }
+
+  .minister-name {
+    @apply text-4xl md:text-5xl font-bold mb-4;
+  }
+
+  .minister-function {
+    @apply text-2xl text-bf-yellow-400 font-medium mb-6;
+  }
+
+  .minister-bio {
+    @apply text-lg text-green-100 leading-relaxed;
+  }
+}
+
+// Biography Section
+.biography-section {
+  @apply py-16 bg-white;
+}
+
+.section-title {
+  @apply text-3xl font-bold text-gray-900 mb-8;
+}
+
+// Journey Section
+.journey-section {
+  @apply py-16 bg-gray-50;
+}
+
+.timeline {
+  @apply relative;
+
+  .timeline-line {
+    @apply absolute left-8 top-0 bottom-0 w-0.5 bg-bf-green-200;
+  }
+}
+
+.timeline-item {
+  @apply relative pl-20;
+
+  .timeline-dot {
+    @apply absolute left-5 w-6 h-6 bg-bf-green-600 rounded-full border-4 border-white shadow;
+  }
+
+  .timeline-content {
+    @apply bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow;
+  }
+
+  .experience-title {
+    @apply text-xl font-bold text-gray-900;
+  }
+
+  .experience-institution {
+    @apply text-bf-green-600 font-medium;
+  }
+
+  .experience-period {
+    @apply px-3 py-1 bg-bf-yellow-100 text-bf-yellow-800 rounded-full text-sm font-semibold;
+  }
+
+  .experience-description {
+    @apply text-gray-600;
+  }
+}
+
+// Education Section
+.education-section {
+  @apply py-16 bg-white;
+}
+
+.education-card {
+  @apply bg-gradient-to-br from-bf-green-50 to-white rounded-xl p-6 border border-bf-green-100;
+
+  .education-icon {
+    @apply w-12 h-12 bg-bf-green-600 rounded-xl flex items-center justify-center flex-shrink-0;
+  }
+
+  .education-diploma {
+    @apply text-lg font-bold text-gray-900 mb-1;
+  }
+
+  .education-institution {
+    @apply text-bf-green-600 font-medium mb-2;
+  }
+
+  .education-year {
+    @apply text-sm text-gray-500;
+  }
+}
+
+// Achievements Section
+.achievements-section {
+  @apply py-16 bg-bf-green-600 text-white;
+}
+
+.achievement-card {
+  @apply bg-white/10 backdrop-blur-sm rounded-xl p-6 hover:bg-white/20 transition-colors;
+
+  .achievement-icon {
+    @apply w-12 h-12 bg-bf-yellow-500 rounded-xl flex items-center justify-center flex-shrink-0;
+  }
+
+  .achievement-title {
+    @apply text-xl font-bold mb-2;
+  }
+
+  .achievement-description {
+    @apply text-green-100;
+  }
+}
+
+// Vision Section
+.vision-section {
+  @apply py-16 bg-gray-50;
+}
+
+.vision-card {
+  @apply bg-white rounded-2xl p-8 shadow-sm;
+
+  .vision-icon {
+    @apply w-16 h-16 rounded-2xl flex items-center justify-center mb-6;
+
+    &.green {
+      @apply bg-bf-green-100;
+    }
+
+    &.yellow {
+      @apply bg-bf-yellow-100;
+    }
+  }
+}
+
+// Contact Section
+.contact-section {
+  @apply py-16 bg-white;
+}
+
+.contact-card {
+  @apply bg-gradient-to-br from-bf-green-50 to-white rounded-2xl p-8 border border-bf-green-100;
+}
+
+.contact-subtitle {
+  @apply text-xl font-bold text-gray-900 mb-4;
+}
+
+.contact-item {
+  @apply flex items-start gap-3;
+
+  .contact-icon {
+    @apply w-6 h-6 text-bf-green-600 mt-1 flex-shrink-0;
+  }
+}
+
+.schedule-item {
+  @apply flex justify-between;
+}
+
+// Empty State
+.empty-state {
+  @apply text-center py-32;
+}
+
+// Footer
+.footer {
+  @apply bg-gray-900 text-white py-16;
+}
+
+.footer-link {
+  @apply text-gray-400 hover:text-white transition-colors;
+}

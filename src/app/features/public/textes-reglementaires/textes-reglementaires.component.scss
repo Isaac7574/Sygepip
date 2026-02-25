@@ -1,0 +1,193 @@
+// Header
+.header {
+  @apply bg-white shadow-sm sticky top-0 z-50;
+}
+
+.nav-link {
+  @apply text-gray-600 hover:text-bf-green-600 transition-colors;
+
+  &.active {
+    @apply text-bf-green-600 font-medium;
+  }
+}
+
+// Hero Section
+.hero-section {
+  @apply bg-gradient-to-br from-bf-green-600 to-bf-green-800 text-white py-16;
+}
+
+// Search Section
+.search-section {
+  @apply bg-white border-b sticky top-16 z-40 shadow-sm;
+}
+
+.search-bar {
+  @apply relative max-w-2xl;
+
+  .search-icon {
+    @apply absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none;
+  }
+
+  .search-input {
+    @apply w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl;
+    @apply focus:outline-none focus:ring-2 focus:ring-bf-green-500 focus:border-transparent;
+  }
+}
+
+.filter-btn {
+  @apply px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors;
+
+  &.active {
+    @apply bg-bf-green-600 text-white;
+  }
+}
+
+// Loading & Empty States
+.loading-container {
+  @apply flex justify-center py-16;
+}
+
+.empty-state {
+  @apply text-center py-16;
+}
+
+// Texte Card
+.texte-card {
+  @apply bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow;
+}
+
+.numero-badge {
+  @apply px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full;
+}
+
+.texte-title {
+  @apply text-xl font-bold text-gray-900 mb-2;
+}
+
+.texte-description {
+  @apply text-gray-600 leading-relaxed;
+}
+
+.texte-footer {
+  @apply flex items-center justify-between;
+}
+
+.texte-date {
+  @apply flex items-center gap-2 text-sm text-gray-500;
+}
+
+.view-btn {
+  @apply inline-flex items-center px-4 py-2 bg-bf-green-50 text-bf-green-700 rounded-lg;
+  @apply hover:bg-bf-green-100 transition-colors font-medium;
+}
+
+.download-btn {
+  @apply inline-flex items-center px-4 py-2 bg-bf-yellow-500 text-bf-green-900 rounded-lg;
+  @apply hover:bg-bf-yellow-600 transition-colors font-medium;
+}
+
+// Type Colors
+.type-icon-blue {
+  @apply w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600;
+}
+
+.type-icon-purple {
+  @apply w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600;
+}
+
+.type-icon-green {
+  @apply w-16 h-16 bg-bf-green-100 rounded-2xl flex items-center justify-center text-bf-green-600;
+}
+
+.type-icon-orange {
+  @apply w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600;
+}
+
+.type-icon-pink {
+  @apply w-16 h-16 bg-pink-100 rounded-2xl flex items-center justify-center text-pink-600;
+}
+
+// Type Badges
+.type-badge-blue {
+  @apply px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full;
+}
+
+.type-badge-purple {
+  @apply px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full;
+}
+
+.type-badge-green {
+  @apply px-3 py-1 bg-bf-green-100 text-bf-green-700 text-xs font-semibold rounded-full;
+}
+
+.type-badge-orange {
+  @apply px-3 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full;
+}
+
+.type-badge-pink {
+  @apply px-3 py-1 bg-pink-100 text-pink-700 text-xs font-semibold rounded-full;
+}
+
+// Statut Badges
+.statut-badge-green {
+  @apply px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full;
+}
+
+.statut-badge-red {
+  @apply px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full;
+}
+
+.statut-badge-yellow {
+  @apply px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full;
+}
+
+// Modal
+.modal-overlay {
+  @apply fixed inset-0 z-50 overflow-y-auto bg-black/70 flex items-center justify-center p-4;
+}
+
+.modal-container {
+  @apply relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl;
+}
+
+.modal-close {
+  @apply absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors;
+}
+
+.modal-header {
+  @apply border-b px-8 py-6;
+}
+
+.modal-title {
+  @apply text-2xl font-bold text-gray-900 mb-2;
+}
+
+.modal-date {
+  @apply text-gray-600;
+}
+
+.modal-content {
+  @apply px-8 py-6 max-h-[60vh] overflow-y-auto;
+}
+
+.modal-footer {
+  @apply border-t px-8 py-6 bg-gray-50 rounded-b-2xl flex items-center justify-between;
+}
+
+.close-btn {
+  @apply px-6 py-2 text-gray-700 hover:text-gray-900 font-medium;
+}
+
+.download-full-btn {
+  @apply inline-flex items-center px-6 py-3 bg-bf-green-600 text-white rounded-lg;
+  @apply hover:bg-bf-green-700 transition-colors font-semibold;
+}
+
+// Footer
+.footer {
+  @apply bg-gray-900 text-white py-16;
+}
+
+.footer-link {
+  @apply text-gray-400 hover:text-white transition-colors;
+}

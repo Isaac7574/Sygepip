@@ -1,0 +1,476 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Projets PIP</h1>
+      <p class="font-bold text-gray-900">Programme d'Investissement Public - Gestion des projets</p>
+    </div>
+    <button (click)="openModal()" class="btn-primary">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Nouveau Projet
+    </button>
+  </div>
+
+  <div class="card p-4">
+    <div class="flex gap-4">
+      <div class="flex-1">
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher par code, titre ou ministère..." class="form-input">
+      </div>
+    </div>
+  </div>
+
+  <div class="card overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Titre</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ministère</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Catégorie</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Coût Total</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Avancement</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        @for (item of filteredItems(); track item.id) {
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 font-medium text-gray-900">{{ item.code }}</td>
+            <td class="px-6 py-4 text-gray-900">{{ item.titre }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ getMinistereNom(item.ministereId) }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ getCategorieLabel(item.categorie) }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ formatBudget(item.coutTotal) }}</td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <div class="w-20 bg-gray-200 rounded-full h-2">
+                  <div class="bg-bf-green-500 h-2 rounded-full" [style.width.%]="item.tauxAvancementPhysique || 0"></div>
+                </div>
+                <span class="text-sm text-gray-500">{{ item.tauxAvancementPhysique || 0 }}%</span>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <span class="badge" [ngClass]="getStatutBadgeClass(item.statut)">{{ getStatutLabel(item.statut) }}</span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button (click)="viewDetail(item)" class="text-bf-green-600 hover:text-bf-green-800 mr-2" title="Voir détail">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </button>
+              <button (click)="edit(item)" class="text-primary-600 hover:text-primary-800 mr-2" title="Modifier">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <button (click)="confirmDelete(item)" class="text-bf-red-600 hover:text-bf-red-800" title="Supprimer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="8" class="px-6 py-12 text-center text-gray-500">Aucun projet trouvé</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+@if (detailOpen() && viewingItem()) {
+  <div class="modal-overlay" (click)="closeDetail()">
+    <div class="modal-content w-full max-w-4xl" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="text-lg font-semibold">Détail du Projet</h3>
+        <button (click)="closeDetail()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body max-h-[80vh] overflow-y-auto">
+        <!-- Header du projet -->
+        <div class="flex items-start justify-between mb-6">
+          <div>
+            <div class="flex items-center gap-3 mb-1">
+              <span class="text-sm font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{{ viewingItem()!.code }}</span>
+              <span class="badge" [ngClass]="getStatutBadgeClass(viewingItem()!.statut)">{{ getStatutLabel(viewingItem()!.statut) }}</span>
+              @if (viewingItem()!.actif) {
+                <span class="badge badge-success">Actif</span>
+              } @else {
+                <span class="badge badge-secondary">Inactif</span>
+              }
+            </div>
+            <h2 class="text-xl font-bold text-gray-900">{{ viewingItem()!.titre }}</h2>
+          </div>
+        </div>
+
+        <!-- Progression -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="bg-gray-50 rounded-lg p-4">
+            <p class="text-sm text-gray-500 mb-1">Avancement physique</p>
+            <div class="flex items-center gap-3">
+              <div class="flex-1 bg-gray-200 rounded-full h-3">
+                <div class="bg-bf-green-500 h-3 rounded-full" [style.width.%]="viewingItem()!.tauxAvancementPhysique || 0"></div>
+              </div>
+              <span class="text-lg font-bold text-gray-900">{{ viewingItem()!.tauxAvancementPhysique || 0 }}%</span>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-4">
+            <p class="text-sm text-gray-500 mb-1">Avancement financier</p>
+            <div class="flex items-center gap-3">
+              <div class="flex-1 bg-gray-200 rounded-full h-3">
+                <div class="bg-blue-500 h-3 rounded-full" [style.width.%]="viewingItem()!.tauxAvancementFinancier || 0"></div>
+              </div>
+              <span class="text-lg font-bold text-gray-900">{{ viewingItem()!.tauxAvancementFinancier || 0 }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informations générales -->
+        <div class="mb-6">
+          <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3 border-b pb-2">Informations générales</h4>
+          <div class="grid grid-cols-2 gap-x-8 gap-y-3">
+            <div>
+              <span class="text-sm text-gray-500">Catégorie</span>
+              <p class="text-sm font-medium text-gray-900">{{ getCategorieLabel(viewingItem()!.categorie) }}</p>
+            </div>
+            <div>
+              <span class="text-sm text-gray-500">Ministère</span>
+              <p class="text-sm font-medium text-gray-900">{{ getMinistereNom(viewingItem()!.ministereId) }}</p>
+            </div>
+            <div>
+              <span class="text-sm text-gray-500">Secteur</span>
+              <p class="text-sm font-medium text-gray-900">{{ getSecteurNom(viewingItem()!.secteurId) }}</p>
+            </div>
+            <div>
+              <span class="text-sm text-gray-500">Région</span>
+              <p class="text-sm font-medium text-gray-900">{{ getRegionNom(viewingItem()!.regionId) }}</p>
+            </div>
+            <div>
+              <span class="text-sm text-gray-500">Programme</span>
+              <p class="text-sm font-medium text-gray-900">{{ getProgrammeNom(viewingItem()!.programmeId) }}</p>
+            </div>
+            <div>
+              <span class="text-sm text-gray-500">Idée de projet source</span>
+              <p class="text-sm font-medium text-gray-900">{{ getIdeeProjetNom(viewingItem()!.ideeProjetId) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description, Objectifs, Résultats -->
+        @if (viewingItem()!.description) {
+          <div class="mb-4">
+            <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-2 border-b pb-2">Description</h4>
+            <p class="text-sm text-gray-700 whitespace-pre-line">{{ viewingItem()!.description }}</p>
+          </div>
+        }
+        <div class="grid grid-cols-2 gap-6 mb-6">
+          @if (viewingItem()!.objectifs) {
+            <div>
+              <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-2 border-b pb-2">Objectifs</h4>
+              <p class="text-sm text-gray-700 whitespace-pre-line">{{ viewingItem()!.objectifs }}</p>
+            </div>
+          }
+          @if (viewingItem()!.resultatsAttendus) {
+            <div>
+              <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-2 border-b pb-2">Résultats attendus</h4>
+              <p class="text-sm text-gray-700 whitespace-pre-line">{{ viewingItem()!.resultatsAttendus }}</p>
+            </div>
+          }
+        </div>
+
+        <!-- Finances -->
+        <div class="mb-6">
+          <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3 border-b pb-2">Finances</h4>
+          <div class="grid grid-cols-2 gap-x-8 gap-y-3">
+            <div>
+              <span class="text-sm text-gray-500">Coût total</span>
+              <p class="text-sm font-medium text-gray-900">{{ formatBudget(viewingItem()!.coutTotal) }}</p>
+            </div>
+            <div>
+              <span class="text-sm text-gray-500">Coût prévisionnel</span>
+              <p class="text-sm font-medium text-gray-900">{{ formatBudget(viewingItem()!.coutPrevisionnel) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Planification -->
+        <div class="mb-6">
+          <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3 border-b pb-2">Planification</h4>
+          <div class="grid grid-cols-3 gap-x-8 gap-y-3">
+            <div>
+              <span class="text-sm text-gray-500">Date de début</span>
+              <p class="text-sm font-medium text-gray-900">{{ formatDate(viewingItem()!.dateDebut) }}</p>
+            </div>
+            <div>
+              <span class="text-sm text-gray-500">Date de fin</span>
+              <p class="text-sm font-medium text-gray-900">{{ formatDate(viewingItem()!.dateFin) }}</p>
+            </div>
+            <div>
+              <span class="text-sm text-gray-500">Durée</span>
+              <p class="text-sm font-medium text-gray-900">{{ viewingItem()!.dureeEnMois ? viewingItem()!.dureeEnMois + ' mois' : '-' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acteurs -->
+        <div class="mb-6">
+          <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3 border-b pb-2">Acteurs</h4>
+          <div class="grid grid-cols-3 gap-x-8 gap-y-3">
+            <div>
+              <span class="text-sm text-gray-500">Maître d'ouvrage</span>
+              <p class="text-sm font-medium text-gray-900">{{ viewingItem()!.maitreOuvrage || '-' }}</p>
+            </div>
+            <div>
+              <span class="text-sm text-gray-500">Maître d'oeuvre</span>
+              <p class="text-sm font-medium text-gray-900">{{ viewingItem()!.maitreOeuvre || '-' }}</p>
+            </div>
+            <div>
+              <span class="text-sm text-gray-500">Entreprise exécutante</span>
+              <p class="text-sm font-medium text-gray-900">{{ viewingItem()!.entrepriseExecutante || '-' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Géolocalisation & Workflow -->
+        <div>
+          <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3 border-b pb-2">Autres informations</h4>
+          <div class="grid grid-cols-3 gap-x-8 gap-y-3">
+            <div>
+              <span class="text-sm text-gray-500">Étape workflow</span>
+              <p class="text-sm font-medium text-gray-900">{{ viewingItem()!.etapeWorkflow || '-' }}</p>
+            </div>
+            <div>
+              <span class="text-sm text-gray-500">Latitude</span>
+              <p class="text-sm font-medium text-gray-900">{{ viewingItem()!.latitude ?? '-' }}</p>
+            </div>
+            <div>
+              <span class="text-sm text-gray-500">Longitude</span>
+              <p class="text-sm font-medium text-gray-900">{{ viewingItem()!.longitude ?? '-' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button (click)="closeDetail()" class="btn-outline">Fermer</button>
+        <button (click)="closeDetail(); edit(viewingItem()!)" class="btn-primary">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          Modifier
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (modalOpen()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content w-full max-w-4xl" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier' : 'Nouveau' }} Projet</h3>
+        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body space-y-4 max-h-[80vh] overflow-y-auto">
+        <!-- Identification -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="form-label">Code *</label>
+            <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: PRJ-001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Idée de projet source</label>
+            <select [(ngModel)]="formData.ideeProjetId" class="form-input">
+              <option [ngValue]="undefined">-- Aucune --</option>
+              @for (ip of ideesProjet(); track ip.id) {
+                <option [ngValue]="ip.id">{{ ip.code }} - {{ ip.titre }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Titre *</label>
+          <input type="text" [(ngModel)]="formData.titre" class="form-input" placeholder="Titre du projet">
+        </div>
+
+        <!-- Rattachement institutionnel -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="form-label">Ministère *</label>
+            <select [(ngModel)]="formData.ministereId" class="form-input" required>
+              <option [ngValue]="undefined">-- Sélectionner --</option>
+              @for (m of ministeres(); track m.id) {
+                <option [ngValue]="m.id">{{ m.sigle }} - {{ m.nom }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Secteur</label>
+            <select [(ngModel)]="formData.secteurId" class="form-input">
+              <option [ngValue]="undefined">-- Sélectionner --</option>
+              @for (s of secteurs(); track s.id) {
+                <option [ngValue]="s.id">{{ s.nom }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+
+         <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="form-label">Région</label>
+            <select [(ngModel)]="formData.regionId" class="form-input">
+              <option [ngValue]="undefined">-- Sélectionner --</option>
+              @for (r of regions(); track r.id) {
+                <option [ngValue]="r.id">{{ r.nom }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Programme</label>
+            <select [(ngModel)]="formData.programmeId" class="form-input">
+              <option [ngValue]="undefined">-- Sélectionner --</option>
+              @for (p of programmes(); track p.id) {
+                <option [ngValue]="p.id">{{ p.code }} - {{ p.nom }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- Classification -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="form-label">Catégorie *</label>
+            <select [(ngModel)]="formData.categorie" class="form-input">
+              @for (c of categories; track c.value) {
+                <option [value]="c.value">{{ c.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Statut *</label>
+            <select [(ngModel)]="formData.statut" class="form-input">
+              @for (s of statuts; track s.value) {
+                <option [value]="s.value">{{ s.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+
+         <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="form-label">Coût total (FCFA) *</label>
+            <input type="number" [(ngModel)]="formData.coutTotal" class="form-input" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Coût prévisionnel (FCFA)</label>
+            <input type="number" [(ngModel)]="formData.coutPrevisionnel" class="form-input" placeholder="0">
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea [(ngModel)]="formData.description" class="form-input" rows="3" placeholder="Description du projet"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="form-label">Objectifs</label>
+            <textarea [(ngModel)]="formData.objectifs" class="form-input" rows="2" placeholder="Objectifs du projet"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Résultats attendus</label>
+            <textarea [(ngModel)]="formData.resultatsAttendus" class="form-input" rows="2" placeholder="Résultats attendus"></textarea>
+          </div>
+        </div>
+
+        <!-- Planification -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="form-label">Date de début</label>
+            <input type="date" [(ngModel)]="formData.dateDebut" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date de fin</label>
+            <input type="date" [(ngModel)]="formData.dateFin" class="form-input">
+          </div>
+          
+        </div>
+
+
+        <div class="grid grid-cols-2 gap-4">
+          
+          <div class="form-group">
+            <label class="form-label">Durée (mois)</label>
+            <input type="number" [(ngModel)]="formData.dureeEnMois" class="form-input" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Étape workflow</label>
+            <input type="text" [(ngModel)]="formData.etapeWorkflow" class="form-input" placeholder="Étape actuelle">
+          </div>
+        </div>
+
+        <!-- Acteurs -->
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="form-group">
+            <label class="form-label">Maître d'ouvrage</label>
+            <input type="text" [(ngModel)]="formData.maitreOuvrage" class="form-input" placeholder="Maître d'ouvrage">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Maître d'oeuvre</label>
+            <input type="text" [(ngModel)]="formData.maitreOeuvre" class="form-input" placeholder="Maître d'oeuvre">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Entreprise exécutante</label>
+            <input type="text" [(ngModel)]="formData.entrepriseExecutante" class="form-input" placeholder="Entreprise">
+          </div>
+        </div>
+
+        <!-- Géolocalisation -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="form-label">Latitude</label>
+            <input type="number" [(ngModel)]="formData.latitude" class="form-input" step="0.000001" placeholder="Ex: 12.370000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Longitude</label>
+            <input type="number" [(ngModel)]="formData.longitude" class="form-input" step="0.000001" placeholder="Ex: -1.520000">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="flex items-center">
+            <input type="checkbox" [(ngModel)]="formData.actif" class="rounded border-gray-300">
+            <span class="ml-2 text-sm text-gray-700">Projet actif</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button (click)="closeModal()" class="btn-outline">Annuler</button>
+        <button (click)="save()" [disabled]="saving()" class="btn-primary">
+          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  [visible]="confirmDialogVisible()"
+  [title]="confirmDialogTitle"
+  [message]="confirmDialogMessage"
+  type="danger"
+  confirmText="Supprimer"
+  (confirm)="onConfirmDelete()"
+  (cancel)="onCancelDelete()">
+</app-confirm-dialog>
+
+<app-toast
+  [visible]="toastVisible()"
+  [message]="toastMessage"
+  [type]="toastType"
+  (close)="toastVisible.set(false)">
+</app-toast>
