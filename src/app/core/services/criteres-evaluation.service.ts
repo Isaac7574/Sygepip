@@ -18,7 +18,7 @@ export class CriteresEvaluationService {
     return this.api.getPaginated<CritereEvaluation>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<CritereEvaluation> {
+  getById(id: string | number): Observable<CritereEvaluation> {
     return this.api.getById<CritereEvaluation>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class CriteresEvaluationService {
     return this.api.post<CritereEvaluation>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<CritereEvaluation>): Observable<CritereEvaluation> {
+  update(id: string | number, data: Partial<CritereEvaluation>): Observable<CritereEvaluation> {
     return this.api.put<CritereEvaluation>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+

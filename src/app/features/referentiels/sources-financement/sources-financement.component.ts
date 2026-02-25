@@ -20,12 +20,12 @@ export class SourcesdeFinancementComponent implements OnInit {
   modalOpen = signal(false);
   editingItem = signal<SourceFinancement | null>(null);
   saving = signal(false);
-  formData: Partial<SourceFinancement> = { code: '', nom: '', type: 'INTERNE', description: '', paysOrigine: '', actif: true };
+  formData: Partial<SourceFinancement> = { code: '', nom: '', type: 'RESSOURCE_EXTERIEURE', description: '', actif: true };
 
   types: Array<{value: string, label: string}> = [
-    { value: 'INTERNE', label: 'Interne' },
-    { value: 'EXTERNE', label: 'Externe' },
-    { value: 'MIXTE', label: 'Mixte' }
+    { value: 'RESSOURCE_EXTERIEURE', label: 'Ressource extérieure' },
+    { value: 'CONTREPARTIE_NATIONALE', label: 'Contrepartie nationale' },
+    { value: 'RESSOURCE_PROPRE_ETAT', label: 'Ressource propre Etat' }
   ];
 
   ngOnInit(): void { this.load(); }
@@ -40,12 +40,12 @@ export class SourcesdeFinancementComponent implements OnInit {
   search(): void {
     const term = this.searchTerm.toLowerCase();
     this.filteredItems.set(this.items().filter(i =>
-      i.nom?.toLowerCase().includes(term) || i.code?.toLowerCase().includes(term) || i.type?.toLowerCase().includes(term) || i.paysOrigine?.toLowerCase().includes(term)
+      i.nom?.toLowerCase().includes(term) || i.code?.toLowerCase().includes(term) || i.type?.toLowerCase().includes(term)
     ));
   }
 
   openModal(): void {
-    this.formData = { code: '', nom: '', type: 'INTERNE', description: '', paysOrigine: '', actif: true };
+    this.formData = { code: '', nom: '', type: 'RESSOURCE_EXTERIEURE', description: '', actif: true };
     this.editingItem.set(null);
     this.modalOpen.set(true);
   }
@@ -83,9 +83,9 @@ export class SourcesdeFinancementComponent implements OnInit {
 
   getTypeBadgeClass(type: string): string {
     switch (type) {
-      case 'INTERNE': return 'badge-info';
-      case 'EXTERNE': return 'badge-warning';
-      case 'MIXTE': return 'badge-secondary';
+      case 'RESSOURCE_EXTERIEURE': return 'badge-info';
+      case 'CONTREPARTIE_NATIONALE': return 'badge-warning';
+      case 'RESSOURCE_PROPRE_ETAT': return 'badge-success';
       default: return 'badge-secondary';
     }
   }

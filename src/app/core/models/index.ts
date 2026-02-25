@@ -5,16 +5,21 @@
 
 // === AUTHENTIFICATION ===
 export interface User {
-  id: number;
+  id: string;
   username: string;
   email: string;
   nom: string;
   prenom: string;
-  role: 'ADMIN' | 'USER' | 'MANAGER' | 'VIEWER';
-  ministereId?: number;
+  telephone?: string;
+  role?: 'ADMIN' | 'USER' | 'MANAGER' | 'VIEWER' | string;
+  roles?: string[];
+  ministereId?: string;
+  directionId?: string;
+  typeAffiliation?: 'ETAT' | 'ONG' | 'PTF' | 'PRIVE' | 'COLLECTIVITE' | 'AUTRE';
+  organisationExterne?: string;
   actif: boolean;
-  dateCreation: Date;
-  derniereConnexion?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface LoginRequest {
@@ -27,6 +32,8 @@ export interface LoginResponse {
   accessToken?: string;
   access_token?: string;
   jwt?: string;
+  refreshToken?: string;
+  refreshExpiresIn?: number;
   user?: User;
   userInfo?: User;
   expiresIn?: number;
@@ -45,105 +52,113 @@ export interface RegisterRequest {
 
 // === RÉFÉRENTIELS ===
 export interface Ministere {
-  id: number;
+  id: string;
   code: string;
   nom: string;
   sigle?: string;
   nomCourt?: string;
   description?: string;
-  adresse?: string;
-  telephone?: string;
-  email?: string;
-  siteWeb?: string;
-  logoUrl?: string;
   actif: boolean;
-  dateCreation: Date;
-  dateModification?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Region {
-  id: number;
+  id: string;
   code: string;
   nom: string;
   chefLieu?: string;
   latitude?: number;
   longitude?: number;
-  population?: number;
-  superficie?: number;
   actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Secteur {
-  id: number;
+  id: string;
   code: string;
   nom: string;
   description?: string;
   couleur?: string;
-  icone?: string;
+  niveauPriorite?: 'STRATEGIQUE' | 'PRIORITAIRE' | 'SECONDAIRE' | 'TRANSVERSAL';
   actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Programme {
-  id: number;
+  id: string;
   code: string;
   nom: string;
-  ministereId: number;
-  secteurId?: number;
+  ministereId: string;
+  secteurId?: string;
   description?: string;
-  objectifs?: string;
   dateDebut?: Date;
   dateFin?: Date;
-  budgetTotal?: number;
+  niveauPriorite?: 'PHARE' | 'STRUCTURANT' | 'PRIORITAIRE' | 'NORMAL' | 'DIFFERE';
   actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface SourceFinancement {
-  id: number;
+  id: string;
   code: string;
   nom: string;
-  type: 'INTERNE' | 'EXTERNE' | 'MIXTE';
+  type: 'RESSOURCE_EXTERIEURE' | 'CONTREPARTIE_NATIONALE' | 'RESSOURCE_PROPRE_ETAT';
   description?: string;
-  paysOrigine?: string;
   actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // === MATURATION ===
 export interface IdeeProjet {
-  id: number;
+  id: string;
   code: string;
   titre: string;
   description?: string;
-  ministereId: number;
-  secteurId?: number;
-  regionId?: number;
-  programmeId?: number;
-  categorie: 'NOUVEAU' | 'EN_COURS' | 'EXTENSION' | 'REHABILITATION';
-  priorite: 'HAUTE' | 'MOYENNE' | 'BASSE';
-  coutEstime?: number;
-  dureeEstimee?: number;
-  beneficiaires?: string;
-  objectifs?: string;
-  resultatsAttendus?: string;
-  etapeWorkflow: string;
-  statut: 'BROUILLON' | 'SOUMIS' | 'EN_EVALUATION' | 'VALIDE' | 'REJETE';
-  scoreTotal?: number;
-  dateCreation: Date;
-  dateSoumission?: Date;
-  dateValidation?: Date;
-  creePar?: number;
-  validePar?: number;
+  ministereId: string;
+  secteurId?: string;
+  regionId?: string; // For compatibility with existing components
+  programmeId?: string; // For compatibility with existing components
+  categorie?: string;
+  statut?: string;
+  priorite?: 'HAUTE' | 'MOYENNE' | 'BASSE' | string; // For compatibility
+  scoreSelection?: number;
+  coutEstime?: number; // For compatibility with existing components
+  objectifs?: string; // For compatibility with existing components
+  resultatsAttendus?: string; // For compatibility with existing components
+  dureeEstimee?: number; // For compatibility with existing components
+  beneficiaires?: string; // For compatibility with existing components
+  createdBy?: string;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface CritereSelection {
-  id: number;
+  id: string;
   code: string;
-  nom: string;
+  nom?: string; // For compatibility with existing components (alias for libelle)
+  libelle: string;
   description?: string;
-  categorie: string;
-  poids: number;
-  valeurMin?: number;
-  valeurMax?: number;
+  domaine?: string;
+  categorie?: string;
+  typeValeur?: string;
+  poids?: number; // For compatibility with existing components
+  minValeur?: number;
+  maxValeur?: number;
+  valeurMin?: number; // Alias for minValeur
+  valeurMax?: number; // Alias for maxValeur
+  unite?: string;
+  utiliseReference?: boolean;
+  obligatoire?: boolean;
+  ordre?: number;
   actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface ScoreIdeeProjet {
@@ -158,181 +173,225 @@ export interface ScoreIdeeProjet {
 }
 
 export interface AvisConformiteCNDP {
-  id: number;
-  ideeProjetId: number;
-  numeroAvis: string;
-  dateAvis: Date;
-  typeAvis: 'FAVORABLE' | 'DEFAVORABLE' | 'RESERVE';
+  id: string;
+  ideeProjetId: string;
+  numeroAvis?: string;
+  dateAvis?: Date;
+  typeAvis?: string;
+  decision?: string;
   observations?: string;
   recommandations?: string;
   fichierUrl?: string;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface DocumentProjet {
-  id: number;
-  projetId?: number;
-  ideeProjetId?: number;
-  typeDocument: string;
-  titre: string;
-  description?: string;
-  fichierUrl: string;
-  tailleFichier?: number;
-  mimeType?: string;
-  version?: number;
-  uploadePar?: number;
-  dateUpload: Date;
+  id: string;
+  projetId?: string;
+  ideeProjetId?: string | number; // Support both types for compatibility
+  typeDocument?: string;
+  titre?: string;
+  description?: string; // For compatibility with existing components
+  fichierId?: string;
+  fichierUrl?: string; // For compatibility with existing components
+  version?: string;
+  statut?: string;
+  decision?: string;
+  justificationDecision?: string;
+  dateDecision?: Date;
+  decidePar?: string;
+  tailleFichier?: number; // For compatibility with existing components
+  dateUpload?: Date; // For compatibility with existing components
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface PlanFinancement {
-  id: number;
-  projetId: number;
-  sourceFinancementId: number;
+  id: string;
+  projetId: string;
+  sourceFinancementId: string;
   montant: number;
   pourcentage?: number;
-  devise?: string;
-  conditionsFinancement?: string;
-  dateAccord?: Date;
-  statut: 'EN_ATTENTE' | 'CONFIRME' | 'DECAISSE';
+  statut?: string;
+  dateEngagement?: Date;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-// === PIP ===
+// === PROJETS ===
 export interface Projet {
-  id: number;
-  ideeProjetId?: number;
+  id: string;
+  ideeProjetId?: string;
   code: string;
   titre: string;
-  categorie: 'NOUVEAU' | 'EN_COURS' | 'EXTENSION' | 'REHABILITATION';
-  ministereId: number;
-  secteurId?: number;
-  regionId?: number;
-  programmeId?: number;
+  categorie?: string;
+  ministereId: string;
+  secteurId?: string;
+  regionId?: string;
+  programmeId?: string;
+  pipAnnuelId?: string;
   description?: string;
   objectifs?: string;
-  resultatsAttendus?: string;
-  coutTotal: number;
-  coutPrevisionnel?: number;
-  dateDebut?: Date;
-  dateFin?: Date;
+  coutTotal?: number;
+  dateDebutPrevu?: Date;
+  dateFinPrevu?: Date;
+  dateCreation?: Date;
   dureeEnMois?: number;
-  maitreOuvrage?: string;
-  maitreOeuvre?: string;
-  entrepriseExecutante?: string;
-  tauxAvancementPhysique?: number;
-  tauxAvancementFinancier?: number;
-  statut: 'PLANIFIE' | 'EN_COURS' | 'SUSPENDU' | 'TERMINE' | 'ANNULE';
-  etapeWorkflow: string;
+  sourceFinancement?: string;
+  statut?: string;
+  chefProjetId?: string;
   latitude?: number;
   longitude?: number;
+  typeStructurant?: string;
+  typeProjetPip?: 'NOYAU_SUR' | 'NATIONAL';
+  statutInscriptionPip?: 'EN_EXECUTION' | 'INSTANCE_DEMARRAGE';
+  financementBoucle?: boolean;
+  createdBy?: string;
   actif: boolean;
-  dateCreation: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface PipAnnuel {
-  id: number;
+  id: string;
+  pipTriennalId?: string;
   code: string;
   annee: number;
-  statut: 'PREPARATION' | 'VALIDATION' | 'EXECUTION' | 'CLOTURE';
+  statut?: string;
   enveloppeGlobale?: number;
-  montantProgramme?: number;
-  montantExecute?: number;
-  tauxExecution?: number;
+  montantProgramme?: number; // For compatibility with existing components
+  tauxExecution?: number; // For compatibility with existing components
   dateOuverture?: Date;
   dateCloture?: Date;
+  dateValidation?: Date;
   observations?: string;
   actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface AutorisationEngagement {
-  id: number;
-  projetId: number;
+  id: string;
+  projetId: string;
   annee: number;
-  montantAE: number;
-  montantCP?: number;
+  montantAe: number;
+  montantAE?: number; // Alias for montantAe (compatibility)
   natureDepense?: string;
-  lignebudgetaire?: string;
+  sourceFinancementId?: string;
+  montantCp?: number;
+  montantCP?: number; // Alias for montantCp (compatibility)
+  ligneBudgetaire?: string;
+  lignebudgetaire?: string; // Alias lowercase (compatibility)
   dateAutorisation?: Date;
-  statut: 'PREVU' | 'AUTORISE' | 'ENGAGE';
+  statut?: string;
   observations?: string;
+  actif: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export interface CreditPaiement {
-  id: number;
-  projetId: number;
-  autorisationEngagementId?: number;
+  id: string;
+  projetId: string;
+  autorisationEngagementId?: string;
   annee: number;
-  montantCP: number;
+  montantCp: number;
+  natureDepense?: string;
   montantPaye?: number;
   dateEcheance?: Date;
-  statut: 'PREVU' | 'ORDONNANCE' | 'PAYE';
+  statut?: string;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface EnveloppeReference {
-  id: number;
-  pipAnnuelId: number;
-  ministereId?: number;
-  secteurId?: number;
+  id: string;
+  pipAnnuelId: string;
+  ministereId?: string;
+  secteurId?: string;
   montantEnveloppe: number;
-  montantConsomme?: number;
-  tauxConsommation?: number;
+  montantConsomme?: number; // For compatibility with existing components
+  tauxConsommation?: number; // For compatibility with existing components
+  typeEnveloppe?: string;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // === SUIVI-ÉVALUATION ===
 export interface SuiviExecution {
-  id: number;
-  projetId: number;
+  id: string;
+  projetId: string;
   code: string;
   periode: string;
-  typePeriode: 'MENSUEL' | 'TRIMESTRIEL' | 'SEMESTRIEL' | 'ANNUEL';
-  annee: number;
+  typePeriode?: string;
+  annee?: number; // For compatibility with existing components
   tauxAvancementPhysique?: number;
-  tauxAvancementFinancier?: number;
+  tauxAvancementFinancier?: number; // For compatibility with existing components
+  tauxDecaissement?: number;
   montantDecaisse?: number;
-  observations?: string;
-  difficultesRencontrees?: string;
+  activitesRealisees?: string;
+  difficultes?: string;
   mesuresCorrectives?: string;
-  dateRapport: Date;
-  rapportePar?: number;
+  observations?: string; // For compatibility with existing components
+  createdBy?: string;
   actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Indicateur {
-  id: number;
-  projetId: number;
+  id: string;
+  projetId: string;
   code: string;
   nom: string;
   description?: string;
+  typeIndicateur?: string;
   unite?: string;
   valeurReference?: number;
-  valeurCible?: number;
-  valeurActuelle?: number;
-  source?: string;
-  frequenceMesure?: string;
-  responsable?: string;
+  valeurCible?: number; // For compatibility with existing components
+  valeurActuelle?: number; // For compatibility with existing components
+  frequenceMesure?: string; // For compatibility with existing components
+  sourceVerification?: string;
+  periodicite?: string;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Cible {
-  id: number;
-  indicateurId: number;
+  id: string;
+  indicateurId: string;
   annee: number;
   valeurCible: number;
   valeurRealisee?: number;
   tauxRealisation?: number;
-  observations?: string;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface RapportEvaluation {
-  id: number;
-  projetId: number;
-  typeEvaluation: 'MI_PARCOURS' | 'FINALE' | 'EX_POST' | 'IMPACT';
-  dateEvaluation: Date;
+  id: string;
+  projetId: string;
+  typeEvaluation?: string;
+  dateEvaluation?: Date;
   evaluateur?: string;
-  noteGlobale?: number;
-  pointsForts?: string;
-  pointsFaibles?: string;
+  synthese?: string;
   recommandations?: string;
-  fichierRapportUrl?: string;
+  scoreGlobal?: number;
+  noteGlobale?: number; // Alias for scoreGlobal (compatibility)
+  pointsForts?: string; // For compatibility with existing components
+  pointsFaibles?: string; // For compatibility with existing components
+  cheminRapport?: string;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface RapportPerformance {
@@ -363,15 +422,19 @@ export interface Alerte {
 }
 
 export interface LocaliteIntervention {
-  id: number;
-  projetId: number;
-  regionId: number;
+  id: string;
+  projetId: string;
+  regionId?: string;
   province?: string;
   commune?: string;
   village?: string;
+  nomLocalite?: string;
+  typeLocalite?: string;
   latitude?: number;
   longitude?: number;
-  description?: string;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Activite {
@@ -394,31 +457,36 @@ export interface Activite {
 
 // === WORKFLOW ===
 export interface WorkflowEtape {
-  id: number;
-  module: 'MATURATION' | 'PIP' | 'SUIVI';
+  id: string;
+  module?: string;
   codeEtape: string;
   nomEtape: string;
+  description?: string; // For compatibility with existing components
   ordre: number;
-  description?: string;
-  delaiJours?: number;
+  delaiJours?: number; // For compatibility with existing components
+  etatSource?: string;
+  etatCible?: string;
+  roleRequis?: string;
   roleValidateur?: string;
-  actionsDisponibles?: string;
-  etapeSuivante?: string;
-  etapePrecedente?: string;
+  notificationEmail?: boolean;
   actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface HistoriqueWorkflow {
-  id: number;
+  id: string;
   entiteType: string;
-  entiteId: number;
-  etapeId: number;
+  entiteId: string;
+  etapeId?: string;
   etatAvant?: string;
-  etatApres: string;
-  action: string;
+  etatApres?: string;
   commentaire?: string;
-  effectuePar?: number;
-  dateAction: Date;
+  userId?: string;
+  dateTransition?: Date;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // === COMMUNICATION ===
@@ -452,17 +520,25 @@ export interface Media {
 }
 
 export interface TexteReglementaire {
-  id: number;
-  type: 'LOI' | 'DECRET' | 'ARRETE' | 'CIRCULAIRE' | 'NOTE' | 'AUTRE';
-  numero: string;
+  id: string;
+  type?: string;
+  numero?: string;
   titre: string;
   description?: string;
-  datePublication: Date;
-  dateEntreeVigueur?: Date;
-  fichierUrl?: string;
   categorie?: string;
-  motsCles?: string;
-  actif: boolean;
+  dateAdoption?: Date;
+  datePromulgation?: Date;
+  datePublication?: Date; // Alias for compatibility
+  dateEntreeVigueur?: Date; // For compatibility with existing components
+  fichierId?: string;
+  fichierUrl?: string; // For compatibility
+  autoriteSignature?: string;
+  statut?: string;
+  nombreTelechargements?: number;
+  motsCles?: string; // For compatibility with existing components
+  actif?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Ministre {
@@ -480,26 +556,36 @@ export interface Ministre {
 
 // === AUDIT ===
 export interface PisteAudit {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   action: string;
   entiteType: string;
-  entiteId?: number;
-  ancienneValeur?: string;
-  nouvelleValeur?: string;
+  entiteId?: string;
+  details?: string;
   adresseIp?: string;
-  userAgent?: string;
-  dateAction: Date;
+  dateAction?: Date;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface CritereEvaluation {
-  id: number;
+  id: string;
   code: string;
-  nom: string;
+  libelle: string;
   description?: string;
-  poids: number;
+  domaine?: string;
   categorie?: string;
+  typeValeur?: string;
+  minValeur?: number;
+  maxValeur?: number;
+  unite?: string;
+  utiliseReference?: boolean;
+  obligatoire?: boolean;
+  ordre?: number;
   actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // === TYPES UTILITAIRES ===
@@ -561,6 +647,150 @@ export interface StatistiquesParRegion {
   nombreProjets: number;
   budgetTotal: number;
   tauxExecution: number;
+}
+
+// === DIRECTION ===
+export interface Direction {
+  id: string;
+  code: string;
+  nom: string;
+  ministereId: string;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// === DÉCAISSEMENT ===
+export interface Decaissement {
+  id: string;
+  creditPaiementId: string;
+  sourceFinancementId?: string;
+  natureDepense?: string;
+  dateDecaissement?: Date;
+  montant: number;
+  referencePiece?: string;
+  commentaire?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// === NOTE CONCEPTUELLE ===
+export interface IdeeProjetNoteConceptuelle {
+  ideeProjetId: string;
+  problematique?: string;
+  contexte?: string;
+  alignementStrategique?: string;
+  beneficiairesCibles?: string;
+  objectifGeneral?: string;
+  objectifsSpecifiques?: string;
+  resultatsAttendus?: string;
+  indicateursPreliminaires?: string;
+  descriptionSolution?: string;
+  composantesProjet?: string;
+  approcheMiseEnOeuvre?: string;
+  contraintesRisques?: string;
+  hypotheses?: string;
+  prerequis?: string;
+  beneficiairesEstimes?: number;
+  coutEstime?: number;
+  sourcesFinancementEnvisagees?: string;
+  dureeEstimeeMois?: number;
+  chronogrammeSynthese?: string;
+  impactSocioEconomique?: string;
+  impactEnvironnementalSocial?: string;
+  durabilite?: string;
+  zoneIntervention?: string;
+  porteurProjet?: string;
+}
+
+// === INSCRIPTION PIP ANNUEL ===
+export interface InscriptionPipAnnuel {
+  id: string;
+  pipAnnuelId: string;
+  projetId: string;
+  statutInscriptionPip?: 'EN_EXECUTION' | 'INSTANCE_DEMARRAGE';
+  commentaire?: string;
+  dateInscription?: Date;
+  inscritPar?: string;
+  dateRetrait?: Date;
+  retirePar?: string;
+  motifRetrait?: string;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface InscriptionPipAnnuelRequest {
+  pipAnnuelId: string;
+  projetId: string;
+  statutInscriptionPip?: 'EN_EXECUTION' | 'INSTANCE_DEMARRAGE';
+  inscritPar?: string;
+  commentaire?: string;
+}
+
+export interface RetraitInscriptionPipAnnuelRequest {
+  pipAnnuelId?: string;
+  projetId?: string;
+  retirePar?: string;
+  motifRetrait?: string;
+}
+
+// === ADMINISTRATION UTILISATEURS ===
+export interface UserRegistrationRequest {
+  username?: string;
+  email: string;
+  prenom?: string;
+  nom?: string;
+  password?: string;
+  telephone?: string;
+  role?: string;
+  ministereId?: string;
+  directionId?: string;
+  typeAffiliation?: 'ETAT' | 'ONG' | 'PTF' | 'PRIVE' | 'COLLECTIVITE' | 'AUTRE';
+  organisationExterne?: string;
+  actif?: boolean;
+}
+
+export interface UserRegistrationResponse {
+  keycloakId?: string;
+  localUserId?: string;
+  username?: string;
+  email?: string;
+  role?: string;
+  actif?: boolean;
+}
+
+// === KEYCLOAK ===
+export interface KeycloakUser {
+  id: string;
+  username: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  enabled: boolean;
+  roles?: string[];
+}
+
+export interface KeycloakUserCreateRequest {
+  username: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  enabled?: boolean;
+  password?: string;
+  roles?: string[];
+}
+
+// === ABAC ===
+export interface AbacRule {
+  id: string;
+  endpoint: string;
+  action: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE';
+  roles: string[];
+  directionIds: string[];
+  enabled: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // === GÉOLOCALISATION ===

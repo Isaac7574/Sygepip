@@ -18,7 +18,7 @@ export class EnveloppesService {
     return this.api.getPaginated<EnveloppeReference>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<EnveloppeReference> {
+  getById(id: string | number): Observable<EnveloppeReference> {
     return this.api.getById<EnveloppeReference>(this.endpoint, id);
   }
 
@@ -26,11 +26,11 @@ export class EnveloppesService {
     return this.api.post<EnveloppeReference>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<EnveloppeReference>): Observable<EnveloppeReference> {
+  update(id: string | number, data: Partial<EnveloppeReference>): Observable<EnveloppeReference> {
     return this.api.put<EnveloppeReference>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 
@@ -42,3 +42,4 @@ export class EnveloppesService {
     return this.api.get<EnveloppeReference[]>(this.endpoint, { ministereId });
   }
 }
+

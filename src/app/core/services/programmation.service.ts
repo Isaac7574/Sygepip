@@ -18,7 +18,7 @@ export class ProgrammationService {
     return this.api.getPaginated<PipAnnuel>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<PipAnnuel> {
+  getById(id: string | number): Observable<PipAnnuel> {
     return this.api.getById<PipAnnuel>(this.endpoint, id);
   }
 
@@ -26,11 +26,11 @@ export class ProgrammationService {
     return this.api.post<PipAnnuel>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<PipAnnuel>): Observable<PipAnnuel> {
+  update(id: string | number, data: Partial<PipAnnuel>): Observable<PipAnnuel> {
     return this.api.put<PipAnnuel>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 
@@ -42,3 +42,4 @@ export class ProgrammationService {
     return this.api.get<PipAnnuel[]>(this.endpoint, { statut });
   }
 }
+

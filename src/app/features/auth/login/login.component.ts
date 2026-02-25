@@ -1,71 +1,57 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
-import { AuthService } from '@core/services/auth.service';
+import { KeycloakService } from 'keycloak-angular';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent {
-  private fb = inject(FormBuilder);
-  private authService = inject(AuthService);
+export class LoginComponent implements OnInit {
+  private keycloak = inject(KeycloakService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  
-  loginForm: FormGroup;
-  loading = signal(false);
+
+  loading = signal(true);
   error = signal('');
-  showPassword = signal(false);
-  sessionExpired = false;
   currentYear = new Date().getFullYear();
-  
-  constructor() {
-    this.loginForm = this.fb.group({
-      username: ['', [Validators.required]],
-      password: ['', [Validators.required]],
-      rememberMe: [false]
-    });
-    
-    // Check for session expired
-    this.route.queryParams.subscribe(params => {
-      this.sessionExpired = params['expired'] === 'true';
-    });
-  }
-  
-  togglePassword(): void {
-    this.showPassword.update(v => !v);
-  }
-  
-  isFieldInvalid(field: string): boolean {
-    const control = this.loginForm.get(field);
-    return !!(control && control.invalid && control.touched);
-  }
-  
-  onSubmit(): void {
-    if (this.loginForm.invalid) {
-      this.loginForm.markAllAsTouched();
-      return;
+
+  async ngOnInit(): Promise<void> {
+    try {
+      const isLoggedIn = await this.keycloak.isLoggedIn();
+
+      if (isLoggedIn) {
+        // Already logged in, redirect to dashboard
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/admin/dashboard';
+        this.router.navigateByUrl(returnUrl);
+      } else {
+        // Redirect to Keycloak login
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/admin/dashboard';
+        await this.keycloak.login({
+          redirectUri: window.location.origin + returnUrl
+        });
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      this.loading.set(false);
+      this.error.set('Erreur de connexion au serveur d\'authentification');
     }
-    
+  }
+
+  async retryLogin(): Promise<void> {
     this.loading.set(true);
     this.error.set('');
-    
-    const { username, password } = this.loginForm.value;
-    
-    this.authService.login({ username, password }).subscribe({
-      next: () => {
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/app/dashboard';
-        this.router.navigateByUrl(returnUrl);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.error.set(err.message || 'Identifiants incorrects. Veuillez réessayer.');
-      }
-    });
+
+    try {
+      await this.keycloak.login({
+        redirectUri: window.location.origin + '/admin/dashboard'
+      });
+    } catch (err) {
+      this.loading.set(false);
+      this.error.set('Erreur de connexion');
+    }
   }
 }

@@ -18,7 +18,7 @@ export class AlertesService {
     return this.api.getPaginated<Alerte>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<Alerte> {
+  getById(id: string | number): Observable<Alerte> {
     return this.api.getById<Alerte>(this.endpoint, id);
   }
 
@@ -26,11 +26,11 @@ export class AlertesService {
     return this.api.post<Alerte>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<Alerte>): Observable<Alerte> {
+  update(id: string | number, data: Partial<Alerte>): Observable<Alerte> {
     return this.api.put<Alerte>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 
@@ -46,3 +46,4 @@ export class AlertesService {
     return this.api.post<Alerte>(`${this.endpoint}/${id}/traiter`, { actionPrise: action });
   }
 }
+

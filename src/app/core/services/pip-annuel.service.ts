@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PipAnnuel, FilterParams, PaginatedResponse } from '@core/models';
+import { PipAnnuel, FilterParams, PaginatedResponse, InscriptionPipAnnuel, InscriptionPipAnnuelRequest, RetraitInscriptionPipAnnuelRequest } from '@core/models';
 import { ApiService } from '@core/services/api.service';
 
 @Injectable({
@@ -18,7 +18,7 @@ export class PipAnnuelService {
     return this.api.getPaginated<PipAnnuel>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<PipAnnuel> {
+  getById(id: string | number): Observable<PipAnnuel> {
     return this.api.getById<PipAnnuel>(this.endpoint, id);
   }
 
@@ -26,11 +26,39 @@ export class PipAnnuelService {
     return this.api.post<PipAnnuel>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<PipAnnuel>): Observable<PipAnnuel> {
+  update(id: string | number, data: Partial<PipAnnuel>): Observable<PipAnnuel> {
     return this.api.put<PipAnnuel>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
+
+  // Récupérer par code
+  getByCode(code: string): Observable<PipAnnuel> {
+    return this.api.get<PipAnnuel>(`${this.endpoint}/code/${code}`);
+  }
+
+  // Récupérer les PIP actifs
+  getActifs(): Observable<PipAnnuel[]> {
+    return this.api.get<PipAnnuel[]>(`${this.endpoint}/actifs`);
+  }
+
+  // === INSCRIPTIONS ===
+
+  // Récupérer les inscriptions actives d'un PIP annuel
+  getInscriptions(pipAnnuelId: string): Observable<InscriptionPipAnnuel[]> {
+    return this.api.get<InscriptionPipAnnuel[]>(`${this.endpoint}/${pipAnnuelId}/inscriptions`);
+  }
+
+  // Inscrire un projet au PIP annuel
+  inscrireProjet(pipAnnuelId: string, data: InscriptionPipAnnuelRequest): Observable<InscriptionPipAnnuel> {
+    return this.api.post<InscriptionPipAnnuel>(`${this.endpoint}/${pipAnnuelId}/inscriptions`, data);
+  }
+
+  // Retirer un projet du PIP annuel
+  retirerProjet(pipAnnuelId: string, projetId: string, data?: RetraitInscriptionPipAnnuelRequest): Observable<InscriptionPipAnnuel> {
+    return this.api.deleteWithBody<InscriptionPipAnnuel>(`${this.endpoint}/${pipAnnuelId}/inscriptions/${projetId}`, data);
+  }
 }
+

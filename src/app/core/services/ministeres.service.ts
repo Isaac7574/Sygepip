@@ -18,7 +18,7 @@ export class MinisteresService {
     return this.api.getPaginated<Ministere>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<Ministere> {
+  getById(id: string | number): Observable<Ministere> {
     return this.api.getById<Ministere>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class MinisteresService {
     return this.api.post<Ministere>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<Ministere>): Observable<Ministere> {
+  update(id: string | number, data: Partial<Ministere>): Observable<Ministere> {
     return this.api.put<Ministere>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { environment } from '@env/environment';
 import { FilterParams, PaginatedResponse } from '@core/models';
 
@@ -27,7 +27,7 @@ export class ApiService {
   }
 
   // GET by ID
-  getById<T>(endpoint: string, id: number): Observable<T> {
+  getById<T>(endpoint: string, id: string | number): Observable<T> {
     return this.http.get<T>(`${this.baseUrl}${endpoint}/${id}`)
       .pipe(catchError(this.handleError));
   }
@@ -38,21 +38,33 @@ export class ApiService {
       .pipe(catchError(this.handleError));
   }
 
-  // PUT request
-  put<T>(endpoint: string, id: number, body: any): Observable<T> {
+  // PUT request with id
+  put<T>(endpoint: string, id: string | number, body: any): Observable<T> {
     return this.http.put<T>(`${this.baseUrl}${endpoint}/${id}`, body)
       .pipe(catchError(this.handleError));
   }
 
+  // PUT request to full endpoint (without id concatenation)
+  putUrl<T>(endpoint: string, body: any): Observable<T> {
+    return this.http.put<T>(`${this.baseUrl}${endpoint}`, body)
+      .pipe(catchError(this.handleError));
+  }
+
   // PATCH request
-  patch<T>(endpoint: string, id: number, body: any): Observable<T> {
+  patch<T>(endpoint: string, id: string | number, body: any): Observable<T> {
     return this.http.patch<T>(`${this.baseUrl}${endpoint}/${id}`, body)
       .pipe(catchError(this.handleError));
   }
 
   // DELETE request
-  delete<T>(endpoint: string, id: number): Observable<T> {
+  delete<T>(endpoint: string, id: string | number): Observable<T> {
     return this.http.delete<T>(`${this.baseUrl}${endpoint}/${id}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  // DELETE request with body
+  deleteWithBody<T>(endpoint: string, body?: any): Observable<T> {
+    return this.http.delete<T>(`${this.baseUrl}${endpoint}`, { body })
       .pipe(catchError(this.handleError));
   }
 
@@ -120,3 +132,4 @@ export class ApiService {
     return throwError(() => new Error(errorMessage));
   }
 }
+

@@ -105,9 +105,9 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  getMinistereNom(id: number | undefined): string {
+  getMinistereNom(id: string | number | undefined): string {
     if (!id) return '-';
-    const m = this.ministeres().find(m => m.id === id);
+    const m = this.ministeres().find(m => String(m.id) === String(id));
     return m ? m.nom : '-';
   }
 

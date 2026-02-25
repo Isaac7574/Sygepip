@@ -29,7 +29,6 @@
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pays d'origine</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
           <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
         </tr>
@@ -44,7 +43,6 @@
                 {{ getTypeLabel(item.type) }}
               </span>
             </td>
-            <td class="px-6 py-4 text-gray-500">{{ item.paysOrigine || '-' }}</td>
             <td class="px-6 py-4">
               <span class="badge" [class.badge-success]="item.actif" [class.badge-secondary]="!item.actif">
                 {{ item.actif ? 'Actif' : 'Inactif' }}
@@ -101,10 +99,6 @@
         <div class="form-group">
           <label class="form-label">Description</label>
           <textarea [(ngModel)]="formData.description" class="form-input" rows="3" placeholder="Description de la source"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Pays d'origine</label>
-          <input type="text" [(ngModel)]="formData.paysOrigine" class="form-input" placeholder="Ex: Burkina Faso">
         </div>
         <div class="form-group">
           <label class="flex items-center">

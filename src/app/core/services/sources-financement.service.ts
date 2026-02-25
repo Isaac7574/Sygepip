@@ -18,7 +18,7 @@ export class SourcesFinancementService {
     return this.api.getPaginated<SourceFinancement>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<SourceFinancement> {
+  getById(id: string | number): Observable<SourceFinancement> {
     return this.api.getById<SourceFinancement>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class SourcesFinancementService {
     return this.api.post<SourceFinancement>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<SourceFinancement>): Observable<SourceFinancement> {
+  update(id: string | number, data: Partial<SourceFinancement>): Observable<SourceFinancement> {
     return this.api.put<SourceFinancement>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+

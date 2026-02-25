@@ -18,7 +18,7 @@ export class PlanFinancementService {
     return this.api.getPaginated<PlanFinancement>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<PlanFinancement> {
+  getById(id: string | number): Observable<PlanFinancement> {
     return this.api.getById<PlanFinancement>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class PlanFinancementService {
     return this.api.post<PlanFinancement>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<PlanFinancement>): Observable<PlanFinancement> {
+  update(id: string | number, data: Partial<PlanFinancement>): Observable<PlanFinancement> {
     return this.api.put<PlanFinancement>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+

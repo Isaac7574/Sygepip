@@ -18,7 +18,7 @@ export class CreditPaiementService {
     return this.api.getPaginated<CreditPaiement>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<CreditPaiement> {
+  getById(id: string | number): Observable<CreditPaiement> {
     return this.api.getById<CreditPaiement>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class CreditPaiementService {
     return this.api.post<CreditPaiement>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<CreditPaiement>): Observable<CreditPaiement> {
+  update(id: string | number, data: Partial<CreditPaiement>): Observable<CreditPaiement> {
     return this.api.put<CreditPaiement>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+

@@ -10,7 +10,13 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      const isAuthEndpoint = req.url.includes('/auth/login') || req.url.includes('/auth/register') || req.url.includes('/auth/forgot-password');
+      const isAuthEndpoint =
+        req.url.includes('/auth/login') ||
+        req.url.includes('/auth/refresh') ||
+        req.url.includes('/auth/logout') ||
+        req.url.includes('/auth/health') ||
+        req.url.includes('/auth/register') ||
+        req.url.includes('/auth/forgot-password');
 
       if (error.status === 401 && !isAuthEndpoint) {
         // Token expired or invalid (not a login attempt)

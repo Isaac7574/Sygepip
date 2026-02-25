@@ -18,7 +18,7 @@ export class IndicateursService {
     return this.api.getPaginated<Indicateur>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<Indicateur> {
+  getById(id: string | number): Observable<Indicateur> {
     return this.api.getById<Indicateur>(this.endpoint, id);
   }
 
@@ -26,11 +26,11 @@ export class IndicateursService {
     return this.api.post<Indicateur>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<Indicateur>): Observable<Indicateur> {
+  update(id: string | number, data: Partial<Indicateur>): Observable<Indicateur> {
     return this.api.put<Indicateur>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 
@@ -38,3 +38,4 @@ export class IndicateursService {
     return this.api.get<Indicateur[]>(this.endpoint, { projetId });
   }
 }
+

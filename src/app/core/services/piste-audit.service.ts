@@ -18,7 +18,7 @@ export class PisteAuditService {
     return this.api.getPaginated<PisteAudit>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<PisteAudit> {
+  getById(id: string | number): Observable<PisteAudit> {
     return this.api.getById<PisteAudit>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class PisteAuditService {
     return this.api.post<PisteAudit>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<PisteAudit>): Observable<PisteAudit> {
+  update(id: string | number, data: Partial<PisteAudit>): Observable<PisteAudit> {
     return this.api.put<PisteAudit>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+

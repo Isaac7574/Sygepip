@@ -1,323 +1,189 @@
-<!-- Header Navigation -->
-<header class="bg-white shadow-sm sticky top-0 z-50">
-  <div class="container mx-auto px-4">
-    <div class="flex items-center justify-between h-16">
-      <!-- Logo -->
-      <div class="flex items-center gap-3">
-        <img src="assets/images/armoirie-bf.png" alt="Armoirie" class="h-10 w-10 object-contain">
-        <div>
-          <h1 class="text-lg font-bold text-bf-green-600">SYGEPIP</h1>
-          <p class="text-xs text-gray-500">Burkina Faso</p>
-        </div>
+<!-- Bannière drapeau Burkina Faso -->
+<div class="burkina-flag"></div>
+
+<!-- HEADER / NAVIGATION -->
+<nav class="bg-white/95 backdrop-blur-md py-3 px-6 md:px-12 flex flex-col md:flex-row justify-between items-center sticky top-3 z-50 border-b border-gray-200 shadow-sm">
+
+  <!-- Liens de navigation -->
+  <ul class="flex flex-wrap justify-center items-center gap-6 md:gap-12 mb-4 md:mb-0 order-2 md:order-1">
+    <li>
+      <a routerLink="/" class="nav-link text-xs md:text-sm font-bold uppercase tracking-widest text-slate-800 hover:text-green-700 transition-colors duration-300">
+        Accueil
+      </a>
+    </li>
+    <li>
+      <a routerLink="/actualites" class="nav-link text-xs md:text-sm font-bold uppercase tracking-widest text-slate-800 hover:text-green-700 transition-colors duration-300">
+        Projets
+      </a>
+    </li>
+    <li>
+      <a routerLink="/mediatheque" class="nav-link text-xs md:text-sm font-bold uppercase tracking-widest text-slate-800 hover:text-green-700 transition-colors duration-300">
+        Investissements
+      </a>
+    </li>
+    <li>
+      <a routerLink="/textes-reglementaires" class="nav-link text-xs md:text-sm font-bold uppercase tracking-widest text-slate-800 hover:text-green-700 transition-colors duration-300">
+        Rapports
+      </a>
+    </li>
+    <li class="flex items-center gap-2">
+      @if (authService.isAuthenticated()) {
+        <a routerLink="/app/dashboard" class="ml-2 text-xs md:text-sm font-bold uppercase tracking-widest text-white bg-yellow-500 hover:bg-yellow-600 px-5 py-2 rounded shadow transition-colors duration-300">
+          Tableau de bord
+        </a>
+        <button (click)="logout()" class="text-xs md:text-sm font-bold uppercase tracking-widest text-white bg-red-600 hover:bg-red-700 px-5 py-2 rounded shadow transition-colors duration-300">
+          Déconnexion
+        </button>
+      } @else {
+        <a routerLink="/auth/login" class="ml-2 text-xs md:text-sm font-bold uppercase tracking-widest text-white bg-green-700 hover:bg-green-800 px-5 py-2 rounded shadow transition-colors duration-300">
+          Connexion
+        </a>
+      }
+    </li>
+  </ul>
+
+  <!-- Logo Header -->
+  <div class="order-1 md:order-2 mb-4 md:mb-0">
+    <img src="assets/images/newarmoiriebfnb.png"
+         alt="Armoiries du Burkina Faso"
+         class="h-16 md:h-20 w-auto object-contain drop-shadow-sm hover:scale-105 transition-transform"
+         onerror="this.src='assets/images/armoirie-bf.png'">
+  </div>
+</nav>
+
+<!-- SECTION PRINCIPALE -->
+<main class="hero-section flex-grow flex flex-col items-center justify-center px-4 py-12 w-full min-h-screen">
+
+  <div class="w-full max-w-6xl mx-auto flex flex-col items-center">
+
+    <!-- 1. GRANDE CARTE DU HAUT -->
+    <div class="glass-card grid-pattern w-full rounded-2xl p-8 md:p-14 mb-10 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 relative overflow-hidden ring-1 ring-white/30">
+
+      <!-- Logo Arbre -->
+      <div class="flex-shrink-0 drop-shadow-2xl relative z-10 animate-fade-in-up">
+        <img src="assets/images/baobablogo.png"
+             alt="Logo SYGEPIP"
+             class="h-40 md:h-64 w-auto object-contain filter drop-shadow-[0_10px_10px_rgba(0,0,0,0.3)]"
+             onerror="this.style.display='none'">
       </div>
 
-      <!-- Navigation -->
-      <nav class="hidden md:flex items-center gap-6">
-        <a routerLink="/" class="text-bf-green-600 font-medium">Accueil</a>
-        <a routerLink="/actualites" class="text-gray-600 hover:text-bf-green-600 transition-colors">Actualités</a>
-        <a routerLink="/mediatheque" class="text-gray-600 hover:text-bf-green-600 transition-colors">Médiathèque</a>
-        <a routerLink="/textes-reglementaires" class="text-gray-600 hover:text-bf-green-600 transition-colors">Textes</a>
-        <a routerLink="/ministre" class="text-gray-600 hover:text-bf-green-600 transition-colors">Le Ministre</a>
-      </nav>
-
-      <!-- Auth Buttons -->
-      <div class="flex items-center gap-3">
-        @if (authService.isAuthenticated()) {
-          <a routerLink="/app/dashboard" class="btn-primary btn-sm">
-            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-            </svg>
-            Tableau de bord
-          </a>
-          <button (click)="logout()" class="btn-outline btn-sm">
-            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-            </svg>
-            Déconnexion
-          </button>
-        } @else {
-          <a routerLink="/auth/login" class="btn-outline btn-sm">Connexion</a>
-          <a routerLink="/auth/register" class="btn-primary btn-sm">S'inscrire</a>
-        }
+      <!-- Texte -->
+      <div class="text-center md:text-left text-white max-w-2xl relative z-10">
+        <h1 class="text-5xl md:text-7xl text-white tracking-tight mb-2 drop-shadow-lg font-sans">SYGE-PIP</h1>
+        <div class="h-1 bg-yellow-400 w-24 mx-auto md:mx-0 my-5 rounded-full shadow-lg"></div>
+        <p class="text-lg md:text-2xl font-medium leading-relaxed text-white drop-shadow-md">
+          Système de Gestion Intégrée des Projets <br>
+          et Programmes d'Investissements Publics
+        </p>
+        <p class="text-sm md:text-base font-bold mt-4 text-gray-200 tracking-[0.2em] uppercase opacity-90">Burkina Faso</p>
       </div>
     </div>
-  </div>
 
-  <!-- Burkina Flag Bar -->
-  <div class="h-1 bg-gradient-bf"></div>
-</header>
+    <!-- 2. SECTION DU BAS (3 cartes) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full mb-12">
 
-<!-- Hero Slider -->
-<section class="relative h-[600px] overflow-hidden">
-  @for (actualite of actualites(); track actualite.id; let i = $index) {
-    <div class="absolute inset-0 transition-opacity duration-1000"
-         [class.opacity-100]="i === currentSlide()"
-         [class.opacity-0]="i !== currentSlide()">
-      <!-- Background Image -->
-      <div class="absolute inset-0">
-        <img [src]="actualite.imageUrl || 'assets/images/hero-default.jpg'"
-             [alt]="actualite.titre"
-             class="w-full h-full object-cover"
-             onerror="this.src='https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920'">
-        <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent"></div>
-      </div>
-
-      <!-- Content -->
-      <div class="relative h-full container mx-auto px-4 flex items-center">
-        <div class="max-w-2xl text-white">
-          <span class="inline-block px-4 py-1 bg-bf-yellow-500 text-bf-green-800 text-sm font-semibold rounded-full mb-4">
-            {{ actualite.categorie || 'Actualité' }}
-          </span>
-          <h2 class="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-            {{ actualite.titre }}
-          </h2>
-          <p class="text-lg text-gray-200 mb-6 line-clamp-3">
-            {{ actualite.description }}
-          </p>
-          <div class="flex items-center gap-4">
-            <a [routerLink]="['/actualites', actualite.id]" class="btn-primary btn-lg">
-              Lire la suite
-              <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-              </svg>
-            </a>
-            @if (actualite.documentUrl) {
-              <a [href]="actualite.documentUrl" target="_blank" class="btn bg-white/20 text-white hover:bg-white/30">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                Document
-              </a>
-            }
+      <!-- Carte 1 - Consulter un projet -->
+      <a routerLink="/actualites" class="glass-card glass-card-hover armoirie-watermark rounded-xl py-12 px-6 flex flex-col items-center text-center text-white group shadow-lg cursor-pointer">
+        <div class="mb-6 relative z-10 h-20 flex items-center justify-center">
+          <svg class="w-16 h-16 group-hover:scale-110 transition-transform duration-300 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+          </svg>
+          <div class="absolute -bottom-2 -right-4 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center border-2 border-green-600">
+            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
           </div>
         </div>
-      </div>
-    </div>
-  }
+        <h3 class="text-lg font-bold uppercase tracking-widest relative z-10 border-b-2 border-transparent group-hover:border-red-400 pb-1 transition-all">Consulter un projet</h3>
+      </a>
 
-  <!-- Slider Controls -->
-  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3">
-    @for (actualite of actualites(); track actualite.id; let i = $index) {
-      <button
-        (click)="goToSlide(i)"
-        [class]="i === currentSlide() ? 'w-8 h-3 bg-white rounded-full transition-all' : 'w-3 h-3 bg-white/40 rounded-full transition-all'">
-      </button>
-    }
-  </div>
-
-  <!-- Navigation Arrows -->
-  <button (click)="prevSlide()" class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors">
-    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-    </svg>
-  </button>
-  <button (click)="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors">
-    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-    </svg>
-  </button>
-</section>
-
-<!-- Statistics Section -->
-<section class="py-16 bg-white">
-  <div class="container mx-auto px-4">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-      <div class="text-center">
-        <div class="w-16 h-16 bg-bf-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-bf-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+      <!-- Carte 2 - Suivi investissements -->
+      <a routerLink="/mediatheque" class="glass-card glass-card-hover armoirie-watermark rounded-xl py-12 px-6 flex flex-col items-center text-center text-white group shadow-lg cursor-pointer">
+        <div class="mb-6 relative z-10 h-20 flex items-center justify-center">
+          <svg class="w-16 h-16 group-hover:scale-110 transition-transform duration-300 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
           </svg>
-        </div>
-        <p class="text-3xl font-bold text-gray-900">{{ stats()?.totalProjets || 0 }}</p>
-        <p class="text-gray-500">Projets</p>
-      </div>
-      <div class="text-center">
-        <div class="w-16 h-16 bg-bf-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-bf-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        </div>
-        <p class="text-3xl font-bold text-gray-900">{{ formatBudget(stats()?.budgetTotal) }}</p>
-        <p class="text-gray-500">Budget Total</p>
-      </div>
-      <div class="text-center">
-        <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-          </svg>
-        </div>
-        <p class="text-3xl font-bold text-gray-900">{{ stats()?.tauxExecutionGlobal || 0 }}%</p>
-        <p class="text-gray-500">Taux d'Exécution</p>
-      </div>
-      <div class="text-center">
-        <div class="w-16 h-16 bg-bf-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-bf-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-        </div>
-        <p class="text-3xl font-bold text-gray-900">13</p>
-        <p class="text-gray-500">Régions</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Ministre Section -->
-@if (ministre()) {
-  <section class="py-16 bg-gray-50">
-    <div class="container mx-auto px-4">
-      <div class="grid md:grid-cols-2 gap-12 items-center">
-        <div class="relative">
-          <div class="absolute -top-4 -left-4 w-full h-full bg-bf-green-500 rounded-2xl"></div>
-          <img [src]="ministre()?.photoUrl || 'assets/images/ministre-default.jpg'"
-               [alt]="ministre()?.nom + ' ' + ministre()?.prenom"
-               class="relative rounded-2xl w-full h-[400px] object-cover shadow-xl"
-               onerror="this.src='https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600'">
-        </div>
-        <div>
-          <span class="text-bf-green-600 font-semibold">Le Ministre</span>
-          <h2 class="text-3xl font-bold text-gray-900 mt-2 mb-4">
-            {{ ministre()?.prenom }} {{ ministre()?.nom }}
-          </h2>
-          <p class="text-xl text-bf-yellow-600 font-medium mb-4">{{ ministre()?.fonction }}</p>
-          <p class="text-gray-600 leading-relaxed mb-6">
-            {{ ministre()?.biographie || 'Biographie du ministre...' }}
-          </p>
-          <a routerLink="/ministre" class="btn-primary">
-            En savoir plus
-            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          <div class="absolute -top-2 -right-4">
+            <svg class="w-8 h-8 text-yellow-400 drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"/>
             </svg>
-          </a>
+          </div>
         </div>
-      </div>
-    </div>
-  </section>
-}
-
-<!-- Médiathèque Section -->
-<section class="py-16 bg-bf-green-600">
-  <div class="container mx-auto px-4">
-    <div class="text-center mb-12">
-      <h2 class="text-3xl font-bold text-white mb-4">Médiathèque</h2>
-      <p class="text-green-100 max-w-2xl mx-auto">
-        Découvrez nos vidéos, images et documents sur les projets d'investissement public
-      </p>
-    </div>
-
-    <div class="grid md:grid-cols-3 gap-8">
-      <!-- Videos Card -->
-      <a routerLink="/mediatheque" [queryParams]="{type: 'video'}"
-         class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-white hover:bg-white/20 transition-colors group">
-        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        </div>
-        <h3 class="text-xl font-bold mb-2">Vidéos</h3>
-        <p class="text-green-100">Reportages et documentaires sur nos projets</p>
+        <h3 class="text-lg font-bold uppercase tracking-widest relative z-10 border-b-2 border-transparent group-hover:border-yellow-400 pb-1 transition-all">Suivi investissements</h3>
       </a>
 
-      <!-- Images Card -->
-      <a routerLink="/mediatheque" [queryParams]="{type: 'image'}"
-         class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-white hover:bg-white/20 transition-colors group">
-        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      <!-- Carte 3 - Rapports & Analyses -->
+      <a routerLink="/textes-reglementaires" class="glass-card glass-card-hover armoirie-watermark rounded-xl py-12 px-6 flex flex-col items-center text-center text-white group shadow-lg cursor-pointer">
+        <div class="mb-6 relative z-10 h-20 flex items-center justify-center">
+          <svg class="w-16 h-16 group-hover:scale-110 transition-transform duration-300 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
+          <div class="absolute -bottom-2 -right-2">
+            <svg class="w-6 h-6 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
         </div>
-        <h3 class="text-xl font-bold mb-2">Galerie Photos</h3>
-        <p class="text-green-100">Images des réalisations et événements</p>
-      </a>
-
-      <!-- Documents Card -->
-      <a routerLink="/textes-reglementaires"
-         class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-white hover:bg-white/20 transition-colors group">
-        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
-        </div>
-        <h3 class="text-xl font-bold mb-2">Documents</h3>
-        <p class="text-green-100">Textes réglementaires et rapports</p>
+        <h3 class="text-lg font-bold uppercase tracking-widest relative z-10 border-b-2 border-transparent group-hover:border-green-400 pb-1 transition-all">Rapports & Analyses</h3>
       </a>
     </div>
+
   </div>
-</section>
+</main>
 
-<!-- Footer -->
-<footer class="bg-gray-900 text-white py-16">
+<!-- FOOTER -->
+<footer class="bg-gray-900 text-white py-12">
   <div class="container mx-auto px-4">
-    <div class="grid md:grid-cols-4 gap-12">
+    <div class="grid md:grid-cols-4 gap-8">
       <!-- About -->
       <div class="md:col-span-2">
-        <div class="flex items-center gap-3 mb-6">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Coat_of_arms_of_Burkina_Faso.svg/200px-Coat_of_arms_of_Burkina_Faso.svg.png" alt="Armoirie" class="h-12 w-12 object-contain brightness-0 invert">
+        <div class="flex items-center gap-3 mb-4">
+          <img src="assets/images/newarmoiriebfnb.png"
+               alt="Armoirie"
+               class="h-12 w-12 object-contain brightness-0 invert"
+               onerror="this.src='assets/images/armoirie-bf.png'">
           <div>
             <h3 class="text-xl font-bold">SYGEPIP</h3>
             <p class="text-gray-400 text-sm">Burkina Faso</p>
           </div>
         </div>
-        <p class="text-gray-400 leading-relaxed mb-6">
+        <p class="text-gray-400 leading-relaxed mb-4">
           Système de Gestion Intégrée des Projets et Programmes d'Investissements Publics du Burkina Faso.
-          Une plateforme moderne pour la gestion efficace des investissements publics.
         </p>
-        <div class="flex gap-4">
-          <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-bf-green-600 transition-colors">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
-          </a>
-          <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-bf-green-600 transition-colors">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/></svg>
-          </a>
-          <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-bf-green-600 transition-colors">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-          </a>
-        </div>
       </div>
 
       <!-- Quick Links -->
       <div>
-        <h4 class="text-lg font-semibold mb-6">Liens Rapides</h4>
-        <ul class="space-y-3">
-          <li><a routerLink="/actualites" class="text-gray-400 hover:text-white transition-colors">Actualités</a></li>
-          <li><a routerLink="/mediatheque" class="text-gray-400 hover:text-white transition-colors">Médiathèque</a></li>
-          <li><a routerLink="/textes-reglementaires" class="text-gray-400 hover:text-white transition-colors">Textes Réglementaires</a></li>
-          <li><a routerLink="/ministre" class="text-gray-400 hover:text-white transition-colors">Le Ministre</a></li>
+        <h4 class="text-lg font-semibold mb-4">Liens Rapides</h4>
+        <ul class="space-y-2">
+          <li><a routerLink="/actualites" class="text-white-400 hover:text-white transition-colors">Projets</a></li>
+          <li><a routerLink="/mediatheque" class="text-white-400 hover:text-white transition-colors">Investissements</a></li>
+          <li><a routerLink="/textes-reglementaires" class="text-white-400 hover:text-white transition-colors">Rapports</a></li>
         </ul>
       </div>
 
       <!-- Contact -->
       <div>
-        <h4 class="text-lg font-semibold mb-6">Contact</h4>
-        <ul class="space-y-3 text-gray-400">
-          <li class="flex items-start gap-3">
-            <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <h4 class="text-lg font-semibold mb-4">Contact</h4>
+        <ul class="space-y-2 text-gray-400">
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
             <span>Ouagadougou, Burkina Faso</span>
           </li>
-          <li class="flex items-center gap-3">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
             </svg>
             <span>contact&#64;sygepip.gov.bf</span>
-          </li>
-          <li class="flex items-center gap-3">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-            </svg>
-            <span>+226 25 30 XX XX</span>
           </li>
         </ul>
       </div>
     </div>
 
-    <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400 text-sm">
+    <div class="border-t border-gray-800 mt-8 pt-6 text-center text-gray-400 text-sm">
       <p>&copy; {{ currentYear }} SYGEPIP - Ministère de l'Économie, des Finances et de la Prospective</p>
-      <p class="mt-2">Direction Générale de l'Économie et de la Planification</p>
     </div>
   </div>
 </footer>

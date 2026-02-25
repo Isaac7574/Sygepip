@@ -18,7 +18,7 @@ export class ProjetsService {
     return this.api.getPaginated<Projet>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<Projet> {
+  getById(id: string | number): Observable<Projet> {
     return this.api.getById<Projet>(this.endpoint, id);
   }
 
@@ -26,11 +26,11 @@ export class ProjetsService {
     return this.api.post<Projet>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<Projet>): Observable<Projet> {
+  update(id: string | number, data: Partial<Projet>): Observable<Projet> {
     return this.api.put<Projet>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 
@@ -46,3 +46,4 @@ export class ProjetsService {
     return this.api.get<Projet[]>(this.endpoint, { secteurId });
   }
 }
+

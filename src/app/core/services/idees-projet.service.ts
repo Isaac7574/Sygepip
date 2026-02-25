@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { FilterParams, PaginatedResponse, IdeeProjet } from '@core/models';
+import { FilterParams, PaginatedResponse, IdeeProjet, IdeeProjetNoteConceptuelle } from '@core/models';
 import { ApiService } from '@core/services/api.service';
 
 @Injectable({
@@ -18,7 +18,7 @@ export class IdeesProjetService {
     return this.api.getPaginated<IdeeProjet>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<IdeeProjet> {
+  getById(id: string | number): Observable<IdeeProjet> {
     return this.api.getById<IdeeProjet>(this.endpoint, id);
   }
 
@@ -26,11 +26,11 @@ export class IdeesProjetService {
     return this.api.post<IdeeProjet>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<IdeeProjet>): Observable<IdeeProjet> {
+  update(id: string | number, data: Partial<IdeeProjet>): Observable<IdeeProjet> {
     return this.api.put<IdeeProjet>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 
@@ -53,4 +53,24 @@ export class IdeesProjetService {
   rejeter(id: number, motif: string): Observable<IdeeProjet> {
     return this.api.post<IdeeProjet>(`${this.endpoint}/${id}/rejeter`, { motif });
   }
+
+  // Récupérer par code
+  getByCode(code: string): Observable<IdeeProjet> {
+    return this.api.get<IdeeProjet>(`${this.endpoint}/code/${code}`);
+  }
+
+  // Récupérer les idées actives
+  getActifs(): Observable<IdeeProjet[]> {
+    return this.api.get<IdeeProjet[]>(`${this.endpoint}/actifs`);
+  }
+
+  // Note conceptuelle
+  getNoteConceptuelle(id: string | number): Observable<IdeeProjetNoteConceptuelle> {
+    return this.api.get<IdeeProjetNoteConceptuelle>(`${this.endpoint}/${id}/note-conceptuelle`);
+  }
+
+  updateNoteConceptuelle(id: string | number, data: IdeeProjetNoteConceptuelle): Observable<IdeeProjetNoteConceptuelle> {
+    return this.api.putUrl<IdeeProjetNoteConceptuelle>(`${this.endpoint}/${id}/note-conceptuelle`, data);
+  }
 }
+

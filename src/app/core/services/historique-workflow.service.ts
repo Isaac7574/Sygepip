@@ -18,7 +18,7 @@ export class HistoriqueWorkflowService {
     return this.api.getPaginated<HistoriqueWorkflow>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<HistoriqueWorkflow> {
+  getById(id: string | number): Observable<HistoriqueWorkflow> {
     return this.api.getById<HistoriqueWorkflow>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class HistoriqueWorkflowService {
     return this.api.post<HistoriqueWorkflow>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<HistoriqueWorkflow>): Observable<HistoriqueWorkflow> {
+  update(id: string | number, data: Partial<HistoriqueWorkflow>): Observable<HistoriqueWorkflow> {
     return this.api.put<HistoriqueWorkflow>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+

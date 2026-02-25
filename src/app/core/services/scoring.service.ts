@@ -18,7 +18,7 @@ export class ScoringService {
     return this.api.getPaginated<CritereSelection>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<CritereSelection> {
+  getById(id: string | number): Observable<CritereSelection> {
     return this.api.getById<CritereSelection>(this.endpoint, id);
   }
 
@@ -26,11 +26,11 @@ export class ScoringService {
     return this.api.post<CritereSelection>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<CritereSelection>): Observable<CritereSelection> {
+  update(id: string | number, data: Partial<CritereSelection>): Observable<CritereSelection> {
     return this.api.put<CritereSelection>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 
@@ -42,3 +42,4 @@ export class ScoringService {
     return this.api.post<ScoreIdeeProjet>(`${this.endpoint}/evaluer`, data);
   }
 }
+

@@ -18,7 +18,7 @@ export class AutorisationEngagementService {
     return this.api.getPaginated<AutorisationEngagement>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<AutorisationEngagement> {
+  getById(id: string | number): Observable<AutorisationEngagement> {
     return this.api.getById<AutorisationEngagement>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class AutorisationEngagementService {
     return this.api.post<AutorisationEngagement>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<AutorisationEngagement>): Observable<AutorisationEngagement> {
+  update(id: string | number, data: Partial<AutorisationEngagement>): Observable<AutorisationEngagement> {
     return this.api.put<AutorisationEngagement>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+

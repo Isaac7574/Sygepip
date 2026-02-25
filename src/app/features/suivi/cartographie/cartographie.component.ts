@@ -53,8 +53,7 @@ export class CartographieComponent implements OnInit {
       commune: '',
       village: '',
       latitude: undefined,
-      longitude: undefined,
-      description: ''
+      longitude: undefined
     };
   }
 
@@ -152,14 +151,14 @@ export class CartographieComponent implements OnInit {
     this.toastVisible.set(true);
   }
 
-  getRegionNom(id: number | undefined): string {
+  getRegionNom(id: string | number | undefined): string {
     if (!id) return '-';
-    return this.regions().find(r => r.id === id)?.nom || '-';
+    return this.regions().find(r => String(r.id) === String(id))?.nom || '-';
   }
 
-  getProjetNom(id: number | undefined): string {
+  getProjetNom(id: string | number | undefined): string {
     if (!id) return '-';
-    return this.projets().find(p => p.id === id)?.titre || '-';
+    return this.projets().find(p => String(p.id) === String(id))?.titre || '-';
   }
 
   formatCoord(value: number | undefined): string {

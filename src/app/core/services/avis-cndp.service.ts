@@ -18,7 +18,7 @@ export class AvisCndpService {
     return this.api.getPaginated<AvisConformiteCNDP>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<AvisConformiteCNDP> {
+  getById(id: string | number): Observable<AvisConformiteCNDP> {
     return this.api.getById<AvisConformiteCNDP>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class AvisCndpService {
     return this.api.post<AvisConformiteCNDP>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<AvisConformiteCNDP>): Observable<AvisConformiteCNDP> {
+  update(id: string | number, data: Partial<AvisConformiteCNDP>): Observable<AvisConformiteCNDP> {
     return this.api.put<AvisConformiteCNDP>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+

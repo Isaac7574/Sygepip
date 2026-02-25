@@ -26,7 +26,7 @@ export class ProgrammesComponent implements OnInit {
   modalOpen = signal(false);
   editingItem = signal<Programme | null>(null);
   saving = signal(false);
-  formData: Partial<Programme> = { code: '', nom: '', ministereId: undefined, secteurId: undefined, description: '', budgetTotal: undefined, actif: true };
+  formData: Partial<Programme> = { code: '', nom: '', ministereId: undefined, secteurId: undefined, description: '', actif: true };
 
   ngOnInit(): void {
     this.load();
@@ -63,7 +63,7 @@ export class ProgrammesComponent implements OnInit {
   }
 
   openModal(): void {
-    this.formData = { code: '', nom: '', ministereId: undefined, secteurId: undefined, description: '', budgetTotal: undefined, actif: true };
+    this.formData = { code: '', nom: '', ministereId: undefined, secteurId: undefined, description: '', actif: true };
     this.editingItem.set(null);
     this.modalOpen.set(true);
   }
@@ -94,14 +94,15 @@ export class ProgrammesComponent implements OnInit {
     }
   }
 
-  getMinistereNom(id: number): string {
-    const m = this.ministeres().find(m => m.id === id);
+  getMinistereNom(id: string | number | undefined): string {
+    if (!id) return '-';
+    const m = this.ministeres().find(m => String(m.id) === String(id));
     return m ? (m.sigle || m.nom) : '-';
   }
 
-  getSecteurNom(id: number | undefined): string {
+  getSecteurNom(id: string | number | undefined): string {
     if (!id) return '-';
-    const s = this.secteurs().find(s => s.id === id);
+    const s = this.secteurs().find(s => String(s.id) === String(id));
     return s ? s.nom : '-';
   }
 

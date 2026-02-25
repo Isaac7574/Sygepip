@@ -20,7 +20,7 @@ export class RegionsComponent implements OnInit {
   modalOpen = signal(false);
   editingItem = signal<Region | null>(null);
   saving = signal(false);
-  formData: Partial<Region> = { code: '', nom: '', chefLieu: '', population: undefined, superficie: undefined, actif: true };
+  formData: Partial<Region> = { code: '', nom: '', chefLieu: '', actif: true };
 
   ngOnInit(): void { this.load(); }
 
@@ -39,7 +39,7 @@ export class RegionsComponent implements OnInit {
   }
 
   openModal(): void {
-    this.formData = { code: '', nom: '', chefLieu: '', population: undefined, superficie: undefined, actif: true };
+    this.formData = { code: '', nom: '', chefLieu: '', actif: true };
     this.editingItem.set(null);
     this.modalOpen.set(true);
   }

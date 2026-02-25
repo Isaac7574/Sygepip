@@ -30,7 +30,6 @@
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ministère</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Secteur</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Budget Total</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
           <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
         </tr>
@@ -42,7 +41,6 @@
             <td class="px-6 py-4 text-gray-900">{{ item.nom }}</td>
             <td class="px-6 py-4 text-gray-500">{{ getMinistereNom(item.ministereId) }}</td>
             <td class="px-6 py-4 text-gray-500">{{ getSecteurNom(item.secteurId) }}</td>
-            <td class="px-6 py-4 text-gray-500">{{ formatBudget(item.budgetTotal) }}</td>
             <td class="px-6 py-4">
               <span class="badge" [class.badge-success]="item.actif" [class.badge-secondary]="!item.actif">
                 {{ item.actif ? 'Actif' : 'Inactif' }}
@@ -109,10 +107,6 @@
         <div class="form-group">
           <label class="form-label">Description</label>
           <textarea [(ngModel)]="formData.description" class="form-input" rows="3" placeholder="Description du programme"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Budget Total (FCFA)</label>
-          <input type="number" [(ngModel)]="formData.budgetTotal" class="form-input" placeholder="0">
         </div>
         <div class="form-group">
           <label class="flex items-center">

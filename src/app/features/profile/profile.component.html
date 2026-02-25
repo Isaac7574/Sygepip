@@ -163,11 +163,11 @@
         </div>
         <div>
           <p class="text-sm text-gray-500">Date de création</p>
-          <p class="font-medium text-gray-900 mt-1">{{ formatDate(authService.currentUser()?.dateCreation) }}</p>
+          <p class="font-medium text-gray-900 mt-1">{{ formatDate(authService.currentUser()?.createdAt) }}</p>
         </div>
         <div>
-          <p class="text-sm text-gray-500">Dernière connexion</p>
-          <p class="font-medium text-gray-900 mt-1">{{ formatDate(authService.currentUser()?.derniereConnexion) }}</p>
+          <p class="text-sm text-gray-500">Dernière mise à jour</p>
+          <p class="font-medium text-gray-900 mt-1">{{ formatDate(authService.currentUser()?.updatedAt) }}</p>
         </div>
       </div>
     </div>

@@ -18,7 +18,7 @@ export class SecteursService {
     return this.api.getPaginated<Secteur>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<Secteur> {
+  getById(id: string | number): Observable<Secteur> {
     return this.api.getById<Secteur>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class SecteursService {
     return this.api.post<Secteur>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<Secteur>): Observable<Secteur> {
+  update(id: string | number, data: Partial<Secteur>): Observable<Secteur> {
     return this.api.put<Secteur>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+

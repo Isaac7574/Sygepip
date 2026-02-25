@@ -18,7 +18,7 @@ export class LocalitesInterventionService {
     return this.api.getPaginated<LocaliteIntervention>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<LocaliteIntervention> {
+  getById(id: string | number): Observable<LocaliteIntervention> {
     return this.api.getById<LocaliteIntervention>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class LocalitesInterventionService {
     return this.api.post<LocaliteIntervention>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<LocaliteIntervention>): Observable<LocaliteIntervention> {
+  update(id: string | number, data: Partial<LocaliteIntervention>): Observable<LocaliteIntervention> {
     return this.api.put<LocaliteIntervention>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+

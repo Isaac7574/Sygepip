@@ -155,17 +155,19 @@ export class ArbitrageComponent implements OnInit {
     this.toastVisible.set(true);
   }
 
-  getProjetNom(id: number | undefined): string {
+  getProjetNom(id: string | number | undefined): string {
     if (!id) return '-';
-    const projet = this.projets().find(p => p.id === id);
+    const projet = this.projets().find(p => String(p.id) === String(id));
     return projet ? (projet.code + ' - ' + projet.titre) : '-';
   }
 
-  getStatutLabel(statut: string): string {
+  getStatutLabel(statut: string | undefined): string {
+    if (!statut) return '-';
     return this.statuts.find(s => s.value === statut)?.label || statut;
   }
 
-  getStatutBadgeClass(statut: string): string {
+  getStatutBadgeClass(statut: string | undefined): string {
+    if (!statut) return 'badge-secondary';
     const classes: Record<string, string> = {
       'PREVU': 'badge-secondary',
       'AUTORISE': 'badge-info',

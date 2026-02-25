@@ -180,29 +180,31 @@ export class IdeesdeProjetComponent implements OnInit {
     this.toastVisible.set(true);
   }
 
-  getMinistereNom(id: number | undefined): string {
+  getMinistereNom(id: string | number | undefined): string {
     if (!id) return '-';
-    const m = this.ministeres().find(m => m.id === id);
+    const m = this.ministeres().find(m => String(m.id) === String(id));
     return m ? (m.sigle || m.nom) : '-';
   }
 
-  getSecteurNom(id: number | undefined): string {
+  getSecteurNom(id: string | number | undefined): string {
     if (!id) return '-';
-    const s = this.secteurs().find(s => s.id === id);
+    const s = this.secteurs().find(s => String(s.id) === String(id));
     return s ? s.nom : '-';
   }
 
-  getRegionNom(id: number | undefined): string {
+  getRegionNom(id: string | number | undefined): string {
     if (!id) return '-';
-    const r = this.regions().find(r => r.id === id);
+    const r = this.regions().find(r => String(r.id) === String(id));
     return r ? r.nom : '-';
   }
 
-  getStatutLabel(statut: string): string {
+  getStatutLabel(statut: string | undefined): string {
+    if (!statut) return '-';
     return this.statuts.find(s => s.value === statut)?.label || statut;
   }
 
-  getStatutBadgeClass(statut: string): string {
+  getStatutBadgeClass(statut: string | undefined): string {
+    if (!statut) return 'badge-secondary';
     const classes: Record<string, string> = {
       'BROUILLON': 'badge-secondary',
       'SOUMIS': 'badge-info',
@@ -213,11 +215,13 @@ export class IdeesdeProjetComponent implements OnInit {
     return classes[statut] || 'badge-secondary';
   }
 
-  getPrioriteLabel(priorite: string): string {
+  getPrioriteLabel(priorite: string | undefined): string {
+    if (!priorite) return '-';
     return this.priorites.find(p => p.value === priorite)?.label || priorite;
   }
 
-  getPrioriteBadgeClass(priorite: string): string {
+  getPrioriteBadgeClass(priorite: string | undefined): string {
+    if (!priorite) return 'badge-secondary';
     const classes: Record<string, string> = {
       'HAUTE': 'badge-danger',
       'MOYENNE': 'badge-warning',

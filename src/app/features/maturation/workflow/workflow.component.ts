@@ -174,7 +174,8 @@ export class WorkflowComponent implements OnInit {
     }
   }
 
-  getModuleBadgeClass(module: string): string {
+  getModuleBadgeClass(module: string | undefined): string {
+    if (!module) return 'badge-secondary';
     const classes: Record<string, string> = {
       'MATURATION': 'badge-info',
       'PIP': 'badge-warning',

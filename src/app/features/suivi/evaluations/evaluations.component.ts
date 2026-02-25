@@ -49,7 +49,7 @@ export class ÉvaluationsComponent implements OnInit {
   }
 
   private resetForm(): Partial<RapportEvaluation> {
-    return { projetId: undefined, typeEvaluation: 'MI_PARCOURS', dateEvaluation: undefined, evaluateur: '', noteGlobale: undefined, pointsForts: '', pointsFaibles: '', recommandations: '', fichierRapportUrl: '' };
+    return { projetId: undefined, typeEvaluation: 'MI_PARCOURS', dateEvaluation: undefined, evaluateur: '', noteGlobale: undefined, pointsForts: '', pointsFaibles: '', recommandations: '' };
   }
 
   load(): void {
@@ -133,17 +133,19 @@ export class ÉvaluationsComponent implements OnInit {
     this.toastVisible.set(true);
   }
 
-  getProjetNom(id: number | undefined): string {
+  getProjetNom(id: string | number | undefined): string {
     if (!id) return '-';
-    const p = this.projets().find(p => p.id === id);
+    const p = this.projets().find(p => String(p.id) === String(id));
     return p ? p.titre : '-';
   }
 
-  getTypeLabel(value: string): string {
+  getTypeLabel(value: string | undefined): string {
+    if (!value) return '-';
     return this.typesEvaluation.find(t => t.value === value)?.label || value;
   }
 
-  getTypeBadgeClass(type: string): string {
+  getTypeBadgeClass(type: string | undefined): string {
+    if (!type) return 'badge-secondary';
     switch (type) {
       case 'MI_PARCOURS': return 'badge-info';
       case 'FINALE': return 'badge-success';

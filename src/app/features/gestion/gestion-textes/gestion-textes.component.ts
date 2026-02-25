@@ -131,7 +131,8 @@ export class GestionTextesComponent implements OnInit {
     this.toastVisible.set(true);
   }
 
-  getTypeLabel(type: string): string {
+  getTypeLabel(type: string | undefined): string {
+    if (!type) return '-';
     const found = this.types.find(t => t.value === type);
     return found ? found.label : type;
   }

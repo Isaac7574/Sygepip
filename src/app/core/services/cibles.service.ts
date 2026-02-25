@@ -18,7 +18,7 @@ export class CiblesService {
     return this.api.getPaginated<Cible>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<Cible> {
+  getById(id: string | number): Observable<Cible> {
     return this.api.getById<Cible>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class CiblesService {
     return this.api.post<Cible>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<Cible>): Observable<Cible> {
+  update(id: string | number, data: Partial<Cible>): Observable<Cible> {
     return this.api.put<Cible>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+

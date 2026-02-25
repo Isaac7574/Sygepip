@@ -124,11 +124,13 @@ export class ProgrammationComponent implements OnInit {
     this.toastVisible.set(true);
   }
 
-  getStatutLabel(statut: string): string {
+  getStatutLabel(statut: string | undefined): string {
+    if (!statut) return '-';
     return this.statuts.find(s => s.value === statut)?.label || statut;
   }
 
-  getStatutBadgeClass(statut: string): string {
+  getStatutBadgeClass(statut: string | undefined): string {
+    if (!statut) return 'badge-secondary';
     const classes: Record<string, string> = {
       'PREPARATION': 'badge-secondary',
       'VALIDATION': 'badge-info',

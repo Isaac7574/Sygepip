@@ -18,7 +18,7 @@ export class UtilisateursService {
     return this.api.getPaginated<User>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<User> {
+  getById(id: string | number): Observable<User> {
     return this.api.getById<User>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class UtilisateursService {
     return this.api.post<User>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<User>): Observable<User> {
+  update(id: string | number, data: Partial<User>): Observable<User> {
     return this.api.put<User>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+

@@ -18,7 +18,7 @@ export class ScoreIdeeProjetService {
     return this.api.getPaginated<ScoreIdeeProjet>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<ScoreIdeeProjet> {
+  getById(id: string | number): Observable<ScoreIdeeProjet> {
     return this.api.getById<ScoreIdeeProjet>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class ScoreIdeeProjetService {
     return this.api.post<ScoreIdeeProjet>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<ScoreIdeeProjet>): Observable<ScoreIdeeProjet> {
+  update(id: string | number, data: Partial<ScoreIdeeProjet>): Observable<ScoreIdeeProjet> {
     return this.api.put<ScoreIdeeProjet>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+

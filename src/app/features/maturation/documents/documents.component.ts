@@ -143,9 +143,9 @@ export class DocumentsComponent implements OnInit {
     this.toastVisible.set(true);
   }
 
-  getIdeeProjetNom(id: number | undefined): string {
+  getIdeeProjetNom(id: string | number | undefined): string {
     if (!id) return '-';
-    const ip = this.ideesProjet().find(ip => ip.id === id);
+    const ip = this.ideesProjet().find(ip => String(ip.id) === String(id));
     return ip ? (ip.code + ' - ' + ip.titre) : '-';
   }
 

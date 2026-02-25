@@ -18,7 +18,7 @@ export class ProgrammesService {
     return this.api.getPaginated<Programme>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<Programme> {
+  getById(id: string | number): Observable<Programme> {
     return this.api.getById<Programme>(this.endpoint, id);
   }
 
@@ -26,11 +26,11 @@ export class ProgrammesService {
     return this.api.post<Programme>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<Programme>): Observable<Programme> {
+  update(id: string | number, data: Partial<Programme>): Observable<Programme> {
     return this.api.put<Programme>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 
@@ -42,3 +42,4 @@ export class ProgrammesService {
     return this.api.get<Programme[]>(this.endpoint, { secteurId });
   }
 }
+

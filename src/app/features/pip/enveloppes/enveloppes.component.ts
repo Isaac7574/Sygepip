@@ -144,21 +144,21 @@ export class EnveloppesComponent implements OnInit {
     this.toastVisible.set(true);
   }
 
-  getPipLabel(id: number | undefined): string {
+  getPipLabel(id: string | number | undefined): string {
     if (!id) return '-';
-    const pip = this.pipsAnnuels().find(p => p.id === id);
+    const pip = this.pipsAnnuels().find(p => String(p.id) === String(id));
     return pip ? `PIP ${pip.annee}` : '-';
   }
 
-  getMinistereNom(id: number | undefined): string {
+  getMinistereNom(id: string | number | undefined): string {
     if (!id) return '-';
-    const m = this.ministeres().find(m => m.id === id);
+    const m = this.ministeres().find(m => String(m.id) === String(id));
     return m ? (m.sigle || m.nom) : '-';
   }
 
-  getSecteurNom(id: number | undefined): string {
+  getSecteurNom(id: string | number | undefined): string {
     if (!id) return '-';
-    const s = this.secteurs().find(s => s.id === id);
+    const s = this.secteurs().find(s => String(s.id) === String(id));
     return s ? s.nom : '-';
   }
 

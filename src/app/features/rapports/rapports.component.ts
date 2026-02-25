@@ -148,9 +148,9 @@ export class RapportsComponent implements OnInit {
     this.toastVisible.set(true);
   }
 
-  getProjetNom(id: number | undefined): string {
+  getProjetNom(id: string | number | undefined): string {
     if (!id) return '-';
-    const p = this.projets().find(p => p.id === id);
+    const p = this.projets().find(p => String(p.id) === String(id));
     return p ? p.titre : '-';
   }
 

@@ -18,7 +18,7 @@ export class EvaluationsService {
     return this.api.getPaginated<RapportEvaluation>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<RapportEvaluation> {
+  getById(id: string | number): Observable<RapportEvaluation> {
     return this.api.getById<RapportEvaluation>(this.endpoint, id);
   }
 
@@ -26,11 +26,11 @@ export class EvaluationsService {
     return this.api.post<RapportEvaluation>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<RapportEvaluation>): Observable<RapportEvaluation> {
+  update(id: string | number, data: Partial<RapportEvaluation>): Observable<RapportEvaluation> {
     return this.api.put<RapportEvaluation>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 
@@ -42,3 +42,4 @@ export class EvaluationsService {
     return this.api.get<RapportEvaluation[]>(this.endpoint, { type });
   }
 }
+

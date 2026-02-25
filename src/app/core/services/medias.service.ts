@@ -18,7 +18,7 @@ export class MediasService {
     return this.api.getPaginated<Media>(this.endpoint, params);
   }
 
-  getById(id: number): Observable<Media> {
+  getById(id: string | number): Observable<Media> {
     return this.api.getById<Media>(this.endpoint, id);
   }
 
@@ -26,11 +26,12 @@ export class MediasService {
     return this.api.post<Media>(this.endpoint, data);
   }
 
-  update(id: number, data: Partial<Media>): Observable<Media> {
+  update(id: string | number, data: Partial<Media>): Observable<Media> {
     return this.api.put<Media>(this.endpoint, id, data);
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
 }
+
