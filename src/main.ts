@@ -30,6 +30,8 @@ function initializeKeycloak(keycloak: KeycloakService) {
         '/auth/register',
         '/auth/forgot-password'
       ]
+    }).catch((err) => {
+      console.warn('Keycloak initialization failed (server unavailable):', err);
     });
 }
 

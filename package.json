@@ -25,7 +25,7 @@
     "@angular/platform-browser-dynamic": "^18.2.0",
     "@angular/router": "^18.2.0",
     "chart.js": "^4.4.1",
-    "keycloak-angular": "^15.3.0",
+    "keycloak-angular": "^16.1.0",
     "keycloak-js": "^24.0.5",
     "leaflet": "^1.9.4",
     "ng2-charts": "^6.0.1",
