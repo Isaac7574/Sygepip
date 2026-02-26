@@ -120,6 +120,15 @@
     @apply text-sm text-gray-500 mt-1.5;
   }
 
+  // Compact form variants (for modals with many fields)
+  .form-input-sm {
+    @apply w-full px-3 py-1.5 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg transition-all duration-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500;
+  }
+
+  .form-label-sm {
+    @apply block text-xs font-medium text-gray-600 mb-1;
+  }
+
   // Cards
   .card {
     @apply bg-white rounded-2xl shadow-card p-6 transition-shadow hover:shadow-soft;
@@ -236,6 +245,12 @@
   
   .modal-content {
     @apply bg-white rounded-2xl shadow-elevated max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in;
+  }
+
+  // Variante : hauteur libre, s'adapte au contenu (pour les grands formulaires)
+  .modal-content-fit {
+    @apply bg-white rounded-2xl shadow-elevated w-full overflow-y-auto animate-scale-in;
+    max-height: 94vh;
   }
   
   .modal-header {
