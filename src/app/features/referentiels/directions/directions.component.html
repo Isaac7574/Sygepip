@@ -1,0 +1,135 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Directions</h1>
+      <p class="text-gray-500">Gestion des directions par ministère</p>
+    </div>
+    <button (click)="openModal()" class="btn-primary">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Nouvelle Direction
+    </button>
+  </div>
+
+  <!-- Search -->
+  <div class="card p-4">
+    <div class="flex gap-4">
+      <div class="flex-1">
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher une direction..." class="form-input">
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ministère</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        @for (item of filteredItems(); track item.id) {
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 font-medium text-gray-900">{{ item.code }}</td>
+            <td class="px-6 py-4 text-gray-900">{{ item.nom }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ getMinistereNom(item.ministereId) }}</td>
+            <td class="px-6 py-4">
+              <span class="badge" [class.badge-success]="item.actif" [class.badge-secondary]="!item.actif">
+                {{ item.actif ? 'Actif' : 'Inactif' }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button (click)="edit(item)" class="text-primary-600 hover:text-primary-800 mr-2" title="Modifier">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <button (click)="confirmDelete(item)" class="text-red-600 hover:text-red-800" title="Supprimer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="px-6 py-12 text-center text-gray-500">Aucune direction trouvée</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal -->
+@if (modalOpen()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content max-w-2xl" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier' : 'Nouvelle' }} Direction</h3>
+        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body space-y-4">
+        <div class="form-group">
+          <label class="form-label">Code *</label>
+          <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: DIR-001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nom *</label>
+          <input type="text" [(ngModel)]="formData.nom" class="form-input" placeholder="Nom de la direction">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ministère *</label>
+          <select [(ngModel)]="formData.ministereId" class="form-input">
+            <option value="">-- Sélectionner --</option>
+            @for (m of ministeres(); track m.id) {
+              <option [value]="m.id">{{ m.sigle || m.nom }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="flex items-center">
+            <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
+            <span class="ml-2">Actif</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button (click)="closeModal()" class="btn-outline">Annuler</button>
+        <button (click)="save()" [disabled]="saving()" class="btn-primary">
+          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Toast notification -->
+@if (toastVisible()) {
+  <div class="fixed bottom-4 right-4 z-50">
+    <div
+      class="px-6 py-4 rounded-lg shadow-lg text-white"
+      [class.bg-green-600]="toastType === 'success'"
+      [class.bg-red-600]="toastType === 'error'"
+    >
+      <div class="flex items-center gap-3">
+        @if (toastType === 'success') {
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        } @else {
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        }
+        <span>{{ toastMessage }}</span>
+      </div>
+    </div>
+  </div>
+}

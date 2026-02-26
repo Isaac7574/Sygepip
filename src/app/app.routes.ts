@@ -77,6 +77,10 @@ export const routes: Routes = [
           {
             path: 'sources-financement',
             loadComponent: () => import('./features/referentiels/sources-financement/sources-financement.component').then(m => m.SourcesdeFinancementComponent)
+          },
+          {
+            path: 'directions',
+            loadComponent: () => import('./features/referentiels/directions/directions.component').then(m => m.DirectionsComponent)
           }
         ]
       },
@@ -179,6 +183,16 @@ export const routes: Routes = [
           {
             path: 'ministre',
             loadComponent: () => import('./features/gestion/gestion-ministre/gestion-ministre.component').then(m => m.GestionMinistreComponent)
+          }
+        ]
+      },
+      // Administration
+      {
+        path: 'administration',
+        children: [
+          {
+            path: 'gestion-acces',
+            loadComponent: () => import('./features/administration/gestion-acces/gestion-acces.component').then(m => m.GestionAccesComponent)
           }
         ]
       },

@@ -1,0 +1,100 @@
+// Gestion des accès - Styles
+
+// Role chips
+.role-chip {
+  @apply inline-flex items-center px-3 py-1.5 rounded-full text-sm cursor-pointer transition-all;
+  @apply border border-gray-300 text-gray-600 bg-white hover:bg-gray-50;
+
+  &.role-chip-selected {
+    @apply border-primary-500 bg-primary-50 text-primary-700;
+  }
+}
+
+// Toggle switch
+.toggle-switch {
+  @apply relative inline-flex cursor-pointer;
+}
+
+.toggle-track {
+  @apply relative w-11 h-6 bg-gray-200 rounded-full transition-colors;
+
+  &.toggle-track-active {
+    @apply bg-green-500;
+  }
+}
+
+.toggle-thumb {
+  @apply absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow;
+
+  &.toggle-thumb-active {
+    @apply translate-x-5;
+  }
+}
+
+// Config button styles (for the table)
+.config-btn {
+  @apply inline-flex items-center justify-center w-8 h-8 rounded-full transition-colors;
+
+  &.config-btn-active {
+    @apply bg-green-100 text-green-600 hover:bg-green-200;
+  }
+
+  &.config-btn-inactive {
+    @apply bg-red-100 text-red-600 hover:bg-red-200;
+  }
+
+  &.config-btn-none {
+    @apply bg-gray-100 text-gray-400 hover:bg-gray-200;
+  }
+}
+
+// Small button variant
+.btn-sm {
+  @apply px-3 py-1.5 text-sm;
+}
+
+// Form checkbox
+.form-checkbox {
+  @apply w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500;
+}
+
+// Details/summary styling
+details {
+  summary {
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+}
+
+// Scrollbar styling for directions list
+.max-h-32::-webkit-scrollbar,
+.max-h-48::-webkit-scrollbar {
+  width: 6px;
+}
+
+.max-h-32::-webkit-scrollbar-track,
+.max-h-48::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded;
+}
+
+.max-h-32::-webkit-scrollbar-thumb,
+.max-h-48::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded hover:bg-gray-400;
+}
+
+// Animation for loading spinner
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
