@@ -12,8 +12,8 @@ import { keycloakConfig } from './app/keycloak.config';
 
 // Keycloak initialization function
 function initializeKeycloak(keycloak: KeycloakService) {
-  return () =>
-    keycloak.init({
+  return () => {
+    const keycloakInit = keycloak.init({
       config: keycloakConfig,
       initOptions: {
         onLoad: 'check-sso',
@@ -30,7 +30,19 @@ function initializeKeycloak(keycloak: KeycloakService) {
         '/auth/register',
         '/auth/forgot-password'
       ]
+    }).catch((err: unknown) => {
+      console.warn('Keycloak initialization failed:', err);
     });
+
+    const timeout = new Promise<void>((resolve) =>
+      setTimeout(() => {
+        console.warn('Keycloak init timeout — serveur inaccessible, démarrage sans authentification');
+        resolve();
+      }, 5000)
+    );
+
+    return Promise.race([keycloakInit, timeout]);
+  };
 }
 
 // Keycloak providers

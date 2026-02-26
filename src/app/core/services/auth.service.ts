@@ -143,7 +143,7 @@ export class AuthService {
   // Forgot password (redirect to Keycloak)
   forgotPassword(email?: string): Observable<any> {
     // Keycloak handles this via its own UI
-    window.location.href = `${environment.keycloakUrl || 'http://localhost:8180'}/realms/sygepip/login-actions/reset-credentials`;
+    window.location.href = `${environment.keycloakUrl || 'http://172.21.224.1:8180'}/realms/sygepip/login-actions/reset-credentials`;
     return of({ success: true });
   }
 
@@ -154,7 +154,7 @@ export class AuthService {
 
   // Change password (redirect to Keycloak account page)
   changePassword(currentPassword?: string, newPassword?: string): Observable<any> {
-    window.location.href = `${environment.keycloakUrl || 'http://localhost:8180'}/realms/sygepip/account/password`;
+    window.location.href = `${environment.keycloakUrl || 'http://172.21.224.1:8180'}/realms/sygepip/account/password`;
     return of({ success: true });
   }
 

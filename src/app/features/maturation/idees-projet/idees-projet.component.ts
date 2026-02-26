@@ -4,9 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
-import { RegionsService } from '@core/services/regions.service';
-import { ProgrammesService } from '@core/services/programmes.service';
-import { IdeeProjet, Ministere, Secteur, Region, Programme } from '@core/models';
+import { AuthService } from '@core/services/auth.service';
+import { IdeeProjet, IdeeProjetNoteConceptuelle, Ministere, Secteur } from '@core/models';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 
@@ -21,20 +20,25 @@ export class IdeesdeProjetComponent implements OnInit {
   private ideesService = inject(IdeesProjetService);
   private ministeresService = inject(MinisteresService);
   private secteursService = inject(SecteursService);
-  private regionsService = inject(RegionsService);
-  private programmesService = inject(ProgrammesService);
+  private authService = inject(AuthService);
 
   items = signal<IdeeProjet[]>([]);
   filteredItems = signal<IdeeProjet[]>([]);
   ministeres = signal<Ministere[]>([]);
   secteurs = signal<Secteur[]>([]);
-  regions = signal<Region[]>([]);
-  programmes = signal<Programme[]>([]);
   searchTerm = '';
+
+  // Modal principal
   modalOpen = signal(false);
   editingItem = signal<IdeeProjet | null>(null);
   saving = signal(false);
   formData: Partial<IdeeProjet> = this.resetForm();
+
+  // Modal Note Conceptuelle
+  noteModalOpen = signal(false);
+  selectedItemForNote: IdeeProjet | null = null;
+  noteData: Partial<IdeeProjetNoteConceptuelle> = this.resetNoteForm();
+  savingNote = signal(false);
 
   // Confirm dialog
   confirmDialogVisible = signal(false);
@@ -54,12 +58,6 @@ export class IdeesdeProjetComponent implements OnInit {
     { value: 'REHABILITATION', label: 'Réhabilitation' }
   ];
 
-  priorites = [
-    { value: 'HAUTE', label: 'Haute' },
-    { value: 'MOYENNE', label: 'Moyenne' },
-    { value: 'BASSE', label: 'Basse' }
-  ];
-
   statuts = [
     { value: 'BROUILLON', label: 'Brouillon' },
     { value: 'SOUMIS', label: 'Soumis' },
@@ -72,12 +70,50 @@ export class IdeesdeProjetComponent implements OnInit {
     this.load();
     this.loadMinisteres();
     this.loadSecteurs();
-    this.loadRegions();
-    this.loadProgrammes();
   }
 
   private resetForm(): Partial<IdeeProjet> {
-    return { code: '', titre: '', description: '', categorie: 'NOUVEAU', priorite: 'MOYENNE', coutEstime: undefined, dureeEstimee: undefined, beneficiaires: '', objectifs: '', resultatsAttendus: '', ministereId: undefined, secteurId: undefined, regionId: undefined, programmeId: undefined, statut: 'BROUILLON' };
+    const userId = this.authService?.currentUser()?.id;
+    return {
+      code: '',
+      titre: '',
+      description: '',
+      categorie: 'NOUVEAU',
+      statut: 'BROUILLON',
+      ministereId: undefined,
+      secteurId: undefined,
+      createdBy: userId || undefined,
+      actif: true
+    };
+  }
+
+  private resetNoteForm(): Partial<IdeeProjetNoteConceptuelle> {
+    return {
+      problematique: '',
+      contexte: '',
+      alignementStrategique: '',
+      beneficiairesCibles: '',
+      objectifGeneral: '',
+      objectifsSpecifiques: '',
+      resultatsAttendus: '',
+      indicateursPreliminaires: '',
+      descriptionSolution: '',
+      composantesProjet: '',
+      approcheMiseEnOeuvre: '',
+      contraintesRisques: '',
+      hypotheses: '',
+      prerequis: '',
+      beneficiairesEstimes: undefined,
+      coutEstime: undefined,
+      sourcesFinancementEnvisagees: '',
+      dureeEstimeeMois: undefined,
+      chronogrammeSynthese: '',
+      impactSocioEconomique: '',
+      impactEnvironnementalSocial: '',
+      durabilite: '',
+      zoneIntervention: '',
+      porteurProjet: ''
+    };
   }
 
   load(): void {
@@ -88,19 +124,17 @@ export class IdeesdeProjetComponent implements OnInit {
   }
 
   loadMinisteres(): void {
-    this.ministeresService.getAll().subscribe({ next: (data) => this.ministeres.set(data) });
+    this.ministeresService.getAll().subscribe({
+      next: (data) => this.ministeres.set(data),
+      error: () => this.showToast('Impossible de charger la liste des ministères', 'error')
+    });
   }
 
   loadSecteurs(): void {
-    this.secteursService.getAll().subscribe({ next: (data) => this.secteurs.set(data) });
-  }
-
-  loadRegions(): void {
-    this.regionsService.getAll().subscribe({ next: (data) => this.regions.set(data) });
-  }
-
-  loadProgrammes(): void {
-    this.programmesService.getAll().subscribe({ next: (data) => this.programmes.set(data) });
+    this.secteursService.getAll().subscribe({
+      next: (data) => this.secteurs.set(data),
+      error: () => this.showToast('Impossible de charger la liste des secteurs', 'error')
+    });
   }
 
   search(): void {
@@ -119,7 +153,17 @@ export class IdeesdeProjetComponent implements OnInit {
   closeModal(): void { this.modalOpen.set(false); }
 
   edit(item: IdeeProjet): void {
-    this.formData = { ...item };
+    this.formData = {
+      code: item.code,
+      titre: item.titre,
+      description: item.description,
+      categorie: item.categorie,
+      statut: item.statut,
+      ministereId: item.ministereId,
+      secteurId: item.secteurId,
+      createdBy: item.createdBy,
+      actif: item.actif
+    };
     this.editingItem.set(item);
     this.modalOpen.set(true);
   }
@@ -144,6 +188,42 @@ export class IdeesdeProjetComponent implements OnInit {
       error: () => {
         this.saving.set(false);
         this.showToast('Erreur lors de l\'enregistrement', 'error');
+      }
+    });
+  }
+
+  // Note Conceptuelle
+  openNoteConceptuelle(item: IdeeProjet): void {
+    this.selectedItemForNote = item;
+    this.noteData = this.resetNoteForm();
+    this.ideesService.getNoteConceptuelle(item.id).subscribe({
+      next: (note) => { this.noteData = { ...note }; },
+      error: () => {}
+    });
+    this.noteModalOpen.set(true);
+  }
+
+  closeNoteModal(): void {
+    this.noteModalOpen.set(false);
+    this.selectedItemForNote = null;
+  }
+
+  saveNoteConceptuelle(): void {
+    if (!this.selectedItemForNote) return;
+    this.savingNote.set(true);
+    const noteWithId: IdeeProjetNoteConceptuelle = {
+      ...(this.noteData as IdeeProjetNoteConceptuelle),
+      ideeProjetId: this.selectedItemForNote.id
+    };
+    this.ideesService.updateNoteConceptuelle(this.selectedItemForNote.id, noteWithId).subscribe({
+      next: () => {
+        this.savingNote.set(false);
+        this.closeNoteModal();
+        this.showToast('Note conceptuelle mise à jour avec succès', 'success');
+      },
+      error: () => {
+        this.savingNote.set(false);
+        this.showToast('Erreur lors de la mise à jour de la note conceptuelle', 'error');
       }
     });
   }
@@ -192,48 +272,20 @@ export class IdeesdeProjetComponent implements OnInit {
     return s ? s.nom : '-';
   }
 
-  getRegionNom(id: string | number | undefined): string {
-    if (!id) return '-';
-    const r = this.regions().find(r => String(r.id) === String(id));
-    return r ? r.nom : '-';
-  }
-
   getStatutLabel(statut: string | undefined): string {
     if (!statut) return '-';
     return this.statuts.find(s => s.value === statut)?.label || statut;
   }
 
   getStatutBadgeClass(statut: string | undefined): string {
-    if (!statut) return 'badge-secondary';
+    if (!statut) return 'badge-gray';
     const classes: Record<string, string> = {
-      'BROUILLON': 'badge-secondary',
+      'BROUILLON': 'badge-gray',
       'SOUMIS': 'badge-info',
       'EN_EVALUATION': 'badge-warning',
       'VALIDE': 'badge-success',
       'REJETE': 'badge-danger'
     };
-    return classes[statut] || 'badge-secondary';
-  }
-
-  getPrioriteLabel(priorite: string | undefined): string {
-    if (!priorite) return '-';
-    return this.priorites.find(p => p.value === priorite)?.label || priorite;
-  }
-
-  getPrioriteBadgeClass(priorite: string | undefined): string {
-    if (!priorite) return 'badge-secondary';
-    const classes: Record<string, string> = {
-      'HAUTE': 'badge-danger',
-      'MOYENNE': 'badge-warning',
-      'BASSE': 'badge-info'
-    };
-    return classes[priorite] || 'badge-secondary';
-  }
-
-  formatCout(value: number | undefined): string {
-    if (!value) return '-';
-    if (value >= 1000000000) return (value / 1000000000).toFixed(1) + ' Mds';
-    if (value >= 1000000) return (value / 1000000).toFixed(1) + ' M';
-    return value.toLocaleString('fr-FR') + ' FCFA';
+    return classes[statut] || 'badge-gray';
   }
 }
