@@ -134,16 +134,9 @@ aside {
   }
 }
 
-// Background image
-.main-bg {
-  background-image: url('/assets/images/backgrnd1.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-}
 
 // Page Content
 .page-content {
   @apply p-6;
 }
+

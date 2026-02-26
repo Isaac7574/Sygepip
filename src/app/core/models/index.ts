@@ -121,21 +121,33 @@ export interface IdeeProjet {
   description?: string;
   ministereId: string;
   secteurId?: string;
-  regionId?: string; // For compatibility with existing components
-  programmeId?: string; // For compatibility with existing components
-  categorie?: string;
+  portee?: 'NATIONALE' | 'REGIONALE' | 'PROVINCIALE' | 'COMMUNALE' | 'LOCALE' | string;
+  regionsIntervention?: string;
+  pointFocalNom?: string;
+  pointFocalEmail?: string;
+  pointFocalTelephone?: string;
   statut?: string;
-  priorite?: 'HAUTE' | 'MOYENNE' | 'BASSE' | string; // For compatibility
   scoreSelection?: number;
-  coutEstime?: number; // For compatibility with existing components
-  objectifs?: string; // For compatibility with existing components
-  resultatsAttendus?: string; // For compatibility with existing components
-  dureeEstimee?: number; // For compatibility with existing components
-  beneficiaires?: string; // For compatibility with existing components
   createdBy?: string;
-  actif: boolean;
+  actif?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  // === Champs Note Conceptuelle (même table) ===
+  contexte?: string;
+  alignementStrategique?: string;
+  resultatsAttendus?: string;
+  indicateursPreliminaires?: string;
+  descriptionSolution?: string;
+  composantesProjet?: string;
+  approcheMiseEnOeuvre?: string;
+  contraintesRisques?: string;
+  hypotheses?: string;
+  prerequis?: string;
+  sourcesFinancementEnvisagees?: string;
+  chronogrammeSynthese?: string;
+  impactSocioEconomique?: string;
+  impactEnvironnementalSocial?: string;
+  durabilite?: string;
 }
 
 export interface CritereSelection {
@@ -677,12 +689,8 @@ export interface Decaissement {
 // === NOTE CONCEPTUELLE ===
 export interface IdeeProjetNoteConceptuelle {
   ideeProjetId: string;
-  problematique?: string;
   contexte?: string;
   alignementStrategique?: string;
-  beneficiairesCibles?: string;
-  objectifGeneral?: string;
-  objectifsSpecifiques?: string;
   resultatsAttendus?: string;
   indicateursPreliminaires?: string;
   descriptionSolution?: string;
@@ -691,16 +699,11 @@ export interface IdeeProjetNoteConceptuelle {
   contraintesRisques?: string;
   hypotheses?: string;
   prerequis?: string;
-  beneficiairesEstimes?: number;
-  coutEstime?: number;
   sourcesFinancementEnvisagees?: string;
-  dureeEstimeeMois?: number;
   chronogrammeSynthese?: string;
   impactSocioEconomique?: string;
   impactEnvironnementalSocial?: string;
   durabilite?: string;
-  zoneIntervention?: string;
-  porteurProjet?: string;
 }
 
 // === INSCRIPTION PIP ANNUEL ===

@@ -193,6 +193,10 @@ export const routes: Routes = [
           {
             path: 'gestion-acces',
             loadComponent: () => import('./features/administration/gestion-acces/gestion-acces.component').then(m => m.GestionAccesComponent)
+          },
+          {
+            path: 'utilisateurs',
+            loadComponent: () => import('./features/administration/gestion-utilisateurs/gestion-utilisateurs.component').then(m => m.GestionUtilisateursComponent)
           }
         ]
       },

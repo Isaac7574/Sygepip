@@ -23,7 +23,9 @@
   }
   
   body {
-    @apply font-sans text-gray-900 bg-gray-50 antialiased;
+    @apply font-sans text-gray-900 antialiased;
+    background: linear-gradient(135deg, #d1fae5 0%, #e0f2fe 100%);
+    min-height: 100vh;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -460,4 +462,20 @@
   .no-print {
     display: none !important;
   }
+}
+
+// Nav overrides inside light green sidebar
+aside .nav-link {
+  color: #006633; // primary-700
+
+  &:hover {
+    background-color: #bbf7d0; // primary-200
+    color: #004d26; // primary-800
+  }
+}
+
+aside .nav-link-active {
+  background-color: #009E49; // primary-500
+  color: #ffffff;
+  font-weight: 600;
 }
