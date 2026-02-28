@@ -1,10 +1,10 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">Documents Idées Projet</h1>
-      <p class="text-gray-500">Gestion des documents associés aux idées de projet</p>
+      <h1 class="text-2xl font-bold text-gray-900">Documents Projets</h1>
+      <p class="text-gray-500">Gestion des documents associés aux projets PIP</p>
     </div>
-    <button (click)="openModal()" [disabled]="!selectedIdeeProjetId" class="btn-primary" [class.opacity-50]="!selectedIdeeProjetId">
+    <button (click)="openModal()" [disabled]="!selectedProjetId" class="btn-primary" [class.opacity-50]="!selectedProjetId">
       <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
       </svg>
@@ -16,11 +16,11 @@
   <div class="card p-4">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label class="form-label">Idée Projet *</label>
-        <select [(ngModel)]="selectedIdeeProjetId" (ngModelChange)="onIdeeProjetChange()" class="form-input">
-          <option value="">-- Sélectionner une idée projet --</option>
-          @for (ip of ideesProjet(); track ip.id) {
-            <option [value]="ip.id">{{ ip.code }} - {{ ip.titre }}</option>
+        <label class="form-label">Projet *</label>
+        <select [(ngModel)]="selectedProjetId" (ngModelChange)="onProjetChange()" class="form-input">
+          <option value="">-- Sélectionner un projet --</option>
+          @for (p of projets(); track p.id) {
+            <option [value]="p.id">{{ p.code }} - {{ p.titre }}</option>
           }
         </select>
       </div>
@@ -86,10 +86,10 @@
         } @empty {
           <tr>
             <td colspan="7" class="px-6 py-12 text-center text-gray-500">
-              @if (!selectedIdeeProjetId) {
-                Sélectionnez une idée projet pour voir ses documents
+              @if (!selectedProjetId) {
+                Sélectionnez un projet pour voir ses documents
               } @else {
-                Aucun document trouvé pour cette idée projet
+                Aucun document trouvé pour ce projet
               }
             </td>
           </tr>
@@ -113,8 +113,8 @@
       </div>
       <div class="modal-body space-y-4">
         <div class="form-group">
-          <label class="form-label">Idée Projet</label>
-          <input type="text" [value]="getIdeeProjetNom(selectedIdeeProjetId)" class="form-input bg-gray-100" readonly>
+          <label class="form-label">Projet</label>
+          <input type="text" [value]="getProjetNom(selectedProjetId)" class="form-input bg-gray-100" readonly>
         </div>
         <div class="form-group">
           <label class="form-label">Type de document *</label>

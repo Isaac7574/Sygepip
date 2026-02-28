@@ -1,49 +1,48 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DocumentIdeeService } from '@core/services/document-idee.service';
-import { IdeesProjetService } from '@core/services/idees-projet.service';
+import { DocumentProjetService } from '@core/services/document-projet.service';
+import { ProjetsService } from '@core/services/projets.service';
 import {
-  DocumentIdeeProjetResponseDTO,
-  IdeeProjet,
+  DocumentProjetResponseDTO,
+  Projet,
   TypeDocumentProjet
 } from '@core/models';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 
 @Component({
-  selector: 'app-documents',
+  selector: 'app-documents-projet',
   standalone: true,
   imports: [CommonModule, FormsModule, ConfirmDialogComponent, ToastComponent],
-  templateUrl: './documents.component.html',
-  styleUrl: './documents.component.scss'
+  templateUrl: './documents-projet.component.html',
+  styleUrl: './documents-projet.component.scss'
 })
-export class DocumentsComponent implements OnInit {
-  private documentIdeeService = inject(DocumentIdeeService);
-  private ideesProjetService = inject(IdeesProjetService);
+export class DocumentsProjetComponent implements OnInit {
+  private documentProjetService = inject(DocumentProjetService);
+  private projetsService = inject(ProjetsService);
 
-  items = signal<DocumentIdeeProjetResponseDTO[]>([]);
-  filteredItems = signal<DocumentIdeeProjetResponseDTO[]>([]);
-  ideesProjet = signal<IdeeProjet[]>([]);
+  items = signal<DocumentProjetResponseDTO[]>([]);
+  filteredItems = signal<DocumentProjetResponseDTO[]>([]);
+  projets = signal<Projet[]>([]);
   searchTerm = '';
   modalOpen = signal(false);
-  saving = signal(false);
   uploading = signal(false);
 
   // Form data
   selectedFile: File | null = null;
-  selectedIdeeProjetId = '';
+  selectedProjetId = '';
   selectedTypeDocument: TypeDocumentProjet | '' = '';
 
   // Versions history modal
   versionsModalOpen = signal(false);
-  versionsItems = signal<DocumentIdeeProjetResponseDTO[]>([]);
+  versionsItems = signal<DocumentProjetResponseDTO[]>([]);
   versionsLoading = signal(false);
 
   confirmDialogVisible = signal(false);
   confirmDialogTitle = '';
   confirmDialogMessage = '';
-  itemToDelete: DocumentIdeeProjetResponseDTO | null = null;
+  itemToDelete: DocumentProjetResponseDTO | null = null;
 
   toastVisible = signal(false);
   toastMessage = '';
@@ -61,23 +60,23 @@ export class DocumentsComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.loadIdeesProjet();
+    this.loadProjets();
   }
 
-  loadIdeesProjet(): void {
-    this.ideesProjetService.getAll().subscribe({
-      next: (data) => this.ideesProjet.set(data),
-      error: () => this.showToast('Erreur lors du chargement des idées projet', 'error')
+  loadProjets(): void {
+    this.projetsService.getAll().subscribe({
+      next: (data) => this.projets.set(data),
+      error: () => this.showToast('Erreur lors du chargement des projets', 'error')
     });
   }
 
-  loadDocumentsByIdee(ideeProjetId: string): void {
-    if (!ideeProjetId) {
+  loadDocumentsByProjet(projetId: string): void {
+    if (!projetId) {
       this.items.set([]);
       this.filteredItems.set([]);
       return;
     }
-    this.documentIdeeService.getByIdeeProjet(ideeProjetId).subscribe({
+    this.documentProjetService.getByProjet(projetId).subscribe({
       next: (data) => {
         this.items.set(data);
         this.filteredItems.set(data);
@@ -93,7 +92,7 @@ export class DocumentsComponent implements OnInit {
     }
 
     // Recherche via API
-    this.documentIdeeService.recherche(this.searchTerm).subscribe({
+    this.documentProjetService.recherche(this.searchTerm).subscribe({
       next: (data) => this.filteredItems.set(data),
       error: () => {
         // Fallback local search
@@ -106,8 +105,8 @@ export class DocumentsComponent implements OnInit {
     });
   }
 
-  onIdeeProjetChange(): void {
-    this.loadDocumentsByIdee(this.selectedIdeeProjetId);
+  onProjetChange(): void {
+    this.loadDocumentsByProjet(this.selectedProjetId);
   }
 
   openModal(): void {
@@ -128,21 +127,21 @@ export class DocumentsComponent implements OnInit {
   }
 
   upload(): void {
-    if (!this.selectedFile || !this.selectedTypeDocument || !this.selectedIdeeProjetId) {
-      this.showToast('Veuillez sélectionner une idée projet, un type et un fichier', 'error');
+    if (!this.selectedFile || !this.selectedTypeDocument || !this.selectedProjetId) {
+      this.showToast('Veuillez sélectionner un projet, un type et un fichier', 'error');
       return;
     }
 
     this.uploading.set(true);
-    this.documentIdeeService.upload(
+    this.documentProjetService.upload(
       this.selectedFile,
       this.selectedTypeDocument as TypeDocumentProjet,
-      this.selectedIdeeProjetId
+      this.selectedProjetId
     ).subscribe({
       next: () => {
         this.uploading.set(false);
         this.closeModal();
-        this.loadDocumentsByIdee(this.selectedIdeeProjetId);
+        this.loadDocumentsByProjet(this.selectedProjetId);
         this.showToast('Document uploadé avec succès', 'success');
       },
       error: () => {
@@ -152,15 +151,15 @@ export class DocumentsComponent implements OnInit {
     });
   }
 
-  download(item: DocumentIdeeProjetResponseDTO): void {
-    this.documentIdeeService.downloadAndSave(item.id, item.titre);
+  download(item: DocumentProjetResponseDTO): void {
+    this.documentProjetService.downloadAndSave(item.id, item.titre);
   }
 
-  showVersions(item: DocumentIdeeProjetResponseDTO): void {
+  showVersions(item: DocumentProjetResponseDTO): void {
     this.versionsLoading.set(true);
     this.versionsModalOpen.set(true);
 
-    this.documentIdeeService.getVersions(item.ideeProjetId, item.typeDocument).subscribe({
+    this.documentProjetService.getVersions(item.projetId, item.typeDocument).subscribe({
       next: (data) => {
         this.versionsItems.set(data);
         this.versionsLoading.set(false);
@@ -177,7 +176,7 @@ export class DocumentsComponent implements OnInit {
     this.versionsItems.set([]);
   }
 
-  confirmDelete(item: DocumentIdeeProjetResponseDTO): void {
+  confirmDelete(item: DocumentProjetResponseDTO): void {
     this.itemToDelete = item;
     this.confirmDialogTitle = 'Supprimer le document';
     this.confirmDialogMessage = `Êtes-vous sûr de vouloir supprimer le document "${item.titre}" ?`;
@@ -186,9 +185,9 @@ export class DocumentsComponent implements OnInit {
 
   onConfirmDelete(): void {
     if (this.itemToDelete) {
-      this.documentIdeeService.delete(this.itemToDelete.id).subscribe({
+      this.documentProjetService.delete(this.itemToDelete.id).subscribe({
         next: () => {
-          this.loadDocumentsByIdee(this.selectedIdeeProjetId);
+          this.loadDocumentsByProjet(this.selectedProjetId);
           this.showToast('Document supprimé avec succès', 'success');
         },
         error: () => this.showToast('Erreur lors de la suppression', 'error')
@@ -209,10 +208,10 @@ export class DocumentsComponent implements OnInit {
     this.toastVisible.set(true);
   }
 
-  getIdeeProjetNom(id: string | undefined): string {
+  getProjetNom(id: string | undefined): string {
     if (!id) return '-';
-    const ip = this.ideesProjet().find(ip => String(ip.id) === String(id));
-    return ip ? `${ip.code} - ${ip.titre}` : '-';
+    const p = this.projets().find(p => String(p.id) === String(id));
+    return p ? `${p.code} - ${p.titre}` : '-';
   }
 
   getTypeDocumentLabel(type: TypeDocumentProjet): string {
