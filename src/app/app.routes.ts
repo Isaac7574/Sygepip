@@ -125,6 +125,10 @@ export const routes: Routes = [
           {
             path: 'enveloppes',
             loadComponent: () => import('./features/pip/enveloppes/enveloppes.component').then(m => m.EnveloppesComponent)
+          },
+          {
+            path: 'documents',
+            loadComponent: () => import('./features/pip/documents-projet/documents-projet.component').then(m => m.DocumentsProjetComponent)
           }
         ]
       },

@@ -221,6 +221,62 @@ export interface DocumentProjet {
   updatedAt?: Date;
 }
 
+// === DTOs DOCUMENTS API ===
+export type TypeDocumentProjet =
+  | 'NOTE_CONCEPTUELLE'
+  | 'ETUDE_FAISABILITE'
+  | 'RAPPORT_TECHNIQUE'
+  | 'PLAN_FINANCEMENT'
+  | 'CAHIER_CHARGES'
+  | 'RAPPORT_AVANCEMENT'
+  | 'PV_RECEPTION'
+  | 'AUTRE';
+
+export type StatutDocument = 'EN_ATTENTE' | 'VALIDE' | 'REJETE';
+export type DecisionDocument = 'ACCEPTE' | 'REFUSE' | 'EN_ATTENTE';
+
+export interface DocumentProjetResponseDTO {
+  id: string;
+  typeDocument: TypeDocumentProjet;
+  titre: string;
+  projetId: string;
+  fichierId: string;
+  version: string;
+  statut: StatutDocument;
+  decision: DecisionDocument;
+  justificationDecision?: string;
+  dateDecision?: Date;
+  decidePar?: string;
+  actif: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DocumentIdeeProjetResponseDTO {
+  id: string;
+  typeDocument: TypeDocumentProjet;
+  titre: string;
+  ideeProjetId: string;
+  fichierId: string;
+  version: string;
+  statut: StatutDocument;
+  decision: DecisionDocument;
+  justificationDecision?: string;
+  dateDecision?: Date;
+  decidePar?: string;
+  actif: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DocumentUploadRequest {
+  file: File;
+  typeDocument: TypeDocumentProjet;
+  projetId?: string;
+  ideeProjetId?: string;
+  userId?: string;
+}
+
 export interface PlanFinancement {
   id: string;
   projetId: string;
