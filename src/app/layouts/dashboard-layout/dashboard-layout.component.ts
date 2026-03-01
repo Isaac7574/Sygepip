@@ -16,6 +16,15 @@ export class DashboardLayoutComponent {
   sidebarOpen = signal(true);
   userMenuOpen = signal(false);
 
+  // Collapsible sections — fermés par défaut
+  referentielsOpen = signal(false);
+  maturationOpen = signal(false);
+  pipOpen = signal(false);
+  suiviOpen = signal(false);
+  rapportsOpen = signal(false);
+  gestionOpen = signal(false);
+  adminOpen = signal(false);
+
   toggleSidebar(): void {
     this.sidebarOpen.update(v => !v);
   }
@@ -23,6 +32,14 @@ export class DashboardLayoutComponent {
   toggleUserMenu(): void {
     this.userMenuOpen.update(v => !v);
   }
+
+  toggleReferentiels(): void { this.referentielsOpen.update(v => !v); }
+  toggleMaturation(): void { this.maturationOpen.update(v => !v); }
+  togglePip(): void { this.pipOpen.update(v => !v); }
+  toggleSuivi(): void { this.suiviOpen.update(v => !v); }
+  toggleRapports(): void { this.rapportsOpen.update(v => !v); }
+  toggleGestion(): void { this.gestionOpen.update(v => !v); }
+  toggleAdmin(): void { this.adminOpen.update(v => !v); }
 
   getUserInitials(): string {
     const user = this.authService.currentUser();

@@ -64,6 +64,11 @@ export class GestionUtilisateursComponent implements OnInit {
     { value: 'AUTRE', label: 'Autre' }
   ];
 
+  // KPI stats
+  get activeUsersCount(): number { return this.filteredUsers().filter(u => u.actif).length; }
+  get inactiveUsersCount(): number { return this.filteredUsers().filter(u => !u.actif).length; }
+  get adminUsersCount(): number { return this.filteredUsers().filter(u => u.role === 'ADMIN').length; }
+
   // Directions filtrées selon le ministère sélectionné
   get directionsFiltered(): Direction[] {
     if (!this.formData.ministereId) return this.directions();

@@ -23,9 +23,7 @@
   }
   
   body {
-    @apply font-sans text-gray-900 antialiased;
-    background: linear-gradient(135deg, #d1fae5 0%, #e0f2fe 100%);
-    min-height: 100vh;
+    @apply font-sans text-gray-900 antialiased bg-white;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -45,19 +43,19 @@
   }
   
   .btn-secondary {
-    @apply btn bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500;
+    @apply btn bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500 shadow-sm hover:shadow-md active:scale-[0.98];
   }
-  
+
   .btn-outline {
-    @apply btn border-2 border-primary-500 text-primary-600 hover:bg-primary-50 focus:ring-primary-500;
+    @apply btn border-2 border-primary-500 text-primary-600 hover:bg-primary-50 focus:ring-primary-500 shadow-sm hover:shadow-md active:scale-[0.98];
   }
-  
+
   .btn-danger {
-    @apply btn bg-bf-red-500 text-white hover:bg-bf-red-600 focus:ring-bf-red-500;
+    @apply btn bg-bf-red-500 text-white hover:bg-bf-red-600 focus:ring-bf-red-500 shadow-sm hover:shadow-md active:scale-[0.98];
   }
-  
+
   .btn-success {
-    @apply btn bg-emerald-500 text-white hover:bg-emerald-600 focus:ring-emerald-500;
+    @apply btn bg-emerald-500 text-white hover:bg-emerald-600 focus:ring-emerald-500 shadow-sm hover:shadow-md active:scale-[0.98];
   }
   
   .btn-ghost {
@@ -131,7 +129,8 @@
 
   // Cards
   .card {
-    @apply bg-white rounded-2xl shadow-card p-6 transition-shadow hover:shadow-soft;
+    @apply rounded-lg border border-gray-300 p-6 shadow-sm;
+    background-color: #fffffc;
   }
   
   .card-header {
@@ -244,12 +243,12 @@
   }
   
   .modal-content {
-    @apply bg-white rounded-2xl shadow-elevated max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in;
+    @apply bg-white rounded-xl border border-gray-200 shadow-soft max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in;
   }
 
   // Variante : hauteur libre, s'adapte au contenu (pour les grands formulaires)
   .modal-content-fit {
-    @apply bg-white rounded-2xl shadow-elevated w-full overflow-y-auto animate-scale-in;
+    @apply bg-white rounded-xl border border-gray-200 shadow-soft w-full overflow-y-auto animate-scale-in;
     max-height: 94vh;
   }
   
@@ -479,18 +478,26 @@
   }
 }
 
-// Nav overrides inside light green sidebar
+// Nav overrides inside solid green sidebar
 aside .nav-link {
-  color: #006633; // primary-700
+  color: rgba(255, 255, 255, 0.85);
 
   &:hover {
-    background-color: #bbf7d0; // primary-200
-    color: #004d26; // primary-800
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
   }
 }
 
 aside .nav-link-active {
-  background-color: #009E49; // primary-500
+  background-color: rgba(0, 0, 0, 0.2);
   color: #ffffff;
   font-weight: 600;
+}
+
+// Mini sidebar: icon-only mode
+aside nav.sidebar-mini .nav-link {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+  gap: 0;
 }
