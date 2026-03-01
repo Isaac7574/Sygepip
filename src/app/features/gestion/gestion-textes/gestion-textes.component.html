@@ -1,28 +1,36 @@
 <div class="space-y-6">
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Gestion des Textes Réglementaires</h1>
-      <p class="text-gray-500">Gérer les textes de loi, décrets, arrêtés et circulaires</p>
-    </div>
-    <button (click)="openModal()" class="btn-primary">
-      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-      </svg>
-      Nouveau Texte
-    </button>
-  </div>
-
-  <!-- Search -->
-  <div class="card p-4">
-    <div class="flex gap-4">
-      <div class="flex-1">
-        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher un texte réglementaire..." class="form-input">
+  <div class="page-header-section">
+    <div class="page-header-left">
+      <div class="page-header-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+        </svg>
+      </div>
+      <div class="page-header-text">
+        <h1>
+          Textes Réglementaires
+          <span class="page-header-badge">Contenu</span>
+        </h1>
+        <p>Gérer les textes de loi, décrets, arrêtés et circulaires</p>
       </div>
     </div>
   </div>
 
-  <!-- Table -->
   <div class="card overflow-hidden">
+    <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50/50">
+      <div class="relative w-full max-w-sm">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher un texte réglementaire..." class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+      </div>
+      <button (click)="openModal()" class="btn-primary">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nouveau Texte
+      </button>
+    </div>
     <table class="w-full">
       <thead class="bg-gray-50">
         <tr>

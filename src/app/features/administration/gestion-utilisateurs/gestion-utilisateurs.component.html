@@ -1,11 +1,24 @@
 <div class="space-y-6">
 
   <!-- ===== EN-TÊTE ===== -->
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Gestion des utilisateurs</h1>
-      <p class="text-sm text-gray-500 mt-0.5">Créer et gérer les comptes utilisateurs du système</p>
+  <div class="page-header-section">
+    <div class="page-header-left">
+      <div class="page-header-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <div class="page-header-text">
+        <h1>
+          Gestion des utilisateurs
+          <span class="page-header-badge">Administration</span>
+        </h1>
+        <p>Créer et gérer les comptes utilisateurs du système</p>
+      </div>
     </div>
+  </div>
+
+  <div class="flex justify-end mb-6">
     <button (click)="openModal()" class="btn-primary flex items-center gap-2">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -18,7 +31,7 @@
   <div class="grid grid-cols-4 gap-4">
 
     <!-- Total -->
-    <div class="border border-gray-300 rounded-lg p-5 shadow-sm" style="background-color: #fffffc;">
+    <div class="admin-stat-card">
       <div class="flex items-start justify-between">
         <div class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
           <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,7 +47,7 @@
     </div>
 
     <!-- Actifs -->
-    <div class="border border-gray-300 rounded-lg p-5 shadow-sm" style="background-color: #fffffc;">
+    <div class="admin-stat-card">
       <div class="flex items-start justify-between">
         <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
           <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,7 +63,7 @@
     </div>
 
     <!-- Inactifs -->
-    <div class="border border-gray-300 rounded-lg p-5 shadow-sm" style="background-color: #fffffc;">
+    <div class="admin-stat-card">
       <div class="flex items-start justify-between">
         <div class="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center">
           <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,7 +79,7 @@
     </div>
 
     <!-- Administrateurs -->
-    <div class="border border-gray-300 rounded-lg p-5 shadow-sm" style="background-color: #fffffc;">
+    <div class="admin-stat-card">
       <div class="flex items-start justify-between">
         <div class="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center">
           <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,7 +97,7 @@
   </div>
 
   <!-- ===== TABLEAU ===== -->
-  <div class="border border-gray-300 rounded-lg overflow-hidden shadow-sm" style="background-color: #fffffc;">
+  <div class="admin-table-container">
 
     <!-- Barre outils du tableau -->
     <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -231,7 +244,7 @@
 @if (modalOpen()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="closeModal()"></div>
-    <div class="relative bg-white rounded-xl shadow-soft w-full max-w-2xl max-h-[90vh] flex flex-col">
+    <div class="admin-modal w-full max-w-2xl max-h-[90vh] flex flex-col">
 
       <!-- En-tête modal -->
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">

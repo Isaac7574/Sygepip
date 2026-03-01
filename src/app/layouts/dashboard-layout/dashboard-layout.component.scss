@@ -9,8 +9,20 @@
 
 // Sidebar
 aside {
-  @apply fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200;
+  @apply fixed inset-y-0 left-0 z-50 w-64;
   @apply transform transition-transform duration-300;
+}
+
+// Green sidebar with white dashed border
+.sidebar-glass {
+  background: #00843B;
+  border-right: 2px dashed rgba(255, 255, 255, 0.7);
+
+  // Ensure content is above overlays
+  > * {
+    position: relative;
+    z-index: 2;
+  }
 }
 
 .sidebar-logo {

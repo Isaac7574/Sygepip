@@ -1,24 +1,35 @@
 <div class="space-y-6">
   <!-- Header -->
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Tableau de bord</h1>
-      <p class="text-gray-500">Vue d'ensemble du Programme d'Investissement Public</p>
-    </div>
-    <div class="flex gap-3">
-      <button class="btn-outline">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+  <div class="page-header-section">
+    <div class="page-header-left">
+      <div class="page-header-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
         </svg>
-        Exporter
-      </button>
-      <a routerLink="/app/maturation/idees-projet" class="btn-primary">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        Nouveau Projet
-      </a>
+      </div>
+      <div class="page-header-text">
+        <h1>
+          Tableau de bord
+          <span class="page-header-badge">PIP</span>
+        </h1>
+        <p>Vue d'ensemble du Programme d'Investissement Public</p>
+      </div>
     </div>
+  </div>
+
+  <div class="flex justify-end gap-3 mb-6">
+    <button class="btn-outline">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+      </svg>
+      Exporter
+    </button>
+    <a routerLink="/app/maturation/idees-projet" class="btn-primary">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Nouveau Projet
+    </a>
   </div>
 
   <!-- Stats Cards -->

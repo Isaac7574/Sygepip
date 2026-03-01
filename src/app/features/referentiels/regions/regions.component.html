@@ -1,28 +1,37 @@
 <div class="space-y-6">
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Régions</h1>
-      <p class="text-gray-500">Gestion des régions du Burkina Faso</p>
-    </div>
-    <button (click)="openModal()" class="btn-primary">
-      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-      </svg>
-      Nouvelle Région
-    </button>
-  </div>
-
-  <!-- Search -->
-  <div class="card p-4">
-    <div class="flex gap-4">
-      <div class="flex-1">
-        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher une région..." class="form-input">
+  <div class="page-header-section">
+    <div class="page-header-left">
+      <div class="page-header-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <div class="page-header-text">
+        <h1>
+          Régions
+          <span class="page-header-badge">Référentiels</span>
+        </h1>
+        <p>Gestion des régions du Burkina Faso</p>
       </div>
     </div>
   </div>
 
-  <!-- Table -->
   <div class="card overflow-hidden">
+    <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50/50">
+      <div class="relative w-full max-w-sm">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher une région..." class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+      </div>
+      <button (click)="openModal()" class="btn-primary">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nouvelle Région
+      </button>
+    </div>
     <table class="w-full">
       <thead class="bg-gray-50">
         <tr>
