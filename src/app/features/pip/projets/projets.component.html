@@ -81,129 +81,148 @@
 <!-- Detail Modal -->
 @if (detailOpen() && viewingItem()) {
   <div class="modal-overlay" (click)="closeDetail()">
-    <div class="modal-content w-full max-w-4xl" (click)="$event.stopPropagation()">
+    <div class="modal-content max-w-4xl" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="text-lg font-semibold">Détail du Projet</h3>
-        <button (click)="closeDetail()" class="text-gray-400 hover:text-gray-600">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
-      <div class="modal-body max-h-[80vh] overflow-y-auto">
-        <!-- Header du projet -->
-        <div class="flex items-start justify-between mb-6">
+        <div class="flex items-center gap-3">
           <div>
-            <div class="flex items-center gap-3 mb-1">
-              <span class="text-sm font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{{ viewingItem()!.code }}</span>
+            <div class="flex items-center gap-2 mb-0.5">
+              <span class="font-mono text-sm font-bold text-gray-500">{{ viewingItem()!.code }}</span>
               <span class="badge" [ngClass]="getStatutBadgeClass(viewingItem()!.statut)">{{ getStatutLabel(viewingItem()!.statut) }}</span>
               @if (viewingItem()!.actif) {
                 <span class="badge badge-success">Actif</span>
               } @else {
-                <span class="badge badge-secondary">Inactif</span>
+                <span class="badge badge-gray">Inactif</span>
               }
             </div>
-            <h2 class="text-xl font-bold text-gray-900">{{ viewingItem()!.titre }}</h2>
+            <h3 class="text-lg font-semibold text-gray-900">{{ viewingItem()!.titre }}</h3>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button (click)="closeDetail(); edit(viewingItem()!)" class="text-primary-600 hover:text-primary-800" title="Modifier">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+          </button>
+          <button (click)="closeDetail()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-body space-y-5">
+
+        <!-- ── Rattachement institutionnel ── -->
+        <div>
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Rattachement institutionnel</p>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="bg-gray-50 rounded-xl p-3">
+              <p class="text-xs text-gray-400 mb-1">Ministère</p>
+              <p class="text-sm font-medium text-gray-800">{{ getMinistereNom(viewingItem()!.ministereId) || '—' }}</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-3">
+              <p class="text-xs text-gray-400 mb-1">Secteur</p>
+              <p class="text-sm font-medium text-gray-800">{{ getSecteurNom(viewingItem()!.secteurId) || '—' }}</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-3">
+              <p class="text-xs text-gray-400 mb-1">Région</p>
+              <p class="text-sm font-medium text-gray-800">{{ getRegionNom(viewingItem()!.regionId) || '—' }}</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-3">
+              <p class="text-xs text-gray-400 mb-1">Programme</p>
+              <p class="text-sm font-medium text-gray-800">{{ getProgrammeNom(viewingItem()!.programmeId) || '—' }}</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-3 col-span-2">
+              <p class="text-xs text-gray-400 mb-1">Idée de projet source</p>
+              <p class="text-sm font-medium text-gray-800">{{ getIdeeProjetNom(viewingItem()!.ideeProjetId) || '—' }}</p>
+            </div>
           </div>
         </div>
 
-
-        <!-- Informations générales -->
-        <div class="mb-6">
-          <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3 border-b pb-2">Informations générales</h4>
-          <div class="grid grid-cols-2 gap-x-8 gap-y-3">
-            <div>
-              <span class="text-sm text-gray-500">Catégorie</span>
-              <p class="text-sm font-medium text-gray-900">{{ getCategorieLabel(viewingItem()!.categorie) }}</p>
+        <!-- ── Classification & Finances ── -->
+        <div>
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Classification & Finances</p>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="bg-gray-50 rounded-xl p-3">
+              <p class="text-xs text-gray-400 mb-1">Catégorie</p>
+              <p class="text-sm font-medium text-gray-800">{{ getCategorieLabel(viewingItem()!.categorie) || '—' }}</p>
             </div>
-            <div>
-              <span class="text-sm text-gray-500">Ministère</span>
-              <p class="text-sm font-medium text-gray-900">{{ getMinistereNom(viewingItem()!.ministereId) }}</p>
+            <div class="bg-gray-50 rounded-xl p-3">
+              <p class="text-xs text-gray-400 mb-1">Statut</p>
+              <span class="badge mt-0.5" [ngClass]="getStatutBadgeClass(viewingItem()!.statut)">{{ getStatutLabel(viewingItem()!.statut) }}</span>
             </div>
-            <div>
-              <span class="text-sm text-gray-500">Secteur</span>
-              <p class="text-sm font-medium text-gray-900">{{ getSecteurNom(viewingItem()!.secteurId) }}</p>
-            </div>
-            <div>
-              <span class="text-sm text-gray-500">Région</span>
-              <p class="text-sm font-medium text-gray-900">{{ getRegionNom(viewingItem()!.regionId) }}</p>
-            </div>
-            <div>
-              <span class="text-sm text-gray-500">Programme</span>
-              <p class="text-sm font-medium text-gray-900">{{ getProgrammeNom(viewingItem()!.programmeId) }}</p>
-            </div>
-            <div>
-              <span class="text-sm text-gray-500">Idée de projet source</span>
-              <p class="text-sm font-medium text-gray-900">{{ getIdeeProjetNom(viewingItem()!.ideeProjetId) }}</p>
+            <div class="bg-gray-50 rounded-xl p-3">
+              <p class="text-xs text-gray-400 mb-1">Coût total</p>
+              <p class="text-sm font-semibold text-gray-800">{{ formatBudget(viewingItem()!.coutTotal) }}</p>
             </div>
           </div>
         </div>
 
-        <!-- Description, Objectifs, Résultats -->
-        @if (viewingItem()!.description) {
-          <div class="mb-4">
-            <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-2 border-b pb-2">Description</h4>
-            <p class="text-sm text-gray-700 whitespace-pre-line">{{ viewingItem()!.description }}</p>
+        <!-- ── Description & Objectifs ── -->
+        @if (viewingItem()!.description || viewingItem()!.objectifs) {
+          <div>
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Description & Objectifs</p>
+            <div class="grid grid-cols-1 gap-3">
+              @if (viewingItem()!.description) {
+                <div class="bg-gray-50 rounded-xl p-3">
+                  <p class="text-xs text-gray-400 mb-1">Description</p>
+                  <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ viewingItem()!.description }}</p>
+                </div>
+              }
+              @if (viewingItem()!.objectifs) {
+                <div class="bg-gray-50 rounded-xl p-3">
+                  <p class="text-xs text-gray-400 mb-1">Objectifs</p>
+                  <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ viewingItem()!.objectifs }}</p>
+                </div>
+              }
+            </div>
           </div>
         }
-        <div class="grid grid-cols-2 gap-6 mb-6">
-          @if (viewingItem()!.objectifs) {
-            <div>
-              <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-2 border-b pb-2">Objectifs</h4>
-              <p class="text-sm text-gray-700 whitespace-pre-line">{{ viewingItem()!.objectifs }}</p>
-            </div>
-          }
-        </div>
 
-        <!-- Finances -->
-        <div class="mb-6">
-          <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3 border-b pb-2">Finances</h4>
-          <div class="grid grid-cols-2 gap-x-8 gap-y-3">
-            <div>
-              <span class="text-sm text-gray-500">Coût total</span>
-              <p class="text-sm font-medium text-gray-900">{{ formatBudget(viewingItem()!.coutTotal) }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Planification -->
-        <div class="mb-6">
-          <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3 border-b pb-2">Planification</h4>
-          <div class="grid grid-cols-3 gap-x-8 gap-y-3">
-            <div>
-              <span class="text-sm text-gray-500">Date de début prévue</span>
-              <p class="text-sm font-medium text-gray-900">{{ formatDate(viewingItem()!.dateDebutPrevu) }}</p>
-            </div>
-            <div>
-              <span class="text-sm text-gray-500">Date de fin prévue</span>
-              <p class="text-sm font-medium text-gray-900">{{ formatDate(viewingItem()!.dateFinPrevu) }}</p>
-            </div>
-            <div>
-              <span class="text-sm text-gray-500">Durée</span>
-              <p class="text-sm font-medium text-gray-900">{{ viewingItem()!.dureeEnMois ? viewingItem()!.dureeEnMois + ' mois' : '-' }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Géolocalisation -->
+        <!-- ── Planification ── -->
         <div>
-          <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3 border-b pb-2">Autres informations</h4>
-          <div class="grid grid-cols-3 gap-x-8 gap-y-3">
-            <div>
-              <span class="text-sm text-gray-500">Latitude</span>
-              <p class="text-sm font-medium text-gray-900">{{ viewingItem()!.latitude ?? '-' }}</p>
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Planification</p>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="bg-gray-50 rounded-xl p-3">
+              <p class="text-xs text-gray-400 mb-1">Date de début prévue</p>
+              <p class="text-sm font-medium text-gray-800">{{ formatDate(viewingItem()!.dateDebutPrevu) || '—' }}</p>
             </div>
-            <div>
-              <span class="text-sm text-gray-500">Longitude</span>
-              <p class="text-sm font-medium text-gray-900">{{ viewingItem()!.longitude ?? '-' }}</p>
+            <div class="bg-gray-50 rounded-xl p-3">
+              <p class="text-xs text-gray-400 mb-1">Date de fin prévue</p>
+              <p class="text-sm font-medium text-gray-800">{{ formatDate(viewingItem()!.dateFinPrevu) || '—' }}</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-3">
+              <p class="text-xs text-gray-400 mb-1">Durée</p>
+              <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.dureeEnMois ? viewingItem()!.dureeEnMois + ' mois' : '—' }}</p>
             </div>
           </div>
         </div>
+
+        <!-- ── Géolocalisation ── -->
+        @if (viewingItem()!.latitude != null || viewingItem()!.longitude != null) {
+          <div>
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Géolocalisation</p>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="bg-gray-50 rounded-xl p-3">
+                <p class="text-xs text-gray-400 mb-1">Latitude</p>
+                <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.latitude ?? '—' }}</p>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-3">
+                <p class="text-xs text-gray-400 mb-1">Longitude</p>
+                <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.longitude ?? '—' }}</p>
+              </div>
+            </div>
+          </div>
+        }
+
       </div>
       <div class="modal-footer">
         <button (click)="closeDetail()" class="btn-outline">Fermer</button>
         <button (click)="closeDetail(); edit(viewingItem()!)" class="btn-primary">
-          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
           Modifier
         </button>
       </div>
@@ -213,159 +232,207 @@
 
 @if (modalOpen()) {
   <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-content w-full max-w-4xl" (click)="$event.stopPropagation()">
+    <div class="modal-content-fit max-w-4xl" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier' : 'Nouveau' }} Projet</h3>
+        <h3 class="text-lg font-semibold">
+          {{ editingItem() ? 'Modifier le projet' : 'Nouveau projet PIP' }}
+        </h3>
         <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
       </div>
-      <div class="modal-body space-y-4 max-h-[80vh] overflow-y-auto">
-        <!-- Identification -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-group">
-            <label class="form-label">Code *</label>
-            <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: PRJ-001">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Idée de projet source</label>
-            <select [(ngModel)]="formData.ideeProjetId" class="form-input">
-              <option [ngValue]="undefined">-- Aucune --</option>
-              @for (ip of ideesProjet(); track ip.id) {
-                <option [ngValue]="ip.id">{{ ip.code }} - {{ ip.titre }}</option>
-              }
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Titre *</label>
-          <input type="text" [(ngModel)]="formData.titre" class="form-input" placeholder="Titre du projet">
-        </div>
+      <div class="modal-body space-y-6">
 
-        <!-- Rattachement institutionnel -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-group">
-            <label class="form-label">Ministère *</label>
-            <select [(ngModel)]="formData.ministereId" class="form-input" required>
-              <option [ngValue]="undefined">-- Sélectionner --</option>
-              @for (m of ministeres(); track m.id) {
-                <option [ngValue]="m.id">{{ m.sigle }} - {{ m.nom }}</option>
-              }
-            </select>
+        <!-- ── Identification ── -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identification</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Secteur</label>
-            <select [(ngModel)]="formData.secteurId" class="form-input">
-              <option [ngValue]="undefined">-- Sélectionner --</option>
-              @for (s of secteurs(); track s.id) {
-                <option [ngValue]="s.id">{{ s.nom }}</option>
-              }
-            </select>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="form-label">Code <span class="text-red-500">*</span></label>
+              <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: PRJ-2026-001">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Idée de projet source</label>
+              <select [(ngModel)]="formData.ideeProjetId" class="form-input">
+                <option [ngValue]="undefined">— Aucune —</option>
+                @for (ip of ideesProjet(); track ip.id) {
+                  <option [ngValue]="ip.id">{{ ip.code }} — {{ ip.titre }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Titre <span class="text-red-500">*</span></label>
+              <input type="text" [(ngModel)]="formData.titre" class="form-input" placeholder="Titre complet du projet">
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Description</label>
+              <textarea [(ngModel)]="formData.description" class="form-input" rows="2" placeholder="Description du projet"></textarea>
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Objectifs</label>
+              <textarea [(ngModel)]="formData.objectifs" class="form-input" rows="2" placeholder="Objectifs du projet"></textarea>
+            </div>
           </div>
         </div>
 
-
-         <div class="grid grid-cols-2 gap-4">
-          <div class="form-group">
-            <label class="form-label">Région</label>
-            <select [(ngModel)]="formData.regionId" class="form-input">
-              <option [ngValue]="undefined">-- Sélectionner --</option>
-              @for (r of regions(); track r.id) {
-                <option [ngValue]="r.id">{{ r.nom }}</option>
-              }
-            </select>
+        <!-- ── Rattachement institutionnel ── -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Rattachement institutionnel</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Programme</label>
-            <select [(ngModel)]="formData.programmeId" class="form-input">
-              <option [ngValue]="undefined">-- Sélectionner --</option>
-              @for (p of programmes(); track p.id) {
-                <option [ngValue]="p.id">{{ p.code }} - {{ p.nom }}</option>
-              }
-            </select>
-          </div>
-        </div>
-
-        <!-- Classification -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-group">
-            <label class="form-label">Catégorie *</label>
-            <select [(ngModel)]="formData.categorie" class="form-input">
-              @for (c of categories; track c.value) {
-                <option [value]="c.value">{{ c.label }}</option>
-              }
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Statut *</label>
-            <select [(ngModel)]="formData.statut" class="form-input">
-              @for (s of statuts; track s.value) {
-                <option [value]="s.value">{{ s.label }}</option>
-              }
-            </select>
-          </div>
-        </div>
-
-
-         <div class="form-group">
-            <label class="form-label">Coût total (FCFA) *</label>
-            <input type="number" [(ngModel)]="formData.coutTotal" class="form-input" placeholder="0">
-          </div>
-
-        <!-- Description -->
-        <div class="form-group">
-          <label class="form-label">Description</label>
-          <textarea [(ngModel)]="formData.description" class="form-input" rows="3" placeholder="Description du projet"></textarea>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-group">
-            <label class="form-label">Objectifs</label>
-            <textarea [(ngModel)]="formData.objectifs" class="form-input" rows="2" placeholder="Objectifs du projet"></textarea>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="form-label">Ministère <span class="text-red-500">*</span></label>
+              <select [(ngModel)]="formData.ministereId" class="form-input">
+                <option [ngValue]="undefined">— Sélectionner —</option>
+                @for (m of ministeres(); track m.id) {
+                  <option [ngValue]="m.id">{{ m.sigle }} — {{ m.nom }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Secteur</label>
+              <select [(ngModel)]="formData.secteurId" class="form-input">
+                <option [ngValue]="undefined">— Sélectionner —</option>
+                @for (s of secteurs(); track s.id) {
+                  <option [ngValue]="s.id">{{ s.nom }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Région</label>
+              <select [(ngModel)]="formData.regionId" class="form-input">
+                <option [ngValue]="undefined">— Sélectionner —</option>
+                @for (r of regions(); track r.id) {
+                  <option [ngValue]="r.id">{{ r.nom }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Programme</label>
+              <select [(ngModel)]="formData.programmeId" class="form-input">
+                <option [ngValue]="undefined">— Sélectionner —</option>
+                @for (p of programmes(); track p.id) {
+                  <option [ngValue]="p.id">{{ p.code }} — {{ p.nom }}</option>
+                }
+              </select>
+            </div>
           </div>
         </div>
 
-        <!-- Planification -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-group">
-            <label class="form-label">Date de début prévue</label>
-            <input type="date" [(ngModel)]="formData.dateDebutPrevu" class="form-input">
+        <!-- ── Classification & Finances ── -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Classification & Finances</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Date de fin prévue</label>
-            <input type="date" [(ngModel)]="formData.dateFinPrevu" class="form-input">
+          <div class="grid grid-cols-3 gap-4">
+            <div class="form-group">
+              <label class="form-label">Catégorie <span class="text-red-500">*</span></label>
+              <select [(ngModel)]="formData.categorie" class="form-input">
+                @for (c of categories; track c.value) {
+                  <option [value]="c.value">{{ c.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Statut <span class="text-red-500">*</span></label>
+              <select [(ngModel)]="formData.statut" class="form-input">
+                @for (s of statuts; track s.value) {
+                  <option [value]="s.value">{{ s.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Coût total (FCFA) <span class="text-red-500">*</span></label>
+              <input type="number" [(ngModel)]="formData.coutTotal" class="form-input" placeholder="0">
+            </div>
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Durée (mois)</label>
-          <input type="number" [(ngModel)]="formData.dureeEnMois" class="form-input" placeholder="0" min="0">
+        <!-- ── Planification ── -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Planification</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+          <div class="grid grid-cols-3 gap-4">
+            <div class="form-group">
+              <label class="form-label">Date de début prévue</label>
+              <input type="date" [(ngModel)]="formData.dateDebutPrevu" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date de fin prévue</label>
+              <input type="date" [(ngModel)]="formData.dateFinPrevu" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Durée (mois)</label>
+              <input type="number" [(ngModel)]="formData.dureeEnMois" class="form-input" placeholder="0" min="0">
+            </div>
+          </div>
         </div>
 
-        <!-- Géolocalisation -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-group">
-            <label class="form-label">Latitude</label>
-            <input type="number" [(ngModel)]="formData.latitude" class="form-input" step="0.000001" placeholder="Ex: 12.370000">
+        <!-- ── Géolocalisation & Paramètres ── -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Géolocalisation & Paramètres</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Longitude</label>
-            <input type="number" [(ngModel)]="formData.longitude" class="form-input" step="0.000001" placeholder="Ex: -1.520000">
+          <div class="grid grid-cols-3 gap-4">
+            <div class="form-group">
+              <label class="form-label">Latitude</label>
+              <input type="number" [(ngModel)]="formData.latitude" class="form-input" step="0.000001" placeholder="Ex: 12.370000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Longitude</label>
+              <input type="number" [(ngModel)]="formData.longitude" class="form-input" step="0.000001" placeholder="Ex: -1.520000">
+            </div>
+            <div class="form-group flex items-end pb-1">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
+                <span class="text-sm text-gray-700">Projet actif</span>
+              </label>
+            </div>
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="flex items-center">
-            <input type="checkbox" [(ngModel)]="formData.actif" class="rounded border-gray-300">
-            <span class="ml-2 text-sm text-gray-700">Projet actif</span>
-          </label>
-        </div>
       </div>
       <div class="modal-footer">
         <button (click)="closeModal()" class="btn-outline">Annuler</button>
         <button (click)="save()" [disabled]="saving()" class="btn-primary">
-          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer le projet') }}
         </button>
       </div>
     </div>

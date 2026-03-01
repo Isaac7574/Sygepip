@@ -2,72 +2,70 @@
 <div class="burkina-flag"></div>
 
 <!-- HEADER / NAVIGATION -->
-<nav class="bg-white/95 backdrop-blur-md py-3 px-6 md:px-12 flex flex-col md:flex-row justify-between items-center sticky top-3 z-50 border-b border-gray-200 shadow-sm">
+<nav class="bg-white/95 backdrop-blur-md py-3 px-6 md:px-12 flex justify-between items-center sticky top-3 z-50 border-b border-gray-200 shadow-sm">
 
-  <!-- Liens de navigation -->
-  <ul class="flex flex-wrap justify-center items-center gap-6 md:gap-12 mb-4 md:mb-0 order-2 md:order-1">
+  <!-- Logo + Nom (gauche) -->
+  <div class="flex items-center gap-3">
+    <img src="assets/images/newarmoiriebfnb.png"
+         alt="Armoiries du Burkina Faso"
+         class="h-12 w-auto object-contain drop-shadow-sm"
+         onerror="this.src='assets/images/armoirie-bf.png'">
+    <div>
+      <p class="text-sm font-extrabold text-gray-900 leading-tight">SYGEPIP</p>
+      <p class="text-xs text-gray-500 leading-tight hidden md:block">Burkina Faso</p>
+    </div>
+  </div>
+
+  <!-- Liens (centre) -->
+  <ul class="hidden md:flex items-center gap-8">
     <li>
-      <a routerLink="/" class="nav-link text-xs md:text-sm font-bold uppercase tracking-widest text-slate-800 hover:text-green-700 transition-colors duration-300">
-        Accueil
-      </a>
+      <a routerLink="/" class="nav-link text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-green-700 transition-colors">Accueil</a>
     </li>
     <li>
-      <a routerLink="/actualites" class="nav-link text-xs md:text-sm font-bold uppercase tracking-widest text-slate-800 hover:text-green-700 transition-colors duration-300">
-        Projets
-      </a>
+      <a routerLink="/actualites" class="nav-link text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-green-700 transition-colors">Projets</a>
     </li>
     <li>
-      <a routerLink="/mediatheque" class="nav-link text-xs md:text-sm font-bold uppercase tracking-widest text-slate-800 hover:text-green-700 transition-colors duration-300">
-        Investissements
-      </a>
+      <a routerLink="/mediatheque" class="nav-link text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-green-700 transition-colors">Investissements</a>
     </li>
     <li>
-      <a routerLink="/textes-reglementaires" class="nav-link text-xs md:text-sm font-bold uppercase tracking-widest text-slate-800 hover:text-green-700 transition-colors duration-300">
-        Rapports
-      </a>
-    </li>
-    <li class="flex items-center gap-2">
-      @if (authService.isAuthenticated()) {
-        <a routerLink="/app/dashboard" class="ml-2 text-xs md:text-sm font-bold uppercase tracking-widest text-white bg-yellow-500 hover:bg-yellow-600 px-5 py-2 rounded shadow transition-colors duration-300">
-          Tableau de bord
-        </a>
-        <button (click)="logout()" class="text-xs md:text-sm font-bold uppercase tracking-widest text-white bg-red-600 hover:bg-red-700 px-5 py-2 rounded shadow transition-colors duration-300">
-          Déconnexion
-        </button>
-      } @else {
-        <button (click)="login()" class="ml-2 text-xs md:text-sm font-bold uppercase tracking-widest text-white bg-green-700 hover:bg-green-800 px-5 py-2 rounded shadow transition-colors duration-300 cursor-pointer">
-          Connexion
-        </button>
-      }
+      <a routerLink="/textes-reglementaires" class="nav-link text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-green-700 transition-colors">Rapports</a>
     </li>
   </ul>
 
-  <!-- Logo Header -->
-  <div class="order-1 md:order-2 mb-4 md:mb-0">
-    <img src="assets/images/newarmoiriebfnb.png"
-         alt="Armoiries du Burkina Faso"
-         class="h-16 md:h-20 w-auto object-contain drop-shadow-sm hover:scale-105 transition-transform"
-         onerror="this.src='assets/images/armoirie-bf.png'">
+  <!-- CTA (droite) -->
+  <div class="flex items-center gap-2">
+    @if (authService.isAuthenticated()) {
+      <a routerLink="/app/dashboard" class="text-xs font-bold uppercase tracking-widest text-white bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded shadow transition-colors">
+        Tableau de bord
+      </a>
+      <button (click)="logout()" class="text-xs font-bold uppercase tracking-widest text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded shadow transition-colors">
+        Déconnexion
+      </button>
+    } @else {
+      <button (click)="login()" class="text-xs font-bold uppercase tracking-widest text-white bg-green-700 hover:bg-green-800 px-5 py-2 rounded shadow transition-colors cursor-pointer">
+        Connexion
+      </button>
+    }
   </div>
 </nav>
 
 <!-- SECTION PRINCIPALE -->
-<main class="hero-section flex-grow flex flex-col items-center justify-center px-4 py-12 w-full min-h-screen">
+<main class="hero-section flex-grow flex flex-col items-center justify-center px-4 py-14 w-full min-h-screen">
 
-  <div class="w-full max-w-6xl mx-auto flex flex-col items-center">
+  <div class="w-full max-w-6xl mx-auto flex flex-col items-center gap-10">
 
-    <!-- 1. GRANDE CARTE DU HAUT -->
-    <div class="glass-card grid-pattern w-full rounded-2xl p-8 md:p-14 mb-10 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 relative overflow-hidden ring-1 ring-white/30">
+    <!-- HERO CARD -->
+    <div class="glass-card grid-pattern w-full rounded-2xl p-8 md:p-14 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 relative overflow-hidden ring-1 ring-white/30 animate-fade-in-up">
 
-      <!-- Logo Arbre -->
-      <div class="flex-shrink-0 drop-shadow-2xl relative z-10 animate-fade-in-up">
+      <!-- Logo -->
+      <div class="flex-shrink-0 drop-shadow-2xl relative z-10">
         <img src="assets/images/baobablogo.png"
              alt="Logo SYGEPIP"
              class="h-40 md:h-64 w-auto object-contain filter drop-shadow-[0_10px_10px_rgba(0,0,0,0.3)]"
              onerror="this.style.display='none'">
       </div>
 
-      <!-- Texte -->
+      <!-- Texte + Stats -->
       <div class="text-center md:text-left text-white max-w-2xl relative z-10">
         <h1 class="text-5xl md:text-7xl text-white tracking-tight mb-2 drop-shadow-lg font-sans">SYGE-PIP</h1>
         <div class="h-1 bg-yellow-400 w-24 mx-auto md:mx-0 my-5 rounded-full shadow-lg"></div>
@@ -75,58 +73,101 @@
           Système de Gestion Intégrée des Projets <br>
           et Programmes d'Investissements Publics
         </p>
-        <p class="text-sm md:text-base font-bold mt-4 text-gray-200 tracking-[0.2em] uppercase opacity-90">Burkina Faso</p>
+        <p class="text-sm font-bold mt-3 text-gray-200 tracking-[0.2em] uppercase opacity-90">Burkina Faso</p>
+
+        <!-- Stats inline -->
+        @if (stats()) {
+          <div class="mt-8 flex flex-wrap gap-6 justify-center md:justify-start">
+            <div class="text-center">
+              <p class="text-3xl font-black text-yellow-400">{{ stats()?.totalProjets }}</p>
+              <p class="text-xs text-gray-300 uppercase tracking-widest mt-0.5">Projets</p>
+            </div>
+            <div class="w-px bg-white/20 hidden md:block"></div>
+            <div class="text-center">
+              <p class="text-3xl font-black text-yellow-400">{{ stats()?.projetsEnCours }}</p>
+              <p class="text-xs text-gray-300 uppercase tracking-widest mt-0.5">En cours</p>
+            </div>
+            <div class="w-px bg-white/20 hidden md:block"></div>
+            <div class="text-center">
+              <p class="text-3xl font-black text-yellow-400">{{ formatBudget(stats()?.budgetTotal) }}</p>
+              <p class="text-xs text-gray-300 uppercase tracking-widest mt-0.5">Budget total</p>
+            </div>
+          </div>
+        }
+
+        <!-- CTA -->
+        <div class="mt-8 flex gap-3 justify-center md:justify-start">
+          <button (click)="login()" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-sm px-6 py-3 rounded-lg shadow-lg transition-all hover:scale-105">
+            Accéder à la plateforme
+          </button>
+          <a routerLink="/actualites" class="border border-white/50 hover:bg-white/10 text-white font-semibold text-sm px-6 py-3 rounded-lg transition-all">
+            Voir les projets →
+          </a>
+        </div>
       </div>
     </div>
 
-    <!-- 2. SECTION DU BAS (3 cartes) -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full mb-12">
+    <!-- 3 CARTES -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
 
-      <!-- Carte 1 - Consulter un projet -->
-      <a routerLink="/actualites" class="glass-card glass-card-hover armoirie-watermark rounded-xl py-12 px-6 flex flex-col items-center text-center text-white group shadow-lg cursor-pointer">
-        <div class="mb-6 relative z-10 h-20 flex items-center justify-center">
-          <svg class="w-16 h-16 group-hover:scale-110 transition-transform duration-300 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-          </svg>
-          <div class="absolute -bottom-2 -right-4 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center border-2 border-green-600">
-            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+      <a routerLink="/actualites" class="glass-card glass-card-hover armoirie-watermark rounded-xl py-10 px-6 flex flex-col items-center text-center text-white group shadow-lg cursor-pointer">
+        <div class="mb-5 relative z-10">
+          <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto group-hover:bg-white/20 transition-colors">
+            <svg class="w-8 h-8 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
             </svg>
           </div>
         </div>
-        <h3 class="text-lg font-bold uppercase tracking-widest relative z-10 border-b-2 border-transparent group-hover:border-red-400 pb-1 transition-all">Consulter un projet</h3>
+        <h3 class="text-base font-bold uppercase tracking-widest relative z-10 mb-2">Consulter un projet</h3>
+        <p class="text-xs text-white/70 relative z-10">Accédez à la liste complète des projets d'investissement public</p>
       </a>
 
-      <!-- Carte 2 - Suivi investissements -->
-      <a routerLink="/mediatheque" class="glass-card glass-card-hover armoirie-watermark rounded-xl py-12 px-6 flex flex-col items-center text-center text-white group shadow-lg cursor-pointer">
-        <div class="mb-6 relative z-10 h-20 flex items-center justify-center">
-          <svg class="w-16 h-16 group-hover:scale-110 transition-transform duration-300 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-          </svg>
-          <div class="absolute -top-2 -right-4">
-            <svg class="w-8 h-8 text-yellow-400 drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"/>
+      <a routerLink="/mediatheque" class="glass-card glass-card-hover armoirie-watermark rounded-xl py-10 px-6 flex flex-col items-center text-center text-white group shadow-lg cursor-pointer">
+        <div class="mb-5 relative z-10">
+          <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto group-hover:bg-white/20 transition-colors">
+            <svg class="w-8 h-8 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
             </svg>
           </div>
         </div>
-        <h3 class="text-lg font-bold uppercase tracking-widest relative z-10 border-b-2 border-transparent group-hover:border-yellow-400 pb-1 transition-all">Suivi investissements</h3>
+        <h3 class="text-base font-bold uppercase tracking-widest relative z-10 mb-2">Suivi investissements</h3>
+        <p class="text-xs text-white/70 relative z-10">Suivez l'évolution et le taux d'exécution des investissements</p>
       </a>
 
-      <!-- Carte 3 - Rapports & Analyses -->
-      <a routerLink="/textes-reglementaires" class="glass-card glass-card-hover armoirie-watermark rounded-xl py-12 px-6 flex flex-col items-center text-center text-white group shadow-lg cursor-pointer">
-        <div class="mb-6 relative z-10 h-20 flex items-center justify-center">
-          <svg class="w-16 h-16 group-hover:scale-110 transition-transform duration-300 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
-          <div class="absolute -bottom-2 -right-2">
-            <svg class="w-6 h-6 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      <a routerLink="/textes-reglementaires" class="glass-card glass-card-hover armoirie-watermark rounded-xl py-10 px-6 flex flex-col items-center text-center text-white group shadow-lg cursor-pointer">
+        <div class="mb-5 relative z-10">
+          <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto group-hover:bg-white/20 transition-colors">
+            <svg class="w-8 h-8 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
           </div>
         </div>
-        <h3 class="text-lg font-bold uppercase tracking-widest relative z-10 border-b-2 border-transparent group-hover:border-green-400 pb-1 transition-all">Rapports & Analyses</h3>
+        <h3 class="text-base font-bold uppercase tracking-widest relative z-10 mb-2">Rapports & Analyses</h3>
+        <p class="text-xs text-white/70 relative z-10">Consultez les rapports d'analyse et bilans d'exécution</p>
       </a>
     </div>
+
+    <!-- ACTUALITÉS -->
+    @if (actualites().length > 0) {
+      <div class="w-full">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="h-px flex-1 bg-white/20"></div>
+          <h2 class="text-white font-bold text-sm uppercase tracking-widest opacity-80">Actualités</h2>
+          <div class="h-px flex-1 bg-white/20"></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          @for (actu of actualites(); track actu.id; let i = $index) {
+            @if (i < 3) {
+              <div class="glass-card rounded-xl p-5 relative z-10">
+                <span class="text-xs font-semibold text-yellow-400 uppercase tracking-wider">{{ actu.categorie }}</span>
+                <h4 class="text-white font-semibold text-sm mt-2 mb-2 leading-snug line-clamp-2">{{ actu.titre }}</h4>
+                <p class="text-white/60 text-xs leading-relaxed line-clamp-2">{{ actu.description }}</p>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
 
   </div>
 </main>
@@ -135,7 +176,6 @@
 <footer class="bg-gray-900 text-white py-12">
   <div class="container mx-auto px-4">
     <div class="grid md:grid-cols-4 gap-8">
-      <!-- About -->
       <div class="md:col-span-2">
         <div class="flex items-center gap-3 mb-4">
           <img src="assets/images/newarmoiriebfnb.png"
@@ -147,33 +187,31 @@
             <p class="text-gray-400 text-sm">Burkina Faso</p>
           </div>
         </div>
-        <p class="text-gray-400 leading-relaxed mb-4">
+        <p class="text-gray-400 leading-relaxed">
           Système de Gestion Intégrée des Projets et Programmes d'Investissements Publics du Burkina Faso.
         </p>
       </div>
 
-      <!-- Quick Links -->
       <div>
-        <h4 class="text-lg font-semibold mb-4">Liens Rapides</h4>
-        <ul class="space-y-2">
-          <li><a routerLink="/actualites" class="text-white-400 hover:text-white transition-colors">Projets</a></li>
-          <li><a routerLink="/mediatheque" class="text-white-400 hover:text-white transition-colors">Investissements</a></li>
-          <li><a routerLink="/textes-reglementaires" class="text-white-400 hover:text-white transition-colors">Rapports</a></li>
+        <h4 class="text-base font-semibold mb-4">Liens Rapides</h4>
+        <ul class="space-y-2 text-gray-400">
+          <li><a routerLink="/actualites" class="hover:text-white transition-colors">Projets</a></li>
+          <li><a routerLink="/mediatheque" class="hover:text-white transition-colors">Investissements</a></li>
+          <li><a routerLink="/textes-reglementaires" class="hover:text-white transition-colors">Rapports</a></li>
         </ul>
       </div>
 
-      <!-- Contact -->
       <div>
-        <h4 class="text-lg font-semibold mb-4">Contact</h4>
+        <h4 class="text-base font-semibold mb-4">Contact</h4>
         <ul class="space-y-2 text-gray-400">
           <li class="flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
             </svg>
             <span>Ouagadougou, Burkina Faso</span>
           </li>
           <li class="flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
             </svg>
             <span>contact&#64;sygepip.gov.bf</span>

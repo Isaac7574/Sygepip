@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DocumentIdeeService } from '@core/services/document-idee.service';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
 import {
@@ -21,6 +22,7 @@ import { ToastComponent } from '@shared/components/toast/toast.component';
 export class DocumentsComponent implements OnInit {
   private documentIdeeService = inject(DocumentIdeeService);
   private ideesProjetService = inject(IdeesProjetService);
+  private sanitizer = inject(DomSanitizer);
 
   items = signal<DocumentIdeeProjetResponseDTO[]>([]);
   filteredItems = signal<DocumentIdeeProjetResponseDTO[]>([]);
@@ -39,6 +41,13 @@ export class DocumentsComponent implements OnInit {
   versionsModalOpen = signal(false);
   versionsItems = signal<DocumentIdeeProjetResponseDTO[]>([]);
   versionsLoading = signal(false);
+
+  // View file modal
+  viewModalOpen = signal(false);
+  viewingItem = signal<DocumentIdeeProjetResponseDTO | null>(null);
+  viewSafeUrl = signal<SafeResourceUrl | null>(null);
+  viewRawUrl: string | null = null;
+  viewLoading = signal(false);
 
   confirmDialogVisible = signal(false);
   confirmDialogTitle = '';
@@ -175,6 +184,69 @@ export class DocumentsComponent implements OnInit {
   closeVersionsModal(): void {
     this.versionsModalOpen.set(false);
     this.versionsItems.set([]);
+  }
+
+  viewFile(item: DocumentIdeeProjetResponseDTO): void {
+    this.viewingItem.set(item);
+    this.viewSafeUrl.set(null);
+    this.viewRawUrl = null;
+    this.viewLoading.set(true);
+    this.viewModalOpen.set(true);
+
+    this.documentIdeeService.download(item.id).subscribe({
+      next: (blob) => {
+        // Force le bon type MIME selon l'extension (le serveur peut envoyer octet-stream)
+        const mimeType = this.getMimeType(item.titre);
+        const typedBlob = mimeType ? new Blob([blob], { type: mimeType }) : blob;
+        const url = window.URL.createObjectURL(typedBlob);
+        this.viewRawUrl = url;
+        this.viewSafeUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
+        this.viewLoading.set(false);
+      },
+      error: () => {
+        this.viewLoading.set(false);
+        this.showToast('Erreur lors du chargement du fichier', 'error');
+      }
+    });
+  }
+
+  getMimeType(titre: string): string {
+    const ext = titre.split('.').pop()?.toLowerCase() ?? '';
+    const mimeMap: Record<string, string> = {
+      'pdf':  'application/pdf',
+      'png':  'image/png',
+      'jpg':  'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'gif':  'image/gif',
+      'webp': 'image/webp',
+      'svg':  'image/svg+xml',
+    };
+    return mimeMap[ext] ?? '';
+  }
+
+  closeViewModal(): void {
+    if (this.viewRawUrl) {
+      window.URL.revokeObjectURL(this.viewRawUrl);
+      this.viewRawUrl = null;
+    }
+    this.viewSafeUrl.set(null);
+    this.viewingItem.set(null);
+    this.viewModalOpen.set(false);
+  }
+
+  downloadViewing(): void {
+    const item = this.viewingItem();
+    if (item) this.download(item);
+  }
+
+  isImage(titre: string): boolean {
+    const ext = titre.split('.').pop()?.toLowerCase() ?? '';
+    return ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext);
+  }
+
+  isPreviewable(titre: string): boolean {
+    const ext = titre.split('.').pop()?.toLowerCase() ?? '';
+    return ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext);
   }
 
   confirmDelete(item: DocumentIdeeProjetResponseDTO): void {

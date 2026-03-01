@@ -74,6 +74,12 @@
             </td>
             <td class="px-6 py-4 text-gray-500">{{ formatDate(item.createdAt) }}</td>
             <td class="px-6 py-4 text-right">
+              <button (click)="viewFile(item)" class="text-purple-600 hover:text-purple-800 mr-2" title="Voir le fichier">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
               <button (click)="download(item)" class="text-bf-green-600 hover:text-bf-green-800 mr-2" title="Télécharger">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -110,19 +116,26 @@
 <!-- Upload Modal -->
 @if (modalOpen()) {
   <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-content max-w-lg" (click)="$event.stopPropagation()">
+    <div class="modal-content max-w-2xl" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="text-lg font-semibold">Uploader un Document</h3>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900">Uploader un Document</h3>
+        </div>
         <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
       </div>
-      <div class="modal-body space-y-4">
+      <div class="modal-body space-y-5">
         <div class="form-group">
           <label class="form-label">Idée Projet</label>
-          <input type="text" [value]="getIdeeProjetNom(selectedIdeeProjetId)" class="form-input bg-gray-100" readonly>
+          <input type="text" [value]="getIdeeProjetNom(selectedIdeeProjetId)" class="form-input bg-gray-50" readonly>
         </div>
         <div class="form-group">
           <label class="form-label">Type de document *</label>
@@ -135,25 +148,21 @@
         </div>
         <div class="form-group">
           <label class="form-label">Fichier *</label>
-          <div class="flex items-center gap-2">
-            <label class="flex-1 flex items-center justify-center px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary-500 hover:bg-gray-50 transition-colors">
-              <div class="text-center">
-                <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                </svg>
-                <span class="text-sm text-gray-600">Cliquez pour sélectionner un fichier</span>
-                <p class="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, XLS, XLSX (max 10 Mo)</p>
-              </div>
-              <input type="file" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" class="hidden">
-            </label>
-          </div>
+          <label class="flex flex-col items-center justify-center px-6 py-10 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary-400 hover:bg-primary-50/30 transition-colors">
+            <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+            <span class="text-sm font-medium text-gray-600">Cliquez pour sélectionner un fichier</span>
+            <p class="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, XLS, XLSX, PPT (max 10 Mo)</p>
+            <input type="file" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" class="hidden">
+          </label>
           @if (selectedFile) {
-            <p class="mt-2 text-sm text-green-600 flex items-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="mt-3 flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-xl">
+              <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
               </svg>
-              {{ selectedFile.name }}
-            </p>
+              <span class="text-sm text-green-700 font-medium">{{ selectedFile.name }}</span>
+            </div>
           }
         </div>
       </div>
@@ -234,6 +243,84 @@
       </div>
       <div class="modal-footer">
         <button (click)="closeVersionsModal()" class="btn-outline">Fermer</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- View File Modal -->
+@if (viewModalOpen()) {
+  <div class="modal-overlay" (click)="closeViewModal()">
+    <div class="modal-content max-w-5xl" style="height:90vh; max-height:90vh; display:flex; flex-direction:column; overflow:hidden;" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="modal-header" style="flex-shrink:0;">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">{{ viewingItem()?.titre }}</h3>
+            <p class="text-xs text-gray-400">{{ getTypeDocumentLabel(viewingItem()?.typeDocument!) }} · v{{ viewingItem()?.version }}</p>
+          </div>
+        </div>
+        <button (click)="closeViewModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Body : flex-1 + min-height:0 pour que l'iframe puisse remplir l'espace -->
+      <div style="flex:1; min-height:0; padding:1rem; display:flex; flex-direction:column;">
+        @if (viewLoading()) {
+          <div class="flex flex-col items-center justify-center h-full">
+            <svg class="animate-spin w-10 h-10 text-primary-600 mb-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-sm text-gray-500">Chargement du fichier...</p>
+          </div>
+        } @else if (viewSafeUrl()) {
+          @if (isImage(viewingItem()?.titre || '')) {
+            <div class="flex justify-center items-center bg-gray-50 rounded-xl" style="flex:1; min-height:0; overflow:auto;">
+              <img [src]="viewRawUrl" [alt]="viewingItem()?.titre" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:0.5rem;">
+            </div>
+          } @else if (isPreviewable(viewingItem()?.titre || '')) {
+            <iframe [src]="viewSafeUrl()" title="Aperçu du document"
+              style="flex:1; min-height:0; width:100%; border-radius:0.75rem; border:1px solid #e5e7eb; display:block;"></iframe>
+          } @else {
+            <div class="flex flex-col items-center justify-center text-center" style="flex:1;">
+              <div class="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+              <p class="text-gray-700 font-medium mb-1">Aperçu non disponible</p>
+              <p class="text-sm text-gray-400 mb-6">Ce type de fichier ne peut pas être prévisualisé dans le navigateur.</p>
+              <button (click)="downloadViewing()" class="btn-primary">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Télécharger le fichier
+              </button>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer" style="flex-shrink:0;">
+        <button (click)="downloadViewing()" class="btn-outline">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Télécharger
+        </button>
+        <button (click)="closeViewModal()" class="btn-primary">Fermer</button>
       </div>
     </div>
   </div>
