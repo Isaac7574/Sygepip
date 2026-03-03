@@ -902,10 +902,31 @@ export interface AbacRule {
   endpoint: string;
   action: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE';
   roles: string[];
+  ministereIds?: string[];
   directionIds: string[];
   enabled: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+export interface AbacMinistere {
+  id: string;
+  code: string;
+  nom: string;
+}
+
+export interface AbacDirection {
+  id: string;
+  code: string;
+  nom: string;
+  ministereId: string;
+}
+
+export interface AbacEndpointsPageDTO {
+  page: number;
+  size: number;
+  total: number;
+  items: string[];
 }
 
 // === GÉOLOCALISATION ===

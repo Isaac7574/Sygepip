@@ -37,6 +37,12 @@ export class IdeesdeProjetComponent implements OnInit {
   private pendingEditId: string | null = null;
   private pendingNoteId: string | null = null;
 
+  // Modal Vue (lecture seule)
+  viewModalOpen = signal(false);
+  viewingItem = signal<IdeeProjet | null>(null);
+  viewNote = signal<Partial<IdeeProjetNoteConceptuelle>>({});
+  loadingNote = signal(false);
+
   // Modal Note Conceptuelle
   noteModalOpen = signal(false);
   selectedItemForNote: IdeeProjet | null = null;
@@ -164,6 +170,27 @@ export class IdeesdeProjetComponent implements OnInit {
   }
 
   closeModal(): void { this.modalOpen.set(false); }
+
+  view(item: IdeeProjet): void {
+    this.viewingItem.set(item);
+    this.viewNote.set({});
+    this.viewModalOpen.set(true);
+    this.loadingNote.set(true);
+    this.ideesService.getNoteConceptuelle(item.id).subscribe({
+      next: (note) => { this.viewNote.set(note); this.loadingNote.set(false); },
+      error: () => { this.loadingNote.set(false); }
+    });
+  }
+
+  closeView(): void {
+    this.viewModalOpen.set(false);
+    this.viewingItem.set(null);
+    this.viewNote.set({});
+  }
+
+  getNoteField(key: string): string | undefined {
+    return (this.viewNote() as Record<string, string | undefined>)[key];
+  }
 
   private openEditById(id: string): void {
     const item = this.items().find(i => String(i.id) === String(id));

@@ -2,8 +2,9 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '@core/services/admin.service';
+import { MinisteresService } from '@core/services/ministeres.service';
 import { DirectionService } from '@core/services/direction.service';
-import { AbacRule, Direction } from '@core/models';
+import { AbacRule, Ministere, Direction } from '@core/models';
 
 // Interface pour les actions groupées par endpoint
 interface EndpointActions {
@@ -16,6 +17,7 @@ interface EndpointActions {
 interface ActionConfig {
   id?: string;
   roles: string[];
+  ministereIds: string[];
   directionIds: string[];
   enabled: boolean;
 }
@@ -34,16 +36,24 @@ interface GroupedEndpoint {
 })
 export class GestionAccesComponent implements OnInit {
   private adminService = inject(AdminService);
+  private ministeresService = inject(MinisteresService);
   private directionService = inject(DirectionService);
 
   // State
   endpoints = signal<string[]>([]);
   filteredEndpoints = signal<string[]>([]);
   abacRules = signal<AbacRule[]>([]);
+  ministeres = signal<Ministere[]>([]);
   directions = signal<Direction[]>([]);
   loading = signal(false);
   modalOpen = signal(false);
   saving = signal(false);
+
+  // Pagination
+  currentPage = signal(0);
+  pageSize = signal(50);
+  totalItems = signal(0);
+  totalPages = signal(0);
 
   // Search
   searchTerm = '';
@@ -51,6 +61,12 @@ export class GestionAccesComponent implements OnInit {
   // Modal state - endpoint groupé
   selectedEndpoint = '';
   formData: EndpointActions = this.createEmptyActions();
+  perActionDirections: Record<'CREATE' | 'READ' | 'UPDATE' | 'DELETE', Direction[]> = {
+    CREATE: [],
+    READ: [],
+    UPDATE: [],
+    DELETE: []
+  };
 
   // Available roles (static)
   availableRoles = ['ADMIN', 'INSTRUCTEUR', 'AGENT', 'PORTEUR_PROJET', 'CHEF_PROJET', 'CONSULTANT'];
@@ -66,24 +82,27 @@ export class GestionAccesComponent implements OnInit {
   ngOnInit(): void {
     this.loadEndpoints();
     this.loadAbacRules();
+    this.loadMinisteres();
     this.loadDirections();
   }
 
   createEmptyActions(): EndpointActions {
     return {
-      CREATE: { roles: [], directionIds: [], enabled: true },
-      READ: { roles: [], directionIds: [], enabled: true },
-      UPDATE: { roles: [], directionIds: [], enabled: true },
-      DELETE: { roles: [], directionIds: [], enabled: true }
+      CREATE: { roles: [], ministereIds: [], directionIds: [], enabled: true },
+      READ: { roles: [], ministereIds: [], directionIds: [], enabled: true },
+      UPDATE: { roles: [], ministereIds: [], directionIds: [], enabled: true },
+      DELETE: { roles: [], ministereIds: [], directionIds: [], enabled: true }
     };
   }
 
   loadEndpoints(): void {
     this.loading.set(true);
-    this.adminService.getAbacEndpoints().subscribe({
+    this.adminService.getAbacEndpoints(this.currentPage(), this.pageSize()).subscribe({
       next: (data) => {
-        this.endpoints.set(data);
-        this.filteredEndpoints.set(data);
+        this.endpoints.set(data.items);
+        this.filteredEndpoints.set(data.items);
+        this.totalItems.set(data.total);
+        this.totalPages.set(Math.ceil(data.total / this.pageSize()));
         this.loading.set(false);
       },
       error: () => {
@@ -93,6 +112,47 @@ export class GestionAccesComponent implements OnInit {
     });
   }
 
+  nextPage(): void {
+    if (this.currentPage() < this.totalPages() - 1) {
+      this.currentPage.update(p => p + 1);
+      this.searchTerm = '';
+      this.loadEndpoints();
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage() > 0) {
+      this.currentPage.update(p => p - 1);
+      this.searchTerm = '';
+      this.loadEndpoints();
+    }
+  }
+
+  goToPage(page: number): void {
+    if (page >= 0 && page < this.totalPages()) {
+      this.currentPage.set(page);
+      this.searchTerm = '';
+      this.loadEndpoints();
+    }
+  }
+
+  // Retourne les numéros de pages à afficher avec -1 pour les ellipses
+  getPageNumbers(): number[] {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i);
+    }
+    const pages: number[] = [0];
+    if (current > 2) pages.push(-1);
+    for (let i = Math.max(1, current - 1); i <= Math.min(total - 2, current + 1); i++) {
+      pages.push(i);
+    }
+    if (current < total - 3) pages.push(-1);
+    pages.push(total - 1);
+    return pages;
+  }
+
   loadAbacRules(): void {
     this.adminService.getAbacRules().subscribe({
       next: (data) => this.abacRules.set(data),
@@ -100,10 +160,20 @@ export class GestionAccesComponent implements OnInit {
     });
   }
 
+  loadMinisteres(): void {
+    this.ministeresService.getAll().subscribe({
+      next: (data) => this.ministeres.set(data),
+      error: () => this.showToast('Impossible de charger la liste des ministères', 'error')
+    });
+  }
+
   loadDirections(): void {
-    this.directionService.getAll().subscribe({
-      next: (data) => this.directions.set(data),
-      error: () => {}
+    this.directionService.getActifs().subscribe({
+      next: (data) => {
+        this.directions.set(data);
+        this.syncDirectionsForAllActions();
+      },
+      error: () => this.showToast('Impossible de charger la liste des directions', 'error')
     });
   }
 
@@ -112,27 +182,6 @@ export class GestionAccesComponent implements OnInit {
     this.filteredEndpoints.set(
       this.endpoints().filter(ep => ep.toLowerCase().includes(term))
     );
-  }
-
-  // Get grouped data for an endpoint
-  getGroupedEndpoint(endpoint: string): GroupedEndpoint {
-    const actions = this.createEmptyActions();
-
-    for (const action of this.actions) {
-      const rule = this.abacRules().find(
-        r => r.endpoint === endpoint && r.action === action
-      );
-      if (rule) {
-        actions[action] = {
-          id: rule.id,
-          roles: [...rule.roles],
-          directionIds: [...rule.directionIds],
-          enabled: rule.enabled
-        };
-      }
-    }
-
-    return { endpoint, actions };
   }
 
   // Get rule status for visual indicator
@@ -149,16 +198,57 @@ export class GestionAccesComponent implements OnInit {
     return this.abacRules().filter(r => r.endpoint === endpoint).length;
   }
 
+  // Get grouped data for an endpoint
+  getGroupedEndpoint(endpoint: string): GroupedEndpoint {
+    const actions = this.createEmptyActions();
+
+    for (const action of this.actions) {
+      const rule = this.abacRules().find(
+        r => r.endpoint === endpoint && r.action === action
+      );
+      if (rule) {
+        actions[action] = {
+          id: rule.id,
+          roles: [...rule.roles],
+          ministereIds: [...(rule.ministereIds || [])],
+          directionIds: [...rule.directionIds],
+          enabled: rule.enabled
+        };
+      }
+    }
+
+    return { endpoint, actions };
+  }
+
   // Open configuration modal for entire endpoint
   openConfigModal(endpoint: string): void {
     this.selectedEndpoint = endpoint;
     const grouped = this.getGroupedEndpoint(endpoint);
     this.formData = grouped.actions;
+    this.syncDirectionsForAllActions();
     this.modalOpen.set(true);
   }
 
   closeModal(): void {
     this.modalOpen.set(false);
+  }
+
+  private syncDirectionsForAllActions(): void {
+    for (const action of this.actions) {
+      this.updateDirectionsForAction(action);
+    }
+  }
+
+  private updateDirectionsForAction(action: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE'): void {
+    const selected = this.formData[action].ministereIds;
+    if (selected.length === 0) {
+      this.perActionDirections[action] = [...this.directions()];
+      return;
+    }
+    const filtered = this.directions().filter(d => selected.includes(d.ministereId));
+    const allowed = new Set(filtered.map(d => d.id));
+    this.formData[action].directionIds = this.formData[action].directionIds.filter(id => allowed.has(id));
+    this.perActionDirections[action] = filtered;
   }
 
   // Toggle role selection for a specific action
@@ -176,6 +266,20 @@ export class GestionAccesComponent implements OnInit {
     return this.formData[action].roles.includes(role);
   }
 
+  toggleMinistere(action: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE', ministereId: string): void {
+    const index = this.formData[action].ministereIds.indexOf(ministereId);
+    if (index === -1) {
+      this.formData[action].ministereIds.push(ministereId);
+    } else {
+      this.formData[action].ministereIds.splice(index, 1);
+    }
+    this.updateDirectionsForAction(action);
+  }
+
+  isMinistereSelected(action: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE', ministereId: string): boolean {
+    return this.formData[action].ministereIds.includes(ministereId);
+  }
+
   // Toggle direction selection for a specific action
   toggleDirection(action: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE', directionId: string): void {
     const index = this.formData[action].directionIds.indexOf(directionId);
@@ -191,41 +295,16 @@ export class GestionAccesComponent implements OnInit {
     return this.formData[action].directionIds.includes(directionId);
   }
 
-  // Copy roles from one action to all others
-  copyRolesToAll(sourceAction: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE'): void {
-    const sourceRoles = [...this.formData[sourceAction].roles];
-    for (const action of this.actions) {
-      if (action !== sourceAction) {
-        this.formData[action].roles = [...sourceRoles];
-      }
-    }
-    this.showToast('Rôles copiés vers toutes les actions', 'success');
-  }
-
-  // Copy directions from one action to all others
-  copyDirectionsToAll(sourceAction: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE'): void {
-    const sourceDirections = [...this.formData[sourceAction].directionIds];
-    for (const action of this.actions) {
-      if (action !== sourceAction) {
-        this.formData[action].directionIds = [...sourceDirections];
-      }
-    }
-    this.showToast('Directions copiées vers toutes les actions', 'success');
-  }
-
   // Save all rules for the endpoint
   saveAllRules(): void {
     this.saving.set(true);
 
-    // Collect all save operations
     const operations: Promise<void>[] = [];
 
     for (const action of this.actions) {
       const actionConfig = this.formData[action];
 
-      // Skip if no roles defined (rule not configured)
       if (actionConfig.roles.length === 0) {
-        // If there was an existing rule with this ID, delete it
         if (actionConfig.id) {
           const deletePromise = new Promise<void>((resolve, reject) => {
             this.adminService.deleteAbacRule(actionConfig.id!).subscribe({
@@ -242,6 +321,7 @@ export class GestionAccesComponent implements OnInit {
         endpoint: this.selectedEndpoint,
         action: action,
         roles: actionConfig.roles,
+        ministereIds: actionConfig.ministereIds,
         directionIds: actionConfig.directionIds,
         enabled: actionConfig.enabled
       };

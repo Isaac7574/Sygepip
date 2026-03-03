@@ -2,6 +2,9 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   AbacRule,
+  AbacMinistere,
+  AbacDirection,
+  AbacEndpointsPageDTO,
   KeycloakUser,
   KeycloakUserCreateRequest,
   UserRegistrationRequest,
@@ -20,9 +23,23 @@ export class AdminService {
   // ABAC ENDPOINTS
   // ============================================
 
-  // Liste des endpoints disponibles pour l'ABAC
-  getAbacEndpoints(): Observable<string[]> {
-    return this.api.get<string[]>('/admin/abac-endpoints');
+  // Liste des endpoints disponibles pour l'ABAC (paginée)
+  getAbacEndpoints(page: number = 0, size: number = 50): Observable<AbacEndpointsPageDTO> {
+    return this.api.get<AbacEndpointsPageDTO>('/admin/abac-endpoints', { page, size });
+  }
+
+  // Liste des ministères (nettoyée) pour l'ABAC
+  getAbacMinisteres(actif: boolean = true): Observable<AbacMinistere[]> {
+    return this.api.get<AbacMinistere[]>('/admin/abac-ministeres', { actif });
+  }
+
+  // Liste des directions (nettoyée) pour l'ABAC
+  getAbacDirections(params?: { ministereId?: string; actif?: boolean }): Observable<AbacDirection[]> {
+    const query = {
+      actif: params?.actif ?? true,
+      ...(params?.ministereId ? { ministereId: params.ministereId } : {})
+    };
+    return this.api.get<AbacDirection[]>('/admin/abac-ministeres/directions', query);
   }
 
   // ============================================

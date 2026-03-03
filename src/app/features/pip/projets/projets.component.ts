@@ -43,6 +43,9 @@ export class ProjetsPIPComponent implements OnInit {
   formData: Partial<Projet> = this.resetForm();
   private pendingEditId: string | null = null;
 
+  viewingItem = signal<Projet | null>(null);
+  detailOpen = signal(false);
+
   confirmDialogVisible = signal(false);
   confirmDialogTitle = '';
   confirmDialogMessage = '';
@@ -146,6 +149,16 @@ export class ProjetsPIPComponent implements OnInit {
   }
 
   closeModal(): void { this.modalOpen.set(false); }
+
+  view(item: Projet): void {
+    this.viewingItem.set(item);
+    this.detailOpen.set(true);
+  }
+
+  closeDetail(): void {
+    this.detailOpen.set(false);
+    this.viewingItem.set(null);
+  }
 
   private openEditById(id: string): void {
     const item = this.items().find(i => String(i.id) === String(id));
