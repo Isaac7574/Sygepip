@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
@@ -11,11 +12,13 @@ import { ToastComponent } from '@shared/components/toast/toast.component';
 @Component({
   selector: 'app-idees-de-projet',
   standalone: true,
-  imports: [CommonModule, FormsModule, ConfirmDialogComponent, ToastComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ConfirmDialogComponent, ToastComponent],
   templateUrl: './idees-projet.component.html',
   styleUrl: './idees-projet.component.scss'
 })
 export class IdeesdeProjetComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private ideesService = inject(IdeesProjetService);
   private ministeresService = inject(MinisteresService);
   private secteursService = inject(SecteursService);
@@ -31,12 +34,8 @@ export class IdeesdeProjetComponent implements OnInit {
   editingItem = signal<IdeeProjet | null>(null);
   saving = signal(false);
   formData: Partial<IdeeProjet> = this.resetForm();
-
-  // Modal Visualisation
-  viewModalOpen = signal(false);
-  viewingItem = signal<IdeeProjet | null>(null);
-  viewNote = signal<Partial<IdeeProjetNoteConceptuelle>>({});
-  loadingNote = signal(false);
+  private pendingEditId: string | null = null;
+  private pendingNoteId: string | null = null;
 
   // Modal Note Conceptuelle
   noteModalOpen = signal(false);
@@ -58,9 +57,6 @@ export class IdeesdeProjetComponent implements OnInit {
   portees = [
     { value: 'NATIONALE', label: 'Nationale' },
     { value: 'REGIONALE', label: 'Régionale' },
-    { value: 'PROVINCIALE', label: 'Provinciale' },
-    { value: 'COMMUNALE', label: 'Communale' },
-    { value: 'LOCALE', label: 'Locale' }
   ];
 
   statuts = [
@@ -72,6 +68,18 @@ export class IdeesdeProjetComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.route.queryParamMap.subscribe(params => {
+      const editId = params.get('editId');
+      const noteId = params.get('noteId');
+      this.pendingEditId = editId;
+      this.pendingNoteId = noteId;
+      if (editId && this.items().length > 0) {
+        this.openEditById(editId);
+      }
+      if (noteId && this.items().length > 0) {
+        this.openNoteById(noteId);
+      }
+    });
     this.load();
     this.loadMinisteres();
     this.loadSecteurs();
@@ -114,7 +122,16 @@ export class IdeesdeProjetComponent implements OnInit {
 
   load(): void {
     this.ideesService.getAll().subscribe({
-      next: (data) => { this.items.set(data); this.filteredItems.set(data); },
+      next: (data) => {
+        this.items.set(data);
+        this.filteredItems.set(data);
+        if (this.pendingEditId) {
+          this.openEditById(this.pendingEditId);
+        }
+        if (this.pendingNoteId) {
+          this.openNoteById(this.pendingNoteId);
+        }
+      },
       error: () => this.showToast('Erreur lors du chargement des données', 'error')
     });
   }
@@ -147,6 +164,24 @@ export class IdeesdeProjetComponent implements OnInit {
   }
 
   closeModal(): void { this.modalOpen.set(false); }
+
+  private openEditById(id: string): void {
+    const item = this.items().find(i => String(i.id) === String(id));
+    if (item) {
+      this.edit(item);
+      this.router.navigate([], { queryParams: { editId: null }, queryParamsHandling: 'merge' });
+      this.pendingEditId = null;
+    }
+  }
+
+  private openNoteById(id: string): void {
+    const item = this.items().find(i => String(i.id) === String(id));
+    if (item) {
+      this.openNoteConceptuelle(item);
+      this.router.navigate([], { queryParams: { noteId: null }, queryParamsHandling: 'merge' });
+      this.pendingNoteId = null;
+    }
+  }
 
   edit(item: IdeeProjet): void {
     this.formData = {
@@ -190,24 +225,6 @@ export class IdeesdeProjetComponent implements OnInit {
         this.showToast('Erreur lors de l\'enregistrement', 'error');
       }
     });
-  }
-
-  // Visualisation
-  openView(item: IdeeProjet): void {
-    this.viewingItem.set(item);
-    this.viewNote.set({});
-    this.loadingNote.set(true);
-    this.viewModalOpen.set(true);
-    this.ideesService.getNoteConceptuelle(item.id).subscribe({
-      next: (note) => { this.viewNote.set(note); this.loadingNote.set(false); },
-      error: () => { this.loadingNote.set(false); }
-    });
-  }
-
-  closeView(): void {
-    this.viewModalOpen.set(false);
-    this.viewingItem.set(null);
-    this.viewNote.set({});
   }
 
   // Note Conceptuelle
@@ -295,10 +312,6 @@ export class IdeesdeProjetComponent implements OnInit {
   getStatutLabel(statut: string | undefined): string {
     if (!statut) return '-';
     return this.statuts.find(s => s.value === statut)?.label || statut;
-  }
-
-  getNoteField(key: string): string | undefined {
-    return (this.viewNote() as Record<string, string | undefined>)[key];
   }
 
   getStatutBadgeClass(statut: string | undefined): string {

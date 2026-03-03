@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProjetsService } from '@core/services/projets.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
@@ -14,11 +15,13 @@ import { ToastComponent } from '@shared/components/toast/toast.component';
 @Component({
   selector: 'app-projets-pip',
   standalone: true,
-  imports: [CommonModule, FormsModule, ConfirmDialogComponent, ToastComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ConfirmDialogComponent, ToastComponent],
   templateUrl: './projets.component.html',
   styleUrl: './projets.component.scss'
 })
 export class ProjetsPIPComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private projetsService = inject(ProjetsService);
   private ministeresService = inject(MinisteresService);
   private secteursService = inject(SecteursService);
@@ -35,11 +38,10 @@ export class ProjetsPIPComponent implements OnInit {
   ideesProjet = signal<IdeeProjet[]>([]);
   searchTerm = '';
   modalOpen = signal(false);
-  detailOpen = signal(false);
-  viewingItem = signal<Projet | null>(null);
   editingItem = signal<Projet | null>(null);
   saving = signal(false);
   formData: Partial<Projet> = this.resetForm();
+  private pendingEditId: string | null = null;
 
   confirmDialogVisible = signal(false);
   confirmDialogTitle = '';
@@ -66,6 +68,13 @@ export class ProjetsPIPComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.route.queryParamMap.subscribe(params => {
+      const editId = params.get('editId');
+      this.pendingEditId = editId;
+      if (editId && this.items().length > 0) {
+        this.openEditById(editId);
+      }
+    });
     this.load();
     this.ministeresService.getAll().subscribe({ next: (data) => this.ministeres.set(data) });
     this.secteursService.getAll().subscribe({ next: (data) => this.secteurs.set(data) });
@@ -107,6 +116,9 @@ export class ProjetsPIPComponent implements OnInit {
         console.log('Projets chargés adaptés :', adapted);
         this.items.set(adapted);
         this.filteredItems.set(adapted);
+        if (this.pendingEditId) {
+          this.openEditById(this.pendingEditId);
+        }
       },
       error: (err) => {
         console.error('Erreur lors du chargement des projets :', err);
@@ -135,12 +147,14 @@ export class ProjetsPIPComponent implements OnInit {
 
   closeModal(): void { this.modalOpen.set(false); }
 
-  viewDetail(item: Projet): void {
-    this.viewingItem.set(item);
-    this.detailOpen.set(true);
+  private openEditById(id: string): void {
+    const item = this.items().find(i => String(i.id) === String(id));
+    if (item) {
+      this.edit(item);
+      this.router.navigate([], { queryParams: { editId: null }, queryParamsHandling: 'merge' });
+      this.pendingEditId = null;
+    }
   }
-
-  closeDetail(): void { this.detailOpen.set(false); }
 
    edit(item: Projet): void {
     this.formData = this.adaptProjetDates(item);

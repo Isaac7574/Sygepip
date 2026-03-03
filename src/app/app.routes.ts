@@ -89,6 +89,10 @@ export const routes: Routes = [
         path: 'maturation',
         children: [
           {
+            path: 'idees-projet/:ididee',
+            loadComponent: () => import('./features/maturation/idee-projet-detail/idee-projet-detail.component').then(m => m.IdeeProjetDetailComponent)
+          },
+          {
             path: 'idees-projet',
             loadComponent: () => import('./features/maturation/idees-projet/idees-projet.component').then(m => m.IdeesdeProjetComponent)
           },
@@ -110,6 +114,10 @@ export const routes: Routes = [
       {
         path: 'pip',
         children: [
+          {
+            path: 'projets/:idprojet',
+            loadComponent: () => import('./features/pip/projet-detail/projet-detail.component').then(m => m.ProjetDetailComponent)
+          },
           {
             path: 'projets',
             loadComponent: () => import('./features/pip/projets/projets.component').then(m => m.ProjetsPIPComponent)

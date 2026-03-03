@@ -71,13 +71,13 @@
             </td>
             <td class="px-6 py-4 text-right">
               <div class="flex items-center justify-end gap-2">
-                <button (click)="openView(item)" title="Voir"
-                        class="text-gray-400 hover:text-gray-700">
+                <a [routerLink]="['/app/maturation/idees-projet', item.id]" title="Voir"
+                   class="text-gray-400 hover:text-gray-700">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                   </svg>
-                </button>
+                </a>
                 <button (click)="openNoteConceptuelle(item)" title="Note conceptuelle"
                         class="text-blue-500 hover:text-blue-700">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,143 +112,6 @@
   </div>
 
 </div>
-
-<!-- ===== MODAL VISUALISATION ===== -->
-@if (viewModalOpen()) {
-  <div class="modal-overlay" (click)="closeView()">
-    <div class="modal-content max-w-4xl" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div class="flex items-center gap-3">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="font-mono text-sm font-bold text-gray-500">{{ viewingItem()?.code }}</span>
-              <span class="badge" [ngClass]="getStatutBadgeClass(viewingItem()?.statut)">{{ getStatutLabel(viewingItem()?.statut) }}</span>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 mt-0.5">{{ viewingItem()?.titre }}</h3>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <button (click)="closeView(); edit(viewingItem()!)"
-                  class="text-primary-600 hover:text-primary-800" title="Modifier">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-            </svg>
-          </button>
-          <button (click)="closeView()" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-      <div class="modal-body space-y-5">
-
-        <!-- Informations générales -->
-        <div>
-          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Informations générales</p>
-          <div class="grid grid-cols-3 gap-3">
-            <div class="bg-gray-50 rounded-xl p-3">
-              <p class="text-xs text-gray-400 mb-1">Ministère</p>
-              <p class="text-sm font-medium text-gray-800">{{ getMinistereNom(viewingItem()?.ministereId) }}</p>
-            </div>
-            <div class="bg-gray-50 rounded-xl p-3">
-              <p class="text-xs text-gray-400 mb-1">Secteur</p>
-              <p class="text-sm font-medium text-gray-800">{{ getSecteurNom(viewingItem()?.secteurId) }}</p>
-            </div>
-            <div class="bg-gray-50 rounded-xl p-3">
-              <p class="text-xs text-gray-400 mb-1">Portée</p>
-              <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.portee || '—' }}</p>
-            </div>
-            @if (viewingItem()?.regionsIntervention) {
-              <div class="bg-gray-50 rounded-xl p-3 col-span-3">
-                <p class="text-xs text-gray-400 mb-1">Régions d'intervention</p>
-                <p class="text-sm text-gray-700">{{ viewingItem()?.regionsIntervention }}</p>
-              </div>
-            }
-            @if (viewingItem()?.description) {
-              <div class="bg-gray-50 rounded-xl p-3 col-span-3">
-                <p class="text-xs text-gray-400 mb-1">Description</p>
-                <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ viewingItem()?.description }}</p>
-              </div>
-            }
-          </div>
-        </div>
-
-        <!-- Point focal -->
-        @if (viewingItem()?.pointFocalNom || viewingItem()?.pointFocalEmail) {
-          <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Point focal</p>
-            <div class="grid grid-cols-3 gap-3">
-              <div class="bg-gray-50 rounded-xl p-3">
-                <p class="text-xs text-gray-400 mb-1">Nom</p>
-                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalNom || '—' }}</p>
-              </div>
-              <div class="bg-gray-50 rounded-xl p-3">
-                <p class="text-xs text-gray-400 mb-1">Email</p>
-                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalEmail || '—' }}</p>
-              </div>
-              <div class="bg-gray-50 rounded-xl p-3">
-                <p class="text-xs text-gray-400 mb-1">Téléphone</p>
-                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalTelephone || '—' }}</p>
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- Note conceptuelle -->
-        <div>
-          <div class="flex items-center justify-between mb-3">
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Note conceptuelle</p>
-            <button (click)="closeView(); openNoteConceptuelle(viewingItem()!)"
-                    class="text-xs text-blue-500 hover:text-blue-700 font-medium">
-              Modifier la note →
-            </button>
-          </div>
-          @if (loadingNote()) {
-            <div class="flex items-center gap-2 py-4 text-gray-400">
-              <div class="w-4 h-4 border-2 border-gray-200 border-t-primary-500 rounded-full animate-spin"></div>
-              <span class="text-sm">Chargement...</span>
-            </div>
-          } @else {
-            <div class="grid grid-cols-1 gap-3">
-              @for (field of [
-                {key: 'contexte', label: 'Contexte'},
-                {key: 'alignementStrategique', label: 'Alignement stratégique'},
-                {key: 'resultatsAttendus', label: 'Résultats attendus'},
-                {key: 'indicateursPreliminaires', label: 'Indicateurs préliminaires'},
-                {key: 'descriptionSolution', label: 'Description de la solution'},
-                {key: 'composantesProjet', label: 'Composantes du projet'},
-                {key: 'approcheMiseEnOeuvre', label: 'Approche de mise en œuvre'},
-                {key: 'contraintesRisques', label: 'Contraintes et risques'},
-                {key: 'hypotheses', label: 'Hypothèses'},
-                {key: 'prerequis', label: 'Prérequis'},
-                {key: 'sourcesFinancementEnvisagees', label: 'Sources de financement'},
-                {key: 'chronogrammeSynthese', label: 'Chronogramme synthèse'},
-                {key: 'impactSocioEconomique', label: 'Impact socio-économique'},
-                {key: 'impactEnvironnementalSocial', label: 'Impact environnemental et social'},
-                {key: 'durabilite', label: 'Durabilité'}
-              ]; track field.key) {
-                @if (getNoteField(field.key)) {
-                  <div class="bg-gray-50 rounded-xl p-3">
-                    <p class="text-xs font-semibold text-gray-400 mb-1">{{ field.label }}</p>
-                    <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ getNoteField(field.key) }}</p>
-                  </div>
-                }
-              }
-              @if (!viewNote()['contexte'] && !viewNote()['resultatsAttendus'] && !viewNote()['descriptionSolution']) {
-                <p class="text-sm text-gray-400 text-center py-6">Note conceptuelle non encore renseignée</p>
-              }
-            </div>
-          }
-        </div>
-
-      </div>
-      <div class="modal-footer">
-        <button (click)="closeView()" class="btn-outline">Fermer</button>
-      </div>
-    </div>
-  </div>
-}
 
 <!-- ===== MODAL PRINCIPAL ===== -->
 @if (modalOpen()) {
