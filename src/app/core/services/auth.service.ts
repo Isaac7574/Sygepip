@@ -55,6 +55,9 @@ export class AuthService {
   // Load user profile from Keycloak and backend
   private async loadUserProfile(): Promise<void> {
     try {
+      const token = await this.keycloak.getToken();
+      console.log('🔑 Token JWT:', token);
+
       const keycloakProfile = await this.keycloak.loadUserProfile();
       const roles = this.keycloak.getUserRoles();
 
@@ -92,7 +95,13 @@ export class AuthService {
 
   // Sync user with backend
   private syncWithBackend(): Observable<User | null> {
-    return this.http.get<User>(`${environment.apiUrl}/auth/me`).pipe(
+    return from(this.keycloak.getToken()).pipe(
+      switchMap(token => {
+        if (!token) return of(null);
+        return this.http.get<User>(`${environment.apiUrl}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }),
       catchError(() => of(null))
     );
   }
@@ -143,7 +152,7 @@ export class AuthService {
   // Forgot password (redirect to Keycloak)
   forgotPassword(email?: string): Observable<any> {
     // Keycloak handles this via its own UI
-    window.location.href = `${environment.keycloakUrl || 'http://172.21.224.1:8180'}/realms/sygepip/login-actions/reset-credentials`;
+    window.location.href = `${environment.keycloakUrl || 'http://192.168.11.106:8180'}/realms/sygepip/login-actions/reset-credentials`;
     return of({ success: true });
   }
 
@@ -154,7 +163,7 @@ export class AuthService {
 
   // Change password (redirect to Keycloak account page)
   changePassword(currentPassword?: string, newPassword?: string): Observable<any> {
-    window.location.href = `${environment.keycloakUrl || 'http://172.21.224.1:8180'}/realms/sygepip/account/password`;
+    window.location.href = `${environment.keycloakUrl || 'http://192.168.11.106:8180'}/realms/sygepip/account/password`;
     return of({ success: true });
   }
 
@@ -185,14 +194,21 @@ export class AuthService {
 
   // Get current user from API
   getCurrentUser(): Observable<User> {
-    return this.http.get<User>(`${environment.apiUrl}/auth/me`)
-      .pipe(
-        tap(user => {
-          this.storeUser(user);
-          this._currentUser.set(user);
-          this.currentUserSubject.next(user);
-        })
-      );
+    return from(this.keycloak.getToken()).pipe(
+      switchMap(token => {
+        if (!token) {
+          return throwError(() => new Error('Token manquant'));
+        }
+        return this.http.get<User>(`${environment.apiUrl}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }),
+      tap(user => {
+        this.storeUser(user);
+        this._currentUser.set(user);
+        this.currentUserSubject.next(user);
+      })
+    );
   }
 
   // Check if user has role

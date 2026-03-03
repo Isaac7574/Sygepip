@@ -38,7 +38,7 @@ function initializeKeycloak(keycloak: KeycloakService) {
       setTimeout(() => {
         console.warn('Keycloak init timeout — serveur inaccessible, démarrage sans authentification');
         resolve();
-      }, 5000)
+      }, 30000)
     );
 
     return Promise.race([keycloakInit, timeout]);

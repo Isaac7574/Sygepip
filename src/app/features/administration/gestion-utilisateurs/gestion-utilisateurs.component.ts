@@ -170,6 +170,23 @@ export class GestionUtilisateursComponent implements OnInit {
     this.formData.directionId = undefined;
   }
 
+  onTypeAffiliationChange(): void {
+    if (this.formData.typeAffiliation === 'ETAT') {
+      this.formData.organisationExterne = '';
+    } else {
+      this.formData.ministereId = undefined;
+      this.formData.directionId = undefined;
+    }
+  }
+
+  get showMinistereDirection(): boolean {
+    return this.formData.typeAffiliation === 'ETAT';
+  }
+
+  get showOrganisationExterne(): boolean {
+    return this.formData.typeAffiliation !== 'ETAT';
+  }
+
   save(): void {
     if (!this.formData.email || !this.formData.role || !this.formData.typeAffiliation) {
       this.showToast('Veuillez remplir tous les champs obligatoires (email, rôle, type d\'affiliation)', 'error');
