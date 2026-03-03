@@ -22,6 +22,10 @@ export class LocalitesInterventionService {
     return this.api.getById<LocaliteIntervention>(this.endpoint, id);
   }
 
+  getByProjet(projetId: string): Observable<LocaliteIntervention[]> {
+    return this.api.get<LocaliteIntervention[]>(`${this.endpoint}/projet/${projetId}`);
+  }
+
   create(data: Partial<LocaliteIntervention>): Observable<LocaliteIntervention> {
     return this.api.post<LocaliteIntervention>(this.endpoint, data);
   }

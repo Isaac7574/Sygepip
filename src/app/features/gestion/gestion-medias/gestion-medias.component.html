@@ -77,78 +77,121 @@
   </div>
 </div>
 
-<!-- Modal -->
 @if (modalOpen()) {
   <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-content max-w-4xl" (click)="$event.stopPropagation()">
+    <div class="modal-content-fit max-w-3xl" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier' : 'Nouveau' }} Média</h3>
+        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier le média' : 'Nouveau média' }}</h3>
         <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
-      <div class="modal-body space-y-4">
-        <div class="form-group">
-          <label class="form-label">Titre *</label>
-          <input type="text" [(ngModel)]="formData.titre" class="form-input" placeholder="Titre du média">
-        </div>
-        <div class="grid grid-cols-2 gap-4">
+      <div class="modal-body space-y-6">
+
+        <!-- Identification -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identification</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
           <div class="form-group">
-            <label class="form-label">Type *</label>
-            <select [(ngModel)]="formData.type" class="form-input">
-              @for (t of types; track t.value) {
-                <option [value]="t.value">{{ t.label }}</option>
+            <label class="form-label">Titre <span class="text-red-500">*</span></label>
+            <input type="text" [(ngModel)]="formData.titre" class="form-input" placeholder="Titre du média">
+          </div>
+          <div class="grid grid-cols-2 gap-4 mt-4">
+            <div class="form-group">
+              <label class="form-label">Type <span class="text-red-500">*</span></label>
+              <select [(ngModel)]="formData.type" class="form-input">
+                @for (t of types; track t.value) {
+                  <option [value]="t.value">{{ t.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Catégorie</label>
+              <input type="text" [(ngModel)]="formData.categorie" class="form-input" placeholder="Catégorie du média">
+            </div>
+          </div>
+        </div>
+
+        <!-- Fichiers -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Fichiers</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="form-label">Fichier média <span class="text-red-500">*</span></label>
+              <div class="flex items-center gap-2">
+                <label class="flex-1 flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary-500 hover:bg-gray-50 transition-colors">
+                  <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                  <span class="text-sm text-gray-600">Choisir un fichier</span>
+                  <input type="file" (change)="onFileSelected($event, 'url')" class="hidden">
+                </label>
+              </div>
+              @if (formData.url) {
+                <p class="mt-1 text-xs text-green-600 truncate">{{ formData.url }}</p>
               }
-            </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Miniature</label>
+              <div class="flex items-center gap-2">
+                <label class="flex-1 flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary-500 hover:bg-gray-50 transition-colors">
+                  <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  <span class="text-sm text-gray-600">Choisir une miniature</span>
+                  <input type="file" (change)="onFileSelected($event, 'thumbnailUrl')" accept="image/*" class="hidden">
+                </label>
+              </div>
+              @if (formData.thumbnailUrl) {
+                <p class="mt-1 text-xs text-green-600 truncate">{{ formData.thumbnailUrl }}</p>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Description</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
           </div>
           <div class="form-group">
-            <label class="form-label">Catégorie</label>
-            <input type="text" [(ngModel)]="formData.categorie" class="form-input" placeholder="Catégorie du média">
+            <label class="form-label">Description</label>
+            <textarea [(ngModel)]="formData.description" class="form-input" rows="3" placeholder="Description du média"></textarea>
           </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Fichier média *</label>
-          <div class="flex items-center gap-2">
-            <label class="flex-1 flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary-500 hover:bg-gray-50 transition-colors">
-              <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-              <span class="text-sm text-gray-600">Choisir un fichier</span>
-              <input type="file" (change)="onFileSelected($event, 'url')" class="hidden">
+          <div class="form-group mt-4">
+            <label class="form-label">Tags</label>
+            <input type="text" [(ngModel)]="formData.tags" class="form-input" placeholder="Tags séparés par des virgules">
+          </div>
+          <div class="form-group mt-4">
+            <label class="flex items-center">
+              <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
+              <span class="ml-2">Média actif</span>
             </label>
           </div>
-          @if (formData.url) {
-            <p class="mt-1 text-xs text-green-600 truncate">{{ formData.url }}</p>
-          }
         </div>
-        <div class="form-group">
-          <label class="form-label">Miniature</label>
-          <div class="flex items-center gap-2">
-            <label class="flex-1 flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary-500 hover:bg-gray-50 transition-colors">
-              <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-              <span class="text-sm text-gray-600">Choisir une miniature</span>
-              <input type="file" (change)="onFileSelected($event, 'thumbnailUrl')" accept="image/*" class="hidden">
-            </label>
-          </div>
-          @if (formData.thumbnailUrl) {
-            <p class="mt-1 text-xs text-green-600 truncate">{{ formData.thumbnailUrl }}</p>
-          }
-        </div>
-        <div class="form-group">
-          <label class="form-label">Description</label>
-          <textarea [(ngModel)]="formData.description" class="form-input" rows="3" placeholder="Description du média"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Tags</label>
-          <input type="text" [(ngModel)]="formData.tags" class="form-input" placeholder="Tags séparés par des virgules">
-        </div>
-        <div class="form-group flex items-center gap-2">
-          <input type="checkbox" [(ngModel)]="formData.actif" id="actif" class="rounded border-gray-300">
-          <label for="actif" class="text-sm text-gray-700">Actif</label>
-        </div>
+
       </div>
       <div class="modal-footer">
         <button (click)="closeModal()" class="btn-outline">Annuler</button>
         <button (click)="save()" [disabled]="saving() || uploading()" class="btn-primary">
-          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer le média') }}
         </button>
       </div>
     </div>

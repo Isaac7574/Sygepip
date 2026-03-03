@@ -3,43 +3,51 @@
     <div class="page-header-left">
       <div class="page-header-icon">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
         </svg>
       </div>
       <div class="page-header-text">
         <h1>
-          Workflow
-          <span class="page-header-badge">Maturation</span>
+          Provinces
+          <span class="page-header-badge">Référentiels</span>
         </h1>
-        <p>Configuration des étapes de workflow</p>
+        <p>Gestion des 45 provinces du Burkina Faso</p>
       </div>
     </div>
   </div>
 
   <div class="card overflow-hidden">
     <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50/50">
-      <div class="relative w-full max-w-sm">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher une étape..." class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+      <div class="flex items-center gap-4 flex-1">
+        <div class="w-48">
+          <select [(ngModel)]="selectedRegionId" (ngModelChange)="onRegionFilterChange()" class="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+            <option value="">Toutes les régions</option>
+            @for (r of regions(); track r.id) {
+              <option [value]="r.id">{{ r.nom }}</option>
+            }
+          </select>
+        </div>
+        <div class="relative w-full max-w-sm">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher une province..." class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+        </div>
       </div>
-      <button (click)="openModal()" class="btn-primary">
+      <button (click)="openModal()" class="btn-primary ml-4">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
-        Nouvelle Étape
+        Nouvelle Province
       </button>
     </div>
     <table class="w-full">
       <thead class="bg-gray-50">
         <tr>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Module</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ordre</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Délai (jours)</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rôle validateur</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Région</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chef-lieu</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
           <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
         </tr>
@@ -47,14 +55,10 @@
       <tbody class="divide-y divide-gray-100">
         @for (item of filteredItems(); track item.id) {
           <tr class="hover:bg-gray-50">
-            <td class="px-6 py-4">
-              <span class="badge" [ngClass]="getModuleBadgeClass(item.module)">{{ item.module }}</span>
-            </td>
-            <td class="px-6 py-4 font-medium text-gray-900">{{ item.codeEtape }}</td>
-            <td class="px-6 py-4 text-gray-900">{{ item.nomEtape }}</td>
-            <td class="px-6 py-4 text-gray-500">{{ item.ordre }}</td>
-            <td class="px-6 py-4 text-gray-500">{{ item.delaiJours ?? '-' }}</td>
-            <td class="px-6 py-4 text-gray-500">{{ item.roleValidateur || '-' }}</td>
+            <td class="px-6 py-4 font-medium text-gray-900">{{ item.code }}</td>
+            <td class="px-6 py-4 text-gray-900">{{ item.nom }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ item.regionNom || getRegionNom(item.regionId) }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ item.chefLieu || '-' }}</td>
             <td class="px-6 py-4">
               <span class="badge" [class.badge-success]="item.actif" [class.badge-secondary]="!item.actif">
                 {{ item.actif ? 'Actif' : 'Inactif' }}
@@ -71,7 +75,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="8" class="px-6 py-12 text-center text-gray-500">Aucune étape de workflow trouvée</td>
+            <td colspan="6" class="px-6 py-12 text-center text-gray-500">Aucune province trouvée</td>
           </tr>
         }
       </tbody>
@@ -81,9 +85,9 @@
 
 @if (modalOpen()) {
   <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-content-fit max-w-3xl" (click)="$event.stopPropagation()">
+    <div class="modal-content-fit max-w-2xl" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier l\'étape' : 'Nouvelle étape de workflow' }}</h3>
+        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier la province' : 'Nouvelle province' }}</h3>
         <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -103,65 +107,47 @@
             <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identification</span>
             <div class="flex-1 h-px bg-gray-200"></div>
           </div>
-          <div class="grid grid-cols-3 gap-4">
-            <div class="form-group">
-              <label class="form-label">Module <span class="text-red-500">*</span></label>
-              <select [(ngModel)]="formData.module" class="form-input">
-                @for (m of modules; track m.value) {
-                  <option [value]="m.value">{{ m.label }}</option>
-                }
-              </select>
-            </div>
+          <div class="grid grid-cols-2 gap-4">
             <div class="form-group">
               <label class="form-label">Code <span class="text-red-500">*</span></label>
-              <input type="text" [(ngModel)]="formData.codeEtape" class="form-input" [class.border-red-500]="formErrors()['codeEtape']" placeholder="Ex: MAT-01">
-              @if (formErrors()['codeEtape']) {
-                <p class="mt-1 text-sm text-red-600">{{ formErrors()['codeEtape'] }}</p>
-              }
+              <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: PRV-KAD">
             </div>
             <div class="form-group">
-              <label class="form-label">Ordre <span class="text-red-500">*</span></label>
-              <input type="number" [(ngModel)]="formData.ordre" class="form-input" placeholder="1">
+              <label class="form-label">Chef-lieu</label>
+              <input type="text" [(ngModel)]="formData.chefLieu" class="form-input" placeholder="Chef-lieu de la province">
             </div>
-            <div class="form-group col-span-3">
-              <label class="form-label">Nom de l'étape <span class="text-red-500">*</span></label>
-              <input type="text" [(ngModel)]="formData.nomEtape" class="form-input" [class.border-red-500]="formErrors()['nomEtape']" placeholder="Nom de l'étape">
-              @if (formErrors()['nomEtape']) {
-                <p class="mt-1 text-sm text-red-600">{{ formErrors()['nomEtape'] }}</p>
-              }
-            </div>
-            <div class="form-group col-span-3">
-              <label class="form-label">Description</label>
-              <textarea [(ngModel)]="formData.description" class="form-input" rows="2" placeholder="Description de l'étape"></textarea>
+            <div class="form-group col-span-2">
+              <label class="form-label">Nom <span class="text-red-500">*</span></label>
+              <input type="text" [(ngModel)]="formData.nom" class="form-input" placeholder="Nom de la province">
             </div>
           </div>
         </div>
 
-        <!-- Validation -->
+        <!-- Rattachement -->
         <div>
           <div class="flex items-center gap-2 mb-4">
             <div class="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
               <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
             </div>
-            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Validation</span>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Rattachement</span>
             <div class="flex-1 h-px bg-gray-200"></div>
           </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="form-group">
-              <label class="form-label">Délai (jours)</label>
-              <input type="number" [(ngModel)]="formData.delaiJours" class="form-input" placeholder="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Rôle validateur</label>
-              <input type="text" [(ngModel)]="formData.roleValidateur" class="form-input" placeholder="Ex: ADMIN">
-            </div>
+          <div class="form-group">
+            <label class="form-label">Région <span class="text-red-500">*</span></label>
+            <select [(ngModel)]="formData.regionId" class="form-input" required>
+              <option value="">-- Sélectionner une région --</option>
+              @for (r of regions(); track r.id) {
+                <option [value]="r.id">{{ r.nom }}</option>
+              }
+            </select>
           </div>
           <div class="form-group mt-4">
             <label class="flex items-center">
               <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
-              <span class="ml-2">Étape active</span>
+              <span class="ml-2">Province active</span>
             </label>
           </div>
         </div>
@@ -170,7 +156,7 @@
       <div class="modal-footer">
         <button (click)="closeModal()" class="btn-outline">Annuler</button>
         <button (click)="save()" [disabled]="saving()" class="btn-primary">
-          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer l\'étape') }}
+          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer la province') }}
         </button>
       </div>
     </div>
@@ -183,7 +169,6 @@
   [message]="confirmDialogMessage"
   type="danger"
   confirmText="Supprimer"
-  cancelText="Annuler"
   (confirm)="onConfirmDelete()"
   (cancel)="onCancelDelete()">
 </app-confirm-dialog>
@@ -192,5 +177,5 @@
   [visible]="toastVisible()"
   [message]="toastMessage"
   [type]="toastType"
-  (close)="hideToast()">
+  (close)="toastVisible.set(false)">
 </app-toast>

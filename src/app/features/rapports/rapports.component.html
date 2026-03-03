@@ -85,31 +85,87 @@
 
 @if (modalOpen()) {
   <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-content max-w-4xl" (click)="$event.stopPropagation()">
+    <div class="modal-content-fit max-w-3xl" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier' : 'Nouveau' }} Rapport</h3>
-        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier le rapport' : 'Nouveau rapport de performance' }}</h3>
+        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
       </div>
-      <div class="modal-body space-y-4">
-        <div class="form-group">
-          <label class="form-label">Projet *</label>
-          <select [(ngModel)]="formData.projetId" class="form-input" required>
-            <option [ngValue]="undefined">-- Sélectionner un projet --</option>
-            @for (p of projets(); track p.id) {
-              <option [ngValue]="p.id">{{ p.code }} - {{ p.titre }}</option>
-            }
-          </select>
+      <div class="modal-body space-y-6">
+
+        <!-- Rattachement -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Rattachement</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Projet <span class="text-red-500">*</span></label>
+            <select [(ngModel)]="formData.projetId" class="form-input" required>
+              <option [ngValue]="undefined">-- Sélectionner un projet --</option>
+              @for (p of projets(); track p.id) {
+                <option [ngValue]="p.id">{{ p.code }} - {{ p.titre }}</option>
+              }
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mt-4">
+            <div class="form-group">
+              <label class="form-label">Année <span class="text-red-500">*</span></label>
+              <input type="number" [(ngModel)]="formData.annee" class="form-input" placeholder="2025">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Période</label>
+              <input type="text" [(ngModel)]="formData.periode" class="form-input" placeholder="Ex: T1 2025, S1 2025">
+            </div>
+          </div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-group"><label class="form-label">Année *</label><input type="number" [(ngModel)]="formData.annee" class="form-input"></div>
-          <div class="form-group"><label class="form-label">Période</label><input type="text" [(ngModel)]="formData.periode" class="form-input" placeholder="Ex: T1 2025, S1 2025"></div>
+
+        <!-- Performance -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Performance</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+          <div class="grid grid-cols-3 gap-4">
+            <div class="form-group">
+              <label class="form-label">Taux exécution physique (%)</label>
+              <input type="number" [(ngModel)]="formData.tauxExecutionPhysique" class="form-input" min="0" max="100" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Taux exécution financier (%)</label>
+              <input type="number" [(ngModel)]="formData.tauxExecutionFinancier" class="form-input" min="0" max="100" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Indice de performance</label>
+              <input type="number" [(ngModel)]="formData.indicePerformance" class="form-input" min="0" max="2" step="0.01" placeholder="0.00">
+            </div>
+          </div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-group"><label class="form-label">Taux exécution physique (%)</label><input type="number" [(ngModel)]="formData.tauxExecutionPhysique" class="form-input" min="0" max="100"></div>
-          <div class="form-group"><label class="form-label">Taux exécution financier (%)</label><input type="number" [(ngModel)]="formData.tauxExecutionFinancier" class="form-input" min="0" max="100"></div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-group"><label class="form-label">Indice de performance</label><input type="number" [(ngModel)]="formData.indicePerformance" class="form-input" min="0" max="2" step="0.01"></div>
+
+        <!-- Validation -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Validation</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
           <div class="form-group">
             <label class="form-label">Statut</label>
             <select [(ngModel)]="formData.statut" class="form-input">
@@ -118,12 +174,18 @@
               }
             </select>
           </div>
+          <div class="form-group mt-4">
+            <label class="form-label">Commentaires</label>
+            <textarea [(ngModel)]="formData.commentaires" class="form-input" rows="3" placeholder="Commentaires sur la performance"></textarea>
+          </div>
         </div>
-        <div class="form-group"><label class="form-label">Commentaires</label><textarea [(ngModel)]="formData.commentaires" class="form-input" rows="3" placeholder="Commentaires sur la performance"></textarea></div>
+
       </div>
       <div class="modal-footer">
         <button (click)="closeModal()" class="btn-outline">Annuler</button>
-        <button (click)="save()" [disabled]="saving()" class="btn-primary">{{ saving() ? 'Enregistrement...' : 'Enregistrer' }}</button>
+        <button (click)="save()" [disabled]="saving()" class="btn-primary">
+          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer le rapport') }}
+        </button>
       </div>
     </div>
   </div>

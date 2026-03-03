@@ -1,0 +1,238 @@
+<div class="space-y-6">
+  <div class="page-header-section">
+    <div class="page-header-left">
+      <div class="page-header-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+      </div>
+      <div class="page-header-text">
+        <h1>
+          Villages / Secteurs
+          <span class="page-header-badge">Référentiels</span>
+        </h1>
+        <p>Gestion des villages et secteurs du Burkina Faso</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card overflow-hidden">
+    <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50/50">
+      <div class="flex items-center gap-3 flex-1 flex-wrap">
+        <div class="w-36">
+          <select [(ngModel)]="selectedRegionId" (ngModelChange)="onRegionFilterChange()" class="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+            <option value="">Région</option>
+            @for (r of regions(); track r.id) {
+              <option [value]="r.id">{{ r.nom }}</option>
+            }
+          </select>
+        </div>
+        <div class="w-36">
+          <select [(ngModel)]="selectedProvinceId" (ngModelChange)="onProvinceFilterChange()" class="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500" [disabled]="!selectedRegionId">
+            <option value="">Province</option>
+            @for (p of filteredProvinces(); track p.id) {
+              <option [value]="p.id">{{ p.nom }}</option>
+            }
+          </select>
+        </div>
+        <div class="w-40">
+          <select [(ngModel)]="selectedCommuneId" (ngModelChange)="onCommuneFilterChange()" class="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500" [disabled]="!selectedProvinceId">
+            <option value="">Commune</option>
+            @for (c of filteredCommunes(); track c.id) {
+              <option [value]="c.id">{{ c.nom }}</option>
+            }
+          </select>
+        </div>
+        <div class="relative w-full max-w-xs">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher..." class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+        </div>
+      </div>
+      <button (click)="openModal()" class="btn-primary ml-4">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nouveau Village
+      </button>
+    </div>
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Commune</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Latitude</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Longitude</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        @for (item of filteredItems(); track item.id) {
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 font-medium text-gray-900">{{ item.code }}</td>
+            <td class="px-6 py-4 text-gray-900">{{ item.nom }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ item.communeNom || getCommuneNom(item.communeId) }}</td>
+            <td class="px-6 py-4 text-gray-500 font-mono text-sm">{{ formatCoord(item.latitude) }}</td>
+            <td class="px-6 py-4 text-gray-500 font-mono text-sm">{{ formatCoord(item.longitude) }}</td>
+            <td class="px-6 py-4">
+              <span class="badge" [class.badge-success]="item.actif" [class.badge-secondary]="!item.actif">
+                {{ item.actif ? 'Actif' : 'Inactif' }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button (click)="edit(item)" class="text-primary-600 hover:text-primary-800 mr-2" title="Modifier">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <button (click)="confirmDelete(item)" class="text-bf-red-600 hover:text-bf-red-800" title="Supprimer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="px-6 py-12 text-center text-gray-500">Aucun village trouvé</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (modalOpen()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content-fit max-w-2xl" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier le village' : 'Nouveau village' }}</h3>
+        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body space-y-6">
+
+        <!-- Identification -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identification</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="form-label">Code</label>
+              <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: VLG-001">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nom <span class="text-red-500">*</span></label>
+              <input type="text" [(ngModel)]="formData.nom" class="form-input" placeholder="Nom du village">
+            </div>
+          </div>
+        </div>
+
+        <!-- Rattachement -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Rattachement</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+          <div class="grid grid-cols-3 gap-4">
+            <div class="form-group">
+              <label class="form-label">Région <span class="text-red-500">*</span></label>
+              <select [(ngModel)]="formRegionId" (ngModelChange)="onFormRegionChange()" class="form-input">
+                <option value="">-- Région --</option>
+                @for (r of regions(); track r.id) {
+                  <option [value]="r.id">{{ r.nom }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Province <span class="text-red-500">*</span></label>
+              <select [(ngModel)]="formProvinceId" (ngModelChange)="onFormProvinceChange()" class="form-input" [disabled]="!formRegionId">
+                <option value="">-- Province --</option>
+                @for (p of formProvinces(); track p.id) {
+                  <option [value]="p.id">{{ p.nom }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Commune <span class="text-red-500">*</span></label>
+              <select [(ngModel)]="formData.communeId" class="form-input" [disabled]="!formProvinceId">
+                <option value="">-- Commune --</option>
+                @for (c of formCommunes(); track c.id) {
+                  <option [value]="c.id">{{ c.nom }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coordonnées GPS -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Coordonnées GPS</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="form-label">Latitude</label>
+              <input type="number" [(ngModel)]="formData.latitude" class="form-input" step="0.000001" placeholder="Ex: 12.370000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Longitude</label>
+              <input type="number" [(ngModel)]="formData.longitude" class="form-input" step="0.000001" placeholder="Ex: -1.520000">
+            </div>
+          </div>
+          <div class="form-group mt-4">
+            <label class="flex items-center">
+              <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
+              <span class="ml-2">Village actif</span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button (click)="closeModal()" class="btn-outline">Annuler</button>
+        <button (click)="save()" [disabled]="saving()" class="btn-primary">
+          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer le village') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  [visible]="confirmDialogVisible()"
+  [title]="confirmDialogTitle"
+  [message]="confirmDialogMessage"
+  type="danger"
+  confirmText="Supprimer"
+  (confirm)="onConfirmDelete()"
+  (cancel)="onCancelDelete()">
+</app-confirm-dialog>
+
+<app-toast
+  [visible]="toastVisible()"
+  [message]="toastMessage"
+  [type]="toastType"
+  (close)="toastVisible.set(false)">
+</app-toast>
