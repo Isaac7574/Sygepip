@@ -67,6 +67,18 @@ export const routes: Routes = [
             loadComponent: () => import('./features/referentiels/regions/regions.component').then(m => m.RegionsComponent)
           },
           {
+            path: 'provinces',
+            loadComponent: () => import('./features/referentiels/provinces/provinces.component').then(m => m.ProvincesComponent)
+          },
+          {
+            path: 'communes',
+            loadComponent: () => import('./features/referentiels/communes/communes.component').then(m => m.CommunesComponent)
+          },
+          {
+            path: 'villages',
+            loadComponent: () => import('./features/referentiels/villages/villages.component').then(m => m.VillagesComponent)
+          },
+          {
             path: 'secteurs',
             loadComponent: () => import('./features/referentiels/secteurs/secteurs.component').then(m => m.SecteursComponent)
           },

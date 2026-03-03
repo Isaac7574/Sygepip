@@ -74,44 +74,60 @@
 <!-- Modal -->
 @if (modalOpen()) {
   <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-content max-w-2xl" (click)="$event.stopPropagation()">
+    <div class="modal-content-fit max-w-2xl" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier' : 'Nouvelle' }} Direction</h3>
+        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier la direction' : 'Nouvelle direction' }}</h3>
         <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
       </div>
-      <div class="modal-body space-y-4">
-        <div class="form-group">
-          <label class="form-label">Code *</label>
-          <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: DIR-001">
+      <div class="modal-body space-y-6">
+
+        <!-- Identification -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identification</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="form-label">Code <span class="text-red-500">*</span></label>
+              <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: DIR-001">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ministère <span class="text-red-500">*</span></label>
+              <select [(ngModel)]="formData.ministereId" class="form-input">
+                <option value="">-- Sélectionner --</option>
+                @for (m of ministeres(); track m.id) {
+                  <option [value]="m.id">{{ m.sigle || m.nom }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Nom <span class="text-red-500">*</span></label>
+              <input type="text" [(ngModel)]="formData.nom" class="form-input" placeholder="Nom de la direction">
+            </div>
+          </div>
+          <div class="form-group mt-4">
+            <label class="flex items-center">
+              <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
+              <span class="ml-2">Direction active</span>
+            </label>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Nom *</label>
-          <input type="text" [(ngModel)]="formData.nom" class="form-input" placeholder="Nom de la direction">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Ministère *</label>
-          <select [(ngModel)]="formData.ministereId" class="form-input">
-            <option value="">-- Sélectionner --</option>
-            @for (m of ministeres(); track m.id) {
-              <option [value]="m.id">{{ m.sigle || m.nom }}</option>
-            }
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="flex items-center">
-            <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
-            <span class="ml-2">Actif</span>
-          </label>
-        </div>
+
       </div>
       <div class="modal-footer">
         <button (click)="closeModal()" class="btn-outline">Annuler</button>
         <button (click)="save()" [disabled]="saving()" class="btn-primary">
-          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer la direction') }}
         </button>
       </div>
     </div>

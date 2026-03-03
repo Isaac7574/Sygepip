@@ -76,57 +76,86 @@
 <!-- Modal -->
 @if (modalOpen()) {
   <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-content max-w-4xl" (click)="$event.stopPropagation()">
+    <div class="modal-content-fit max-w-3xl" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier' : 'Nouveau' }} Programme</h3>
+        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier le programme' : 'Nouveau programme' }}</h3>
         <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
       </div>
-      <div class="modal-body space-y-4">
-        <div class="form-group">
-          <label class="form-label">Code *</label>
-          <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: PRG-001">
+      <div class="modal-body space-y-6">
+
+        <!-- Identification -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identification</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="form-label">Code <span class="text-red-500">*</span></label>
+              <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: PRG-001">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Secteur</label>
+              <select [(ngModel)]="formData.secteurId" class="form-input">
+                <option [ngValue]="undefined">-- Sélectionner --</option>
+                @for (s of secteurs(); track s.id) {
+                  <option [ngValue]="s.id">{{ s.nom }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Nom <span class="text-red-500">*</span></label>
+              <input type="text" [(ngModel)]="formData.nom" class="form-input" placeholder="Nom du programme">
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Nom *</label>
-          <input type="text" [(ngModel)]="formData.nom" class="form-input" placeholder="Nom du programme">
+
+        <!-- Rattachement -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Rattachement</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ministère <span class="text-red-500">*</span></label>
+            <select [(ngModel)]="formData.ministereId" class="form-input">
+              <option [ngValue]="undefined">-- Sélectionner --</option>
+              @for (m of ministeres(); track m.id) {
+                <option [ngValue]="m.id">{{ m.sigle || m.nom }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group mt-4">
+            <label class="form-label">Description</label>
+            <textarea [(ngModel)]="formData.description" class="form-input" rows="2" placeholder="Description du programme"></textarea>
+          </div>
+          <div class="form-group mt-4">
+            <label class="flex items-center">
+              <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
+              <span class="ml-2">Programme actif</span>
+            </label>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Ministère *</label>
-          <select [(ngModel)]="formData.ministereId" class="form-input">
-            <option [ngValue]="undefined">-- Sélectionner --</option>
-            @for (m of ministeres(); track m.id) {
-              <option [ngValue]="m.id">{{ m.sigle || m.nom }}</option>
-            }
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Secteur</label>
-          <select [(ngModel)]="formData.secteurId" class="form-input">
-            <option [ngValue]="undefined">-- Sélectionner --</option>
-            @for (s of secteurs(); track s.id) {
-              <option [ngValue]="s.id">{{ s.nom }}</option>
-            }
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Description</label>
-          <textarea [(ngModel)]="formData.description" class="form-input" rows="3" placeholder="Description du programme"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="flex items-center">
-            <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
-            <span class="ml-2">Actif</span>
-          </label>
-        </div>
+
       </div>
       <div class="modal-footer">
         <button (click)="closeModal()" class="btn-outline">Annuler</button>
         <button (click)="save()" [disabled]="saving()" class="btn-primary">
-          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer le programme') }}
         </button>
       </div>
     </div>

@@ -82,63 +82,90 @@
 
 @if (modalOpen()) {
   <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-content max-w-4xl" (click)="$event.stopPropagation()">
+    <div class="modal-content-fit max-w-3xl" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier' : 'Nouvelle' }} Programmation</h3>
+        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier la programmation' : 'Nouvelle programmation PIP' }}</h3>
         <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
       </div>
-      <div class="modal-body space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-group">
-            <label class="form-label">Code *</label>
-            <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: PIP-2024">
+      <div class="modal-body space-y-6">
+
+        <!-- Identification -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identification</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+          <div class="grid grid-cols-3 gap-4">
+            <div class="form-group">
+              <label class="form-label">Code <span class="text-red-500">*</span></label>
+              <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: PIP-2024">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Année <span class="text-red-500">*</span></label>
+              <input type="number" [(ngModel)]="formData.annee" class="form-input" placeholder="2024">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Statut <span class="text-red-500">*</span></label>
+              <select [(ngModel)]="formData.statut" class="form-input">
+                @for (s of statuts; track s.value) {
+                  <option [value]="s.value">{{ s.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Budget & Dates -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Budget & Période</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
           </div>
           <div class="form-group">
-            <label class="form-label">Année *</label>
-            <input type="number" [(ngModel)]="formData.annee" class="form-input" placeholder="2024">
+            <label class="form-label">Enveloppe globale (FCFA)</label>
+            <input type="number" [(ngModel)]="formData.enveloppeGlobale" class="form-input" placeholder="0">
+          </div>
+          <div class="grid grid-cols-2 gap-4 mt-4">
+            <div class="form-group">
+              <label class="form-label">Date d'ouverture</label>
+              <input type="date" [(ngModel)]="formData.dateOuverture" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date de clôture</label>
+              <input type="date" [(ngModel)]="formData.dateCloture" class="form-input">
+            </div>
+          </div>
+          <div class="form-group mt-4">
+            <label class="form-label">Observations</label>
+            <textarea [(ngModel)]="formData.observations" class="form-input" rows="2" placeholder="Observations"></textarea>
+          </div>
+          <div class="form-group mt-4">
+            <label class="flex items-center">
+              <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
+              <span class="ml-2">Programmation active</span>
+            </label>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Statut *</label>
-          <select [(ngModel)]="formData.statut" class="form-input">
-            @for (s of statuts; track s.value) {
-              <option [value]="s.value">{{ s.label }}</option>
-            }
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Enveloppe globale (FCFA)</label>
-          <input type="number" [(ngModel)]="formData.enveloppeGlobale" class="form-input" placeholder="0">
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-group">
-            <label class="form-label">Date d'ouverture</label>
-            <input type="date" [(ngModel)]="formData.dateOuverture" class="form-input">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Date de clôture</label>
-            <input type="date" [(ngModel)]="formData.dateCloture" class="form-input">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Observations</label>
-          <textarea [(ngModel)]="formData.observations" class="form-input" rows="2" placeholder="Observations"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="flex items-center">
-            <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
-            <span class="ml-2">Actif</span>
-          </label>
-        </div>
+
       </div>
       <div class="modal-footer">
         <button (click)="closeModal()" class="btn-outline">Annuler</button>
         <button (click)="save()" [disabled]="saving()" class="btn-primary">
-          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer la programmation') }}
         </button>
       </div>
     </div>

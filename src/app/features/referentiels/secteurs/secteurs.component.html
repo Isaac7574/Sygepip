@@ -85,46 +85,62 @@
 <!-- Modal -->
 @if (modalOpen()) {
   <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-content max-w-4xl" (click)="$event.stopPropagation()">
+    <div class="modal-content-fit max-w-2xl" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier' : 'Nouveau' }} Secteur</h3>
+        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier le secteur' : 'Nouveau secteur' }}</h3>
         <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
       </div>
-      <div class="modal-body space-y-4">
-        <div class="form-group">
-          <label class="form-label">Code *</label>
-          <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: SEC-01">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Nom *</label>
-          <input type="text" [(ngModel)]="formData.nom" class="form-input" placeholder="Nom du secteur">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Description</label>
-          <textarea [(ngModel)]="formData.description" class="form-input" rows="3" placeholder="Description du secteur"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Couleur</label>
-          <div class="flex items-center gap-3">
-            <input type="color" [(ngModel)]="formData.couleur" class="w-10 h-10 rounded cursor-pointer border border-gray-200">
-            <input type="text" [(ngModel)]="formData.couleur" class="form-input flex-1" placeholder="#3B82F6">
+      <div class="modal-body space-y-6">
+
+        <!-- Identification -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identification</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="form-label">Code <span class="text-red-500">*</span></label>
+              <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: SEC-01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Couleur</label>
+              <div class="flex items-center gap-2">
+                <input type="color" [(ngModel)]="formData.couleur" class="w-10 h-10 rounded cursor-pointer border border-gray-200">
+                <input type="text" [(ngModel)]="formData.couleur" class="form-input flex-1" placeholder="#3B82F6">
+              </div>
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Nom <span class="text-red-500">*</span></label>
+              <input type="text" [(ngModel)]="formData.nom" class="form-input" placeholder="Nom du secteur">
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Description</label>
+              <textarea [(ngModel)]="formData.description" class="form-input" rows="2" placeholder="Description du secteur"></textarea>
+            </div>
+          </div>
+          <div class="form-group mt-4">
+            <label class="flex items-center">
+              <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
+              <span class="ml-2">Secteur actif</span>
+            </label>
           </div>
         </div>
-        <div class="form-group">
-          <label class="flex items-center">
-            <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
-            <span class="ml-2">Actif</span>
-          </label>
-        </div>
+
       </div>
       <div class="modal-footer">
         <button (click)="closeModal()" class="btn-outline">Annuler</button>
         <button (click)="save()" [disabled]="saving()" class="btn-primary">
-          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer le secteur') }}
         </button>
       </div>
     </div>

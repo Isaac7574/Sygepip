@@ -75,6 +75,57 @@ export interface Region {
   updatedAt?: Date;
 }
 
+// === PROVINCES ===
+export interface Province {
+  id: string;
+  code: string;
+  nom: string;
+  regionId: string;
+  regionNom?: string;
+  chefLieu?: string;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// === COMMUNES ===
+export type TypeCommune = 'URBAINE' | 'RURALE';
+
+export interface Commune {
+  id: string;
+  code: string;
+  nom: string;
+  provinceId: string;
+  provinceNom?: string;
+  regionId?: string;
+  regionNom?: string;
+  typeCommune?: TypeCommune;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// === VILLAGES ===
+export interface Village {
+  id: string;
+  code: string;
+  nom: string;
+  communeId: string;
+  communeNom?: string;
+  provinceId?: string;
+  provinceNom?: string;
+  regionId?: string;
+  regionNom?: string;
+  latitude?: number;
+  longitude?: number;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// === TYPE LOCALITE ENUM ===
+export type TypeLocalite = 'REGION' | 'PROVINCE' | 'COMMUNE' | 'VILLAGE';
+
 export interface Secteur {
   id: string;
   code: string;
@@ -492,12 +543,17 @@ export interface Alerte {
 export interface LocaliteIntervention {
   id: string;
   projetId: string;
+  typeLocalite: TypeLocalite;
   regionId?: string;
-  province?: string;
-  commune?: string;
-  village?: string;
-  nomLocalite?: string;
-  typeLocalite?: string;
+  regionNom?: string;
+  provinceId?: string;
+  provinceNom?: string;
+  communeId?: string;
+  communeNom?: string;
+  villageId?: string;
+  villageNom?: string;
+  nomComplet?: string;
+  description?: string;
   latitude?: number;
   longitude?: number;
   actif: boolean;
