@@ -165,6 +165,21 @@ export interface SourceFinancement {
 }
 
 // === MATURATION ===
+export type StatutIdeeProjet =
+  | 'IDEE_BROUILLON'
+  | 'IDEE_SOUMISE'
+  | 'IDEE_SOMMAIRE_SELECTIONNEE'
+  | 'IDEE_SOMMAIRE_REJETEE'
+  | 'IDEE_ARCHIVEE'
+  | 'IDEE_CONCEPTION_BROUILLON'
+  | 'CONCEPTION_SOUMISE'
+  | 'RAPPORT_FAISABILITE_VALIDE'
+  | 'PRODOC_SOUMIS'
+  | 'PRODOC_VALIDE'
+  | 'IDENTIFICATION_FINANCEMENT'
+  | 'SOUMISSION_DOSSIER_PROJET'
+  | 'DOSSIER_PROJET_VALIDE'
+  | 'DOSSIER_PROJET_RETOURNE';
 export interface IdeeProjet {
   id: string;
   code: string;
@@ -177,29 +192,16 @@ export interface IdeeProjet {
   pointFocalNom?: string;
   pointFocalEmail?: string;
   pointFocalTelephone?: string;
-  statut?: string;
+  dateSoumission?: Date;
+  statut?: StatutIdeeProjet | string;
+  etapeId?: string;
   scoreSelection?: number;
   createdBy?: string;
   actif?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
-  // === Champs Note Conceptuelle (même table) ===
-  contexte?: string;
-  alignementStrategique?: string;
-  resultatsAttendus?: string;
-  indicateursPreliminaires?: string;
-  descriptionSolution?: string;
-  composantesProjet?: string;
-  approcheMiseEnOeuvre?: string;
-  contraintesRisques?: string;
-  hypotheses?: string;
-  prerequis?: string;
-  sourcesFinancementEnvisagees?: string;
-  chronogrammeSynthese?: string;
-  impactSocioEconomique?: string;
-  impactEnvironnementalSocial?: string;
-  durabilite?: string;
 }
+
 
 export interface CritereSelection {
   id: string;
@@ -281,6 +283,10 @@ export type TypeDocumentProjet =
   | 'CAHIER_CHARGES'
   | 'RAPPORT_AVANCEMENT'
   | 'PV_RECEPTION'
+  | 'RAPPORT_FAISABILITE'
+  | 'PRODOC'
+  | 'ACTE_JURIDIQUE'
+  | 'DOSSIER_PROJET'
   | 'AUTRE';
 
 export type StatutDocument = 'EN_ATTENTE' | 'VALIDE' | 'REJETE';
@@ -342,12 +348,38 @@ export interface PlanFinancement {
 }
 
 // === PROJETS ===
+export type CategorieProjet =
+  | 'CATEGORIE_1_ADMINISTRATION_DIRECTE'
+  | 'CATEGORIE_2_STRUCTURE_AUTONOME'
+  | 'CATEGORIE_3_AGENCES_PTF_ONG'
+  | 'CATEGORIE_4_PPP';
+
+export type TypeProjetPip = 'NOYAU_SUR' | 'NATIONAL';
+export type StatutInscriptionPip = 'EN_EXECUTION' | 'INSTANCE_DEMARRAGE';
+
+export type StatutProjet =
+  | 'CREE'
+  | 'PIP_TECHNIQUE_EN_COURS'
+  | 'PIP_TECHNIQUE_SOUMIS'
+  | 'PIP_TECHNIQUE_VALIDE'
+  | 'PIP_TECHNIQUE_A_CORRIGER'
+  | 'PIP_FINANCIER_CREE'
+  | 'EN_ARBITRAGE'
+  | 'ARBITRAGE_RETENU'
+  | 'ARBITRAGE_AJOURNE'
+  | 'PIP_VALIDE'
+  | 'EN_EXECUTION'
+  | 'SUSPENDU'
+  | 'CLOTURE';
+
+export type TypeProjetStructurant = 'STRUCTURANT' | 'NON_STRUCTURANT' | 'STRATEGIQUE';
+
 export interface Projet {
   id: string;
   ideeProjetId?: string;
   code: string;
   titre: string;
-  categorie?: string;
+  categorie?: CategorieProjet | string;
   ministereId: string;
   secteurId?: string;
   regionId?: string;
@@ -355,19 +387,22 @@ export interface Projet {
   pipAnnuelId?: string;
   description?: string;
   objectifs?: string;
+  objectifsStrategiques?: string;
+  objectifsOperationnel?: string;
   coutTotal?: number;
   dateDebutPrevu?: Date;
   dateFinPrevu?: Date;
   dateCreation?: Date;
   dureeEnMois?: number;
   sourceFinancement?: string;
-  statut?: string;
+  statut?: StatutProjet | string;
+  etapeId?: string;
   chefProjetId?: string;
   latitude?: number;
   longitude?: number;
-  typeStructurant?: string;
-  typeProjetPip?: 'NOYAU_SUR' | 'NATIONAL';
-  statutInscriptionPip?: 'EN_EXECUTION' | 'INSTANCE_DEMARRAGE';
+  typeStructurant?: TypeProjetStructurant | string;
+  typeProjetPip?: TypeProjetPip | string;
+  statutInscriptionPip?: StatutInscriptionPip | string;
   financementBoucle?: boolean;
   createdBy?: string;
   actif: boolean;
@@ -580,6 +615,34 @@ export interface Activite {
 }
 
 // === WORKFLOW ===
+export type WorkflowActionCode =
+  | 'SOUMETTRE'
+  | 'RESOUMETTRE'
+  | 'VALIDER'
+  | 'RETOUR'
+  | 'REJETER'
+  | 'PASSER_ETAPE'
+  | 'ARCHIVER'
+  | 'CREER_PROJET'
+  | 'CLOTURER'
+  | 'RETENIR'
+  | 'NON_RETENIR'
+  | 'INSCRIRE_PIP';
+
+export interface WorkflowNextAction {
+  etapeId: string;
+  codeEtape: string;
+  nomEtape: string;
+  actionCode: WorkflowActionCode;
+  etatCible?: string;
+  roleRequis?: string;
+}
+
+export interface MaturationActionRequestDTO {
+  userId?: string;
+  commentaire?: string;
+}
+
 export interface WorkflowEtape {
   id: string;
   module?: string;
@@ -800,9 +863,27 @@ export interface Decaissement {
 
 // === NOTE CONCEPTUELLE ===
 export interface IdeeProjetNoteConceptuelle {
+  id?: string;
   ideeProjetId: string;
+  code?: string;
+  titre?: string;
+  description?: string;
+  ministereId?: string;
+  secteurId?: string;
+  portee?: string;
+  regionsIntervention?: string;
+  pointFocalNom?: string;
+  pointFocalEmail?: string;
+  pointFocalTelephone?: string;
+  dateSoumission?: Date;
+  statut?: StatutIdeeProjet | string;
+  scoreSelection?: number;
+  problematique?: string;
   contexte?: string;
   alignementStrategique?: string;
+  beneficiairesCibles?: string;
+  objectifGeneral?: string;
+  objectifsSpecifiques?: string;
   resultatsAttendus?: string;
   indicateursPreliminaires?: string;
   descriptionSolution?: string;
@@ -811,12 +892,18 @@ export interface IdeeProjetNoteConceptuelle {
   contraintesRisques?: string;
   hypotheses?: string;
   prerequis?: string;
+  beneficiairesEstimes?: number;
+  coutEstime?: number;
   sourcesFinancementEnvisagees?: string;
+  dureeEstimeeMois?: number;
   chronogrammeSynthese?: string;
   impactSocioEconomique?: string;
   impactEnvironnementalSocial?: string;
   durabilite?: string;
+  zoneIntervention?: string;
+  porteurProjet?: string;
 }
+
 
 // === INSCRIPTION PIP ANNUEL ===
 export interface InscriptionPipAnnuel {

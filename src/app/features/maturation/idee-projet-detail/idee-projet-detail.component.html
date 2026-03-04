@@ -53,11 +53,11 @@
     <div class="card overflow-hidden">
       <!-- Bandeau de couleur selon le statut -->
       <div class="h-1.5 w-full"
-           [class.bg-gray-400]="idee()!.statut === 'BROUILLON'"
-           [class.bg-blue-500]="idee()!.statut === 'SOUMIS'"
-           [class.bg-yellow-500]="idee()!.statut === 'EN_EVALUATION'"
-           [class.bg-green-500]="idee()!.statut === 'VALIDE'"
-           [class.bg-red-500]="idee()!.statut === 'REJETE'">
+           [class.bg-gray-400]="idee()!.statut === 'IDEE_BROUILLON' || idee()!.statut === 'IDEE_ARCHIVEE'"
+           [class.bg-blue-500]="idee()!.statut === 'IDEE_SOUMISE' || idee()!.statut === 'CONCEPTION_SOUMISE' || idee()!.statut === 'PRODOC_SOUMIS' || idee()!.statut === 'SOUMISSION_DOSSIER_PROJET'"
+           [class.bg-yellow-500]="idee()!.statut === 'IDEE_CONCEPTION_BROUILLON' || idee()!.statut === 'IDENTIFICATION_FINANCEMENT'"
+           [class.bg-green-500]="idee()!.statut === 'RAPPORT_FAISABILITE_VALIDE' || idee()!.statut === 'PRODOC_VALIDE' || idee()!.statut === 'DOSSIER_PROJET_VALIDE'"
+           [class.bg-red-500]="idee()!.statut === 'IDEE_SOMMAIRE_REJETEE' || idee()!.statut === 'DOSSIER_PROJET_RETOURNE'">
       </div>
 
       <div class="p-6 md:p-8">
@@ -204,7 +204,7 @@
             </div>
           } @else {
             <!-- Regroupement des champs de la note -->
-            @let hasNote = getNoteField('contexte') || getNoteField('resultatsAttendus') || getNoteField('descriptionSolution');
+            @let hasNote = getNoteField('problematique') || getNoteField('contexte') || getNoteField('objectifGeneral') || getNoteField('resultatsAttendus') || getNoteField('descriptionSolution');
 
             @if (!hasNote) {
               <div class="flex flex-col items-center justify-center py-10 text-gray-400">
@@ -220,21 +220,30 @@
             } @else {
               <div class="space-y-3">
                 @for (field of [
-                  {key: 'contexte', label: 'Contexte', color: 'bg-blue-50 border-blue-100'},
-                  {key: 'alignementStrategique', label: 'Alignement stratégique', color: 'bg-indigo-50 border-indigo-100'},
-                  {key: 'resultatsAttendus', label: 'Résultats attendus', color: 'bg-green-50 border-green-100'},
-                  {key: 'indicateursPreliminaires', label: 'Indicateurs préliminaires', color: 'bg-teal-50 border-teal-100'},
-                  {key: 'descriptionSolution', label: 'Description de la solution', color: 'bg-sky-50 border-sky-100'},
-                  {key: 'composantesProjet', label: 'Composantes du projet', color: 'bg-violet-50 border-violet-100'},
-                  {key: 'approcheMiseEnOeuvre', label: 'Approche de mise en œuvre', color: 'bg-purple-50 border-purple-100'},
+                  {key: 'problematique', label: 'Problématique', color: 'bg-blue-50 border-blue-100'},
+                  {key: 'contexte', label: 'Contexte', color: 'bg-indigo-50 border-indigo-100'},
+                  {key: 'alignementStrategique', label: 'Alignement stratégique', color: 'bg-violet-50 border-violet-100'},
+                  {key: 'beneficiairesCibles', label: 'Bénéficiaires cibles', color: 'bg-sky-50 border-sky-100'},
+                  {key: 'objectifGeneral', label: 'Objectif général', color: 'bg-green-50 border-green-100'},
+                  {key: 'objectifsSpecifiques', label: 'Objectifs spécifiques', color: 'bg-teal-50 border-teal-100'},
+                  {key: 'resultatsAttendus', label: 'Résultats attendus', color: 'bg-cyan-50 border-cyan-100'},
+                  {key: 'indicateursPreliminaires', label: 'Indicateurs préliminaires', color: 'bg-emerald-50 border-emerald-100'},
+                  {key: 'descriptionSolution', label: 'Description de la solution', color: 'bg-lime-50 border-lime-100'},
+                  {key: 'composantesProjet', label: 'Composantes du projet', color: 'bg-purple-50 border-purple-100'},
+                  {key: 'approcheMiseEnOeuvre', label: 'Approche de mise en œuvre', color: 'bg-orange-50 border-orange-100'},
                   {key: 'contraintesRisques', label: 'Contraintes et risques', color: 'bg-red-50 border-red-100'},
-                  {key: 'hypotheses', label: 'Hypothèses', color: 'bg-orange-50 border-orange-100'},
-                  {key: 'prerequis', label: 'Prérequis', color: 'bg-yellow-50 border-yellow-100'},
+                  {key: 'hypotheses', label: 'Hypothèses', color: 'bg-yellow-50 border-yellow-100'},
+                  {key: 'prerequis', label: 'Prérequis', color: 'bg-amber-50 border-amber-100'},
+                  {key: 'beneficiairesEstimes', label: 'Bénéficiaires estimés', color: 'bg-indigo-50 border-indigo-100'},
+                  {key: 'coutEstime', label: 'Coût estimé', color: 'bg-blue-50 border-blue-100'},
                   {key: 'sourcesFinancementEnvisagees', label: 'Sources de financement', color: 'bg-emerald-50 border-emerald-100'},
+                  {key: 'dureeEstimeeMois', label: 'Durée estimée (mois)', color: 'bg-slate-50 border-slate-100'},
                   {key: 'chronogrammeSynthese', label: 'Chronogramme synthèse', color: 'bg-cyan-50 border-cyan-100'},
                   {key: 'impactSocioEconomique', label: 'Impact socio-économique', color: 'bg-lime-50 border-lime-100'},
                   {key: 'impactEnvironnementalSocial', label: 'Impact environnemental et social', color: 'bg-green-50 border-green-100'},
-                  {key: 'durabilite', label: 'Durabilité', color: 'bg-teal-50 border-teal-100'}
+                  {key: 'durabilite', label: 'Durabilité', color: 'bg-teal-50 border-teal-100'},
+                  {key: 'zoneIntervention', label: 'Zone d\'intervention', color: 'bg-sky-50 border-sky-100'},
+                  {key: 'porteurProjet', label: 'Porteur du projet', color: 'bg-violet-50 border-violet-100'}
                 ]; track field.key) {
                   @if (getNoteField(field.key)) {
                     <div class="rounded-xl p-4 border {{ field.color }}">
@@ -338,6 +347,71 @@
       <!-- Colonne droite (1/3) -->
       <div class="space-y-6">
 
+        <!-- Actions workflow -->
+        <div class="card p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Actions</h3>
+          </div>
+
+          @if (loadingActions()) {
+            <div class="flex items-center gap-2 py-3 text-gray-400">
+              <div class="w-4 h-4 border-2 border-gray-200 border-t-primary-500 rounded-full animate-spin"></div>
+              <span class="text-sm">Chargement des actions...</span>
+            </div>
+          } @else if (!workflowActions().length) {
+            <p class="text-sm text-gray-400">Aucune action disponible pour ce statut.</p>
+          } @else {
+            <div class="space-y-4">
+              @if (requiredDocumentType()) {
+                <div class="bg-gray-50 rounded-xl p-3">
+                  <div class="flex items-center justify-between gap-3">
+                    <div>
+                      <p class="text-xs font-semibold text-gray-500">Document requis</p>
+                      <p class="text-sm text-gray-800">{{ requiredDocumentType() }}</p>
+                      <p class="text-xs text-gray-400">
+                        @if (hasRequiredDocument()) { Document présent }
+                        @else { Document manquant }
+                      </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <input type="file" (change)="onFileSelected($event)" class="text-xs text-gray-500">
+                      <button (click)="uploadRequiredDocument()"
+                              [disabled]="!selectedFile || actionInProgress()"
+                              class="btn-outline">
+                        Télécharger
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <div class="form-group">
+                <label class="form-label">Commentaire</label>
+                <textarea [(ngModel)]="actionComment" class="form-input" rows="2"
+                          placeholder="Commentaire (obligatoire pour rejet/retour)"></textarea>
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+                @for (action of workflowActions(); track action.etapeId + action.actionCode) {
+                  @if (canShowAction(action)) {
+                    <button (click)="executeWorkflowAction(action)"
+                            [disabled]="actionInProgress()"
+                            class="btn-sm"
+                            [ngClass]="getActionButtonClass(action.actionCode)">
+                      {{ getActionLabel(action) }}
+                    </button>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+
         <!-- Statut & Classification -->
         <div class="card p-6">
           <div class="flex items-center gap-2 mb-4">
@@ -353,6 +427,12 @@
               <p class="text-xs text-gray-400 mb-2">Statut</p>
               <span class="badge" [ngClass]="getStatutBadgeClass(idee()!.statut)">{{ getStatutLabel(idee()!.statut) }}</span>
             </div>
+            @if (idee()!.etapeId) {
+              <div class="bg-gray-50 rounded-xl p-3">
+                <p class="text-xs text-gray-400 mb-2">Étape workflow</p>
+                <p class="text-sm font-mono text-gray-700 truncate">{{ idee()!.etapeId }}</p>
+              </div>
+            }
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">Portée</p>
               <p class="text-sm font-medium text-gray-800">{{ getPorteeLabel(idee()!.portee) }}</p>
@@ -475,3 +555,10 @@
 
   }
 </div>
+
+<app-toast
+  [visible]="toastVisible()"
+  [message]="toastMessage"
+  [type]="toastType"
+  (close)="toastVisible.set(false)">
+</app-toast>

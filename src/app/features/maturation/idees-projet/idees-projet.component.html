@@ -212,8 +212,12 @@
           } @else {
             <div class="grid grid-cols-1 gap-3">
               @for (field of [
+                {key: 'problematique', label: 'Problématique'},
                 {key: 'contexte', label: 'Contexte'},
                 {key: 'alignementStrategique', label: 'Alignement stratégique'},
+                {key: 'beneficiairesCibles', label: 'Bénéficiaires cibles'},
+                {key: 'objectifGeneral', label: 'Objectif général'},
+                {key: 'objectifsSpecifiques', label: 'Objectifs spécifiques'},
                 {key: 'resultatsAttendus', label: 'Résultats attendus'},
                 {key: 'indicateursPreliminaires', label: 'Indicateurs préliminaires'},
                 {key: 'descriptionSolution', label: 'Description de la solution'},
@@ -222,11 +226,16 @@
                 {key: 'contraintesRisques', label: 'Contraintes et risques'},
                 {key: 'hypotheses', label: 'Hypothèses'},
                 {key: 'prerequis', label: 'Prérequis'},
+                {key: 'beneficiairesEstimes', label: 'Bénéficiaires estimés'},
+                {key: 'coutEstime', label: 'Coût estimé'},
                 {key: 'sourcesFinancementEnvisagees', label: 'Sources de financement'},
+                {key: 'dureeEstimeeMois', label: 'Durée estimée (mois)'},
                 {key: 'chronogrammeSynthese', label: 'Chronogramme synthèse'},
                 {key: 'impactSocioEconomique', label: 'Impact socio-économique'},
                 {key: 'impactEnvironnementalSocial', label: 'Impact environnemental et social'},
-                {key: 'durabilite', label: 'Durabilité'}
+                {key: 'durabilite', label: 'Durabilité'},
+                {key: 'zoneIntervention', label: 'Zone d\'intervention'},
+                {key: 'porteurProjet', label: 'Porteur du projet'}
               ]; track field.key) {
                 @if (getNoteField(field.key)) {
                   <div class="bg-gray-50 rounded-xl p-3">
@@ -408,6 +417,11 @@
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div class="form-group col-span-2">
+              <label class="form-label">Problématique</label>
+              <textarea [(ngModel)]="noteData.problematique" class="form-input" rows="2"
+                        placeholder="Problématique à résoudre"></textarea>
+            </div>
+            <div class="form-group col-span-2">
               <label class="form-label">Contexte</label>
               <textarea [(ngModel)]="noteData.contexte" class="form-input" rows="3"
                         placeholder="Contexte général du projet"></textarea>
@@ -416,6 +430,31 @@
               <label class="form-label">Alignement stratégique</label>
               <textarea [(ngModel)]="noteData.alignementStrategique" class="form-input" rows="2"
                         placeholder="Alignement avec les politiques nationales"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bénéficiaires cibles</label>
+              <textarea [(ngModel)]="noteData.beneficiairesCibles" class="form-input" rows="2"
+                        placeholder="Groupes bénéficiaires"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Objectif général</label>
+              <textarea [(ngModel)]="noteData.objectifGeneral" class="form-input" rows="2"
+                        placeholder="Objectif général"></textarea>
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Objectifs spécifiques</label>
+              <textarea [(ngModel)]="noteData.objectifsSpecifiques" class="form-input" rows="2"
+                        placeholder="Objectifs spécifiques"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Zone d'intervention</label>
+              <input type="text" [(ngModel)]="noteData.zoneIntervention" class="form-input"
+                     placeholder="Zone d'intervention">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Porteur du projet</label>
+              <input type="text" [(ngModel)]="noteData.porteurProjet" class="form-input"
+                     placeholder="Porteur du projet">
             </div>
           </div>
         </div>
@@ -503,9 +542,24 @@
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div class="form-group">
+              <label class="form-label">Bénéficiaires estimés</label>
+              <input type="number" [(ngModel)]="noteData.beneficiairesEstimes" class="form-input" min="0"
+                     placeholder="Nombre estimé">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Coût estimé</label>
+              <input type="number" [(ngModel)]="noteData.coutEstime" class="form-input" min="0"
+                     placeholder="Coût estimé">
+            </div>
+            <div class="form-group">
               <label class="form-label">Sources de financement</label>
               <textarea [(ngModel)]="noteData.sourcesFinancementEnvisagees" class="form-input" rows="2"
                         placeholder="Budget national, PTF, PPP..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Durée estimée (mois)</label>
+              <input type="number" [(ngModel)]="noteData.dureeEstimeeMois" class="form-input" min="0"
+                     placeholder="Durée en mois">
             </div>
             <div class="form-group">
               <label class="form-label">Chronogramme synthèse</label>

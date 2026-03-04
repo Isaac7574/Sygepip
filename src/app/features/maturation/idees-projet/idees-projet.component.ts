@@ -5,7 +5,13 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
-import { IdeeProjet, IdeeProjetNoteConceptuelle, Ministere, Secteur } from '@core/models';
+import {
+  IdeeProjet,
+  IdeeProjetNoteConceptuelle,
+  Ministere,
+  Secteur,
+  StatutIdeeProjet
+} from '@core/models';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 
@@ -65,12 +71,21 @@ export class IdeesdeProjetComponent implements OnInit {
     { value: 'REGIONALE', label: 'Régionale' },
   ];
 
-  statuts = [
-    { value: 'BROUILLON', label: 'Brouillon' },
-    { value: 'SOUMIS', label: 'Soumis' },
-    { value: 'EN_EVALUATION', label: 'En évaluation' },
-    { value: 'VALIDE', label: 'Validé' },
-    { value: 'REJETE', label: 'Rejeté' }
+  statuts: { value: StatutIdeeProjet; label: string }[] = [
+    { value: 'IDEE_BROUILLON', label: 'Brouillon' },
+    { value: 'IDEE_SOUMISE', label: 'Soumise' },
+    { value: 'IDEE_SOMMAIRE_SELECTIONNEE', label: 'Sommaire sélectionnée' },
+    { value: 'IDEE_SOMMAIRE_REJETEE', label: 'Sommaire rejetée' },
+    { value: 'IDEE_ARCHIVEE', label: 'Archivée' },
+    { value: 'IDEE_CONCEPTION_BROUILLON', label: 'Conception brouillon' },
+    { value: 'CONCEPTION_SOUMISE', label: 'Conception soumise' },
+    { value: 'RAPPORT_FAISABILITE_VALIDE', label: 'Faisabilité validée' },
+    { value: 'PRODOC_SOUMIS', label: 'ProDoc soumis' },
+    { value: 'PRODOC_VALIDE', label: 'ProDoc validé' },
+    { value: 'IDENTIFICATION_FINANCEMENT', label: 'Financement identifié' },
+    { value: 'SOUMISSION_DOSSIER_PROJET', label: 'Dossier projet soumis' },
+    { value: 'DOSSIER_PROJET_VALIDE', label: 'Dossier projet validé' },
+    { value: 'DOSSIER_PROJET_RETOURNE', label: 'Dossier projet retourné' }
   ];
 
   ngOnInit(): void {
@@ -108,8 +123,12 @@ export class IdeesdeProjetComponent implements OnInit {
 
   private resetNoteForm(): Partial<IdeeProjetNoteConceptuelle> {
     return {
+      problematique: '',
       contexte: '',
       alignementStrategique: '',
+      beneficiairesCibles: '',
+      objectifGeneral: '',
+      objectifsSpecifiques: '',
       resultatsAttendus: '',
       indicateursPreliminaires: '',
       descriptionSolution: '',
@@ -118,11 +137,16 @@ export class IdeesdeProjetComponent implements OnInit {
       contraintesRisques: '',
       hypotheses: '',
       prerequis: '',
+      beneficiairesEstimes: undefined,
+      coutEstime: undefined,
       sourcesFinancementEnvisagees: '',
+      dureeEstimeeMois: undefined,
       chronogrammeSynthese: '',
       impactSocioEconomique: '',
       impactEnvironnementalSocial: '',
-      durabilite: ''
+      durabilite: '',
+      zoneIntervention: '',
+      porteurProjet: ''
     };
   }
 
@@ -188,8 +212,8 @@ export class IdeesdeProjetComponent implements OnInit {
     this.viewNote.set({});
   }
 
-  getNoteField(key: string): string | undefined {
-    return (this.viewNote() as Record<string, string | undefined>)[key];
+  getNoteField(key: string): string | number | undefined {
+    return (this.viewNote() as Record<string, string | number | undefined>)[key];
   }
 
   private openEditById(id: string): void {
@@ -344,11 +368,20 @@ export class IdeesdeProjetComponent implements OnInit {
   getStatutBadgeClass(statut: string | undefined): string {
     if (!statut) return 'badge-gray';
     const classes: Record<string, string> = {
-      'BROUILLON': 'badge-gray',
-      'SOUMIS': 'badge-info',
-      'EN_EVALUATION': 'badge-warning',
-      'VALIDE': 'badge-success',
-      'REJETE': 'badge-danger'
+      'IDEE_BROUILLON': 'badge-gray',
+      'IDEE_SOUMISE': 'badge-info',
+      'IDEE_SOMMAIRE_SELECTIONNEE': 'badge-primary',
+      'IDEE_SOMMAIRE_REJETEE': 'badge-danger',
+      'IDEE_ARCHIVEE': 'badge-gray',
+      'IDEE_CONCEPTION_BROUILLON': 'badge-warning',
+      'CONCEPTION_SOUMISE': 'badge-info',
+      'RAPPORT_FAISABILITE_VALIDE': 'badge-success',
+      'PRODOC_SOUMIS': 'badge-info',
+      'PRODOC_VALIDE': 'badge-success',
+      'IDENTIFICATION_FINANCEMENT': 'badge-warning',
+      'SOUMISSION_DOSSIER_PROJET': 'badge-info',
+      'DOSSIER_PROJET_VALIDE': 'badge-success',
+      'DOSSIER_PROJET_RETOURNE': 'badge-danger'
     };
     return classes[statut] || 'badge-gray';
   }

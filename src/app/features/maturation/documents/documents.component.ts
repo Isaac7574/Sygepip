@@ -61,6 +61,10 @@ export class DocumentsComponent implements OnInit {
   typesDocument: { value: TypeDocumentProjet; label: string }[] = [
     { value: 'NOTE_CONCEPTUELLE', label: 'Note conceptuelle' },
     { value: 'ETUDE_FAISABILITE', label: 'Étude de faisabilité' },
+    { value: 'RAPPORT_FAISABILITE', label: 'Rapport de faisabilité' },
+    { value: 'PRODOC', label: 'ProDoc' },
+    { value: 'ACTE_JURIDIQUE', label: 'Acte juridique' },
+    { value: 'DOSSIER_PROJET', label: 'Dossier projet' },
     { value: 'RAPPORT_TECHNIQUE', label: 'Rapport technique' },
     { value: 'PLAN_FINANCEMENT', label: 'Plan de financement' },
     { value: 'CAHIER_CHARGES', label: 'Cahier des charges' },

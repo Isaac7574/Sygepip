@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { FilterParams, PaginatedResponse, IdeeProjet, IdeeProjetNoteConceptuelle } from '@core/models';
+import { FilterParams, PaginatedResponse, IdeeProjet, IdeeProjetNoteConceptuelle, MaturationActionRequestDTO } from '@core/models';
 import { ApiService } from '@core/services/api.service';
 
 @Injectable({
@@ -9,6 +9,7 @@ import { ApiService } from '@core/services/api.service';
 export class IdeesProjetService {
   private api = inject(ApiService);
   private endpoint = '/ideeprojet';
+  private maturationEndpoint = '/maturation/ideeprojet';
 
   getAll(params?: FilterParams): Observable<IdeeProjet[]> {
     return this.api.get<IdeeProjet[]>(this.endpoint, params);
@@ -42,16 +43,52 @@ export class IdeesProjetService {
     return this.api.get<IdeeProjet[]>(this.endpoint, { ministereId });
   }
 
-  soumettre(id: number): Observable<IdeeProjet> {
-    return this.api.post<IdeeProjet>(`${this.endpoint}/${id}/soumettre`, {});
+  soumettre(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/soumettre`, payload);
   }
 
-  valider(id: number): Observable<IdeeProjet> {
-    return this.api.post<IdeeProjet>(`${this.endpoint}/${id}/valider`, {});
+  validerSommaire(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/valider-sommaire`, payload);
   }
 
-  rejeter(id: number, motif: string): Observable<IdeeProjet> {
-    return this.api.post<IdeeProjet>(`${this.endpoint}/${id}/rejeter`, { motif });
+  rejeterSommaire(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/rejeter-sommaire`, payload);
+  }
+
+  demarrerNoteConceptuelle(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/demarrer-note-conceptuelle`, payload);
+  }
+
+  soumettreNoteConceptuelle(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/soumettre-note-conceptuelle`, payload);
+  }
+
+  validerFaisabilite(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/valider-faisabilite`, payload);
+  }
+
+  soumettreProdoc(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/soumettre-prodoc`, payload);
+  }
+
+  validerProdoc(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/valider-prodoc`, payload);
+  }
+
+  identifierFinancement(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/identifier-financement`, payload);
+  }
+
+  soumettreDossierProjet(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/soumettre-dossier-projet`, payload);
+  }
+
+  validerDossierProjet(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/valider-dossier-projet`, payload);
+  }
+
+  retournerDossierProjet(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/retourner-dossier-projet`, payload);
   }
 
   // Récupérer par code

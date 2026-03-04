@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { FilterParams, WorkflowEtape } from '@core/models';
+import { FilterParams, WorkflowEtape, WorkflowNextAction } from '@core/models';
 import { ApiService } from '@core/services/api.service';
 
 @Injectable({
@@ -49,6 +49,10 @@ export class WorkflowService {
 
   getHistorique(entiteType: string, entiteId: string | number): Observable<any[]> {
     return this.api.get<any[]>(`${this.workflowEndpoint}/historique`, { entiteType, entiteId });
+  }
+
+  getNextActions(entiteType: string, statut: string): Observable<WorkflowNextAction[]> {
+    return this.api.get<WorkflowNextAction[]>(`${this.workflowEndpoint}/next`, { entiteType, statut });
   }
 
   getEtapesDisponibles(module: string, etatActuel: string): Observable<WorkflowEtape[]> {
