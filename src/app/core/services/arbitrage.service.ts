@@ -33,8 +33,8 @@ export class ArbitrageService {
     return this.api.delete<void>(this.endpoint, id);
   }
 
-  getByProjet(projetId: number): Observable<AutorisationEngagement[]> {
-    return this.api.get<AutorisationEngagement[]>(this.endpoint, { projetId });
+  getByProjet(projetId: string | number): Observable<AutorisationEngagement[]> {
+    return this.api.get<AutorisationEngagement[]>(`${this.endpoint}/projet/${projetId}`);
   }
 
   getByAnnee(annee: number): Observable<AutorisationEngagement[]> {

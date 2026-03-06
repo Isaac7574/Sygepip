@@ -33,5 +33,9 @@ export class CreditPaiementService {
   delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
+
+  getByAutorisationEngagement(aeId: string | number): Observable<CreditPaiement[]> {
+    return this.api.get<CreditPaiement[]>(`${this.endpoint}/ae/${aeId}`);
+  }
 }
 

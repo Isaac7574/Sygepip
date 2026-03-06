@@ -51,7 +51,7 @@
             <td class="px-6 py-4 text-gray-900">{{ item.annee }}</td>
             <td class="px-6 py-4 text-gray-500">{{ formatMontant(item.montantAE) }}</td>
             <td class="px-6 py-4 text-gray-500">{{ formatMontant(item.montantCP) }}</td>
-            <td class="px-6 py-4 text-gray-500">{{ item.natureDepense || '-' }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ item.natureDepenseNom || getNatureDepenseNom(item.natureDepenseId) || item.natureDepense || '-' }}</td>
             <td class="px-6 py-4 text-gray-500">{{ item.lignebudgetaire || '-' }}</td>
             <td class="px-6 py-4">
               <span class="badge" [ngClass]="getStatutBadgeClass(item.statut)">{{ getStatutLabel(item.statut) }}</span>
@@ -137,8 +137,17 @@
               <input type="number" [(ngModel)]="formData.montantCP" class="form-input" placeholder="0">
             </div>
             <div class="form-group">
-              <label class="form-label">Nature de la dépense</label>
-              <input type="text" [(ngModel)]="formData.natureDepense" class="form-input" placeholder="Ex: Investissement">
+              <label class="form-label">Nature de la dépense <span class="text-red-500">*</span></label>
+              <select [(ngModel)]="formData.natureDepenseId" class="form-input" required>
+                <option [ngValue]="undefined">-- Sélectionner une nature --</option>
+                @if (naturesDepense().length === 0) {
+                  <option disabled>Aucune nature de dépense disponible</option>
+                } @else {
+                  @for (n of naturesDepense(); track n.id) {
+                    <option [ngValue]="n.id">{{ n.nom }}</option>
+                  }
+                }
+              </select>
             </div>
             <div class="form-group">
               <label class="form-label">Ligne budgétaire</label>

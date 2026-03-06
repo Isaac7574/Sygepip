@@ -160,7 +160,7 @@
         </div>
 
         <!-- ── Description & Objectifs ── -->
-        @if (viewingItem()!.description || viewingItem()!.objectifs) {
+        @if (viewingItem()!.description || viewingItem()!.objectifsStrategiques || viewingItem()!.objectifsOperationnel) {
           <div>
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Description & Objectifs</p>
             <div class="grid grid-cols-1 gap-3">
@@ -170,10 +170,16 @@
                   <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ viewingItem()!.description }}</p>
                 </div>
               }
-              @if (viewingItem()!.objectifs) {
+              @if (viewingItem()!.objectifsStrategiques) {
                 <div class="bg-gray-50 rounded-xl p-3">
-                  <p class="text-xs text-gray-400 mb-1">Objectifs</p>
-                  <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ viewingItem()!.objectifs }}</p>
+                  <p class="text-xs text-gray-400 mb-1">Objectifs stratégiques</p>
+                  <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ viewingItem()!.objectifsStrategiques }}</p>
+                </div>
+              }
+              @if (viewingItem()!.objectifsOperationnel) {
+                <div class="bg-gray-50 rounded-xl p-3">
+                  <p class="text-xs text-gray-400 mb-1">Objectifs opérationnels</p>
+                  <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ viewingItem()!.objectifsOperationnel }}</p>
                 </div>
               }
             </div>
@@ -279,8 +285,12 @@
               <textarea [(ngModel)]="formData.description" class="form-input" rows="2" placeholder="Description du projet"></textarea>
             </div>
             <div class="form-group col-span-2">
-              <label class="form-label">Objectifs</label>
-              <textarea [(ngModel)]="formData.objectifs" class="form-input" rows="2" placeholder="Objectifs du projet"></textarea>
+              <label class="form-label">Objectifs stratégiques</label>
+              <textarea [(ngModel)]="formData.objectifsStrategiques" class="form-input" rows="2" placeholder="Objectifs stratégiques du projet"></textarea>
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Objectifs opérationnels</label>
+              <textarea [(ngModel)]="formData.objectifsOperationnel" class="form-input" rows="2" placeholder="Objectifs opérationnels du projet"></textarea>
             </div>
           </div>
         </div>
@@ -421,10 +431,16 @@
             </div>
             <div class="form-group flex items-end pb-1">
               <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
-                <span class="text-sm text-gray-700">Projet actif</span>
+                <input type="checkbox" [(ngModel)]="formData.financementBoucle" class="form-checkbox">
+                <span class="text-sm text-gray-700">Financement bouclé</span>
               </label>
             </div>
+          </div>
+          <div class="mt-3">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
+              <span class="text-sm text-gray-700">Projet actif</span>
+            </label>
           </div>
         </div>
 

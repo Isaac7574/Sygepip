@@ -153,11 +153,26 @@ export interface Programme {
   updatedAt?: Date;
 }
 
+export type TypeSourceFinancement =
+  | 'RESSOURCE_PROPRE_ETAT'
+  | 'RESSOURCE_EXTERIEURE'
+  | 'CONTREPARTIE_NATIONALE';
+
 export interface SourceFinancement {
   id: string;
   code: string;
   nom: string;
-  type: 'RESSOURCE_EXTERIEURE' | 'CONTREPARTIE_NATIONALE' | 'RESSOURCE_PROPRE_ETAT';
+  type: TypeSourceFinancement | string;
+  description?: string;
+  actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface NatureDepense {
+  id: string;
+  code: string;
+  nom: string;
   description?: string;
   actif: boolean;
   createdAt?: Date;
@@ -434,7 +449,9 @@ export interface AutorisationEngagement {
   annee: number;
   montantAe: number;
   montantAE?: number; // Alias for montantAe (compatibility)
-  natureDepense?: string;
+  natureDepenseId?: string;
+  natureDepenseNom?: string;
+  natureDepense?: string; // Legacy display
   sourceFinancementId?: string;
   montantCp?: number;
   montantCP?: number; // Alias for montantCp (compatibility)
@@ -454,7 +471,9 @@ export interface CreditPaiement {
   autorisationEngagementId?: string;
   annee: number;
   montantCp: number;
-  natureDepense?: string;
+  natureDepenseId?: string;
+  natureDepenseNom?: string;
+  natureDepense?: string; // Legacy display
   montantPaye?: number;
   dateEcheance?: Date;
   statut?: string;

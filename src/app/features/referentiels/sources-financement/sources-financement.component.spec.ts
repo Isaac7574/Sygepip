@@ -27,8 +27,8 @@ describe('SourcesdeFinancementComponent', () => {
 
   it('should filter items on search', () => {
     component.items.set([
-      { id: 1, code: 'SRC-01', nom: 'Budget National', type: 'INTERNE', actif: true },
-      { id: 2, code: 'SRC-02', nom: 'Banque Mondiale', type: 'EXTERNE', actif: true }
+      { id: 1, code: 'SRC-01', nom: 'Budget National', type: 'RESSOURCE_PROPRE_ETAT', actif: true },
+      { id: 2, code: 'SRC-02', nom: 'Banque Mondiale', type: 'RESSOURCE_EXTERIEURE', actif: true }
     ] as any[]);
     component.searchTerm = 'Banque';
     component.search();
@@ -42,7 +42,7 @@ describe('SourcesdeFinancementComponent', () => {
   });
 
   it('should open modal for editing', () => {
-    const item = { id: 1, code: 'SRC-01', nom: 'Test', type: 'INTERNE', actif: true } as any;
+    const item = { id: 1, code: 'SRC-01', nom: 'Test', type: 'RESSOURCE_PROPRE_ETAT', actif: true } as any;
     component.edit(item);
     expect(component.modalOpen()).toBeTrue();
     expect(component.editingItem()).toEqual(item);
@@ -55,13 +55,14 @@ describe('SourcesdeFinancementComponent', () => {
   });
 
   it('should get type label', () => {
-    expect(component.getTypeLabel('INTERNE')).toBe('Interne');
-    expect(component.getTypeLabel('EXTERNE')).toBe('Externe');
-    expect(component.getTypeLabel('MIXTE')).toBe('Mixte');
+    expect(component.getTypeLabel('RESSOURCE_PROPRE_ETAT')).toBe('Ressource propre Etat');
+    expect(component.getTypeLabel('RESSOURCE_EXTERIEURE')).toBe('Ressource extérieure');
+    expect(component.getTypeLabel('CONTREPARTIE_NATIONALE')).toBe('Contrepartie nationale');
   });
 
   it('should get type badge class', () => {
-    expect(component.getTypeBadgeClass('INTERNE')).toBe('badge-info');
-    expect(component.getTypeBadgeClass('EXTERNE')).toBe('badge-warning');
+    expect(component.getTypeBadgeClass('RESSOURCE_EXTERIEURE')).toBe('badge-info');
+    expect(component.getTypeBadgeClass('CONTREPARTIE_NATIONALE')).toBe('badge-warning');
+    expect(component.getTypeBadgeClass('RESSOURCE_PROPRE_ETAT')).toBe('badge-success');
   });
 });

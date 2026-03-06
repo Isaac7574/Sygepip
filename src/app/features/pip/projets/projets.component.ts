@@ -8,7 +8,16 @@ import { SecteursService } from '@core/services/secteurs.service';
 import { RegionsService } from '@core/services/regions.service';
 import { ProgrammesService } from '@core/services/programmes.service';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
-import { Projet, Ministere, Secteur, Region, Programme, IdeeProjet } from '@core/models';
+import {
+  Projet,
+  Ministere,
+  Secteur,
+  Region,
+  Programme,
+  IdeeProjet,
+  CategorieProjet,
+  StatutProjet
+} from '@core/models';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 
@@ -55,19 +64,27 @@ export class ProjetsPIPComponent implements OnInit {
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
 
-  categories = [
-    { value: 'NOUVEAU', label: 'Nouveau' },
-    { value: 'EN_COURS', label: 'En cours' },
-    { value: 'EXTENSION', label: 'Extension' },
-    { value: 'REHABILITATION', label: 'Réhabilitation' }
+  categories: { value: CategorieProjet; label: string }[] = [
+    { value: 'CATEGORIE_1_ADMINISTRATION_DIRECTE', label: 'Catégorie 1 - Administration directe' },
+    { value: 'CATEGORIE_2_STRUCTURE_AUTONOME', label: 'Catégorie 2 - Structure autonome' },
+    { value: 'CATEGORIE_3_AGENCES_PTF_ONG', label: 'Catégorie 3 - Agences/PTF/ONG' },
+    { value: 'CATEGORIE_4_PPP', label: 'Catégorie 4 - PPP' }
   ];
 
-  statuts = [
-    { value: 'PLANIFIE', label: 'Planifié' },
-    { value: 'EN_COURS', label: 'En cours' },
+  statuts: { value: StatutProjet; label: string }[] = [
+    { value: 'CREE', label: 'Créé' },
+    { value: 'PIP_TECHNIQUE_EN_COURS', label: 'PIP technique en cours' },
+    { value: 'PIP_TECHNIQUE_SOUMIS', label: 'PIP technique soumis' },
+    { value: 'PIP_TECHNIQUE_VALIDE', label: 'PIP technique validé' },
+    { value: 'PIP_TECHNIQUE_A_CORRIGER', label: 'PIP technique à corriger' },
+    { value: 'PIP_FINANCIER_CREE', label: 'PIP financier créé' },
+    { value: 'EN_ARBITRAGE', label: 'En arbitrage' },
+    { value: 'ARBITRAGE_RETENU', label: 'Arbitrage retenu' },
+    { value: 'ARBITRAGE_AJOURNE', label: 'Arbitrage ajourné' },
+    { value: 'PIP_VALIDE', label: 'PIP validé' },
+    { value: 'EN_EXECUTION', label: 'En exécution' },
     { value: 'SUSPENDU', label: 'Suspendu' },
-    { value: 'TERMINE', label: 'Terminé' },
-    { value: 'ANNULE', label: 'Annulé' }
+    { value: 'CLOTURE', label: 'Clôturé' }
   ];
 
   ngOnInit(): void {
@@ -88,12 +105,12 @@ export class ProjetsPIPComponent implements OnInit {
 
   private resetForm(): Partial<Projet> {
     return {
-      code: '', titre: '', categorie: 'NOUVEAU', ministereId: undefined,
+      code: '', titre: '', categorie: 'CATEGORIE_1_ADMINISTRATION_DIRECTE', ministereId: undefined,
       secteurId: undefined, regionId: undefined, programmeId: undefined,
-      ideeProjetId: undefined, description: '', objectifs: '',
+      ideeProjetId: undefined, description: '', objectifsStrategiques: '', objectifsOperationnel: '',
       coutTotal: 0,
       dateDebutPrevu: undefined, dateFinPrevu: undefined, dureeEnMois: undefined,
-      statut: 'PLANIFIE', latitude: undefined, longitude: undefined, actif: true
+      statut: 'CREE', latitude: undefined, longitude: undefined, financementBoucle: false, actif: true
     };
   }
 
@@ -107,8 +124,8 @@ export class ProjetsPIPComponent implements OnInit {
       dateFinPrevu: projet.dateFinPrevu ? new Date(projet.dateFinPrevu) : undefined,
       createdAt: projet.createdAt ? new Date(projet.createdAt) : new Date(),
       dateCreation: projet.dateCreation ? new Date(projet.dateCreation) : new Date(),
-      statut: projet.statut || 'PLANIFIE',
-      categorie: projet.categorie || 'NOUVEAU'
+      statut: projet.statut || 'CREE',
+      categorie: projet.categorie || 'CATEGORIE_1_ADMINISTRATION_DIRECTE'
     };
   }
 
@@ -273,11 +290,19 @@ export class ProjetsPIPComponent implements OnInit {
   getStatutBadgeClass(statut: string | undefined): string {
     if (!statut) return 'badge-secondary';
     const classes: Record<string, string> = {
-      'PLANIFIE': 'badge-info',
-      'EN_COURS': 'badge-warning',
+      'CREE': 'badge-info',
+      'PIP_TECHNIQUE_EN_COURS': 'badge-warning',
+      'PIP_TECHNIQUE_SOUMIS': 'badge-info',
+      'PIP_TECHNIQUE_VALIDE': 'badge-success',
+      'PIP_TECHNIQUE_A_CORRIGER': 'badge-danger',
+      'PIP_FINANCIER_CREE': 'badge-info',
+      'EN_ARBITRAGE': 'badge-warning',
+      'ARBITRAGE_RETENU': 'badge-success',
+      'ARBITRAGE_AJOURNE': 'badge-secondary',
+      'PIP_VALIDE': 'badge-success',
+      'EN_EXECUTION': 'badge-warning',
       'SUSPENDU': 'badge-danger',
-      'TERMINE': 'badge-success',
-      'ANNULE': 'badge-secondary'
+      'CLOTURE': 'badge-secondary'
     };
     return classes[statut] || 'badge-secondary';
   }

@@ -45,5 +45,9 @@ export class ProjetsService {
   getBySecteur(secteurId: number): Observable<Projet[]> {
     return this.api.get<Projet[]>(this.endpoint, { secteurId });
   }
+
+  updateProgrammationTechnique(id: string | number, data: Partial<Projet>): Observable<Projet> {
+    return this.api.putUrl<Projet>(`${this.endpoint}/${id}/programmation-technique`, data);
+  }
 }
 

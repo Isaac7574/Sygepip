@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArbitrageService } from '@core/services/arbitrage.service';
 import { ProjetsService } from '@core/services/projets.service';
-import { AutorisationEngagement, Projet } from '@core/models';
+import { NatureDepenseService } from '@core/services/nature-depense.service';
+import { AutorisationEngagement, NatureDepense, Projet } from '@core/models';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 
@@ -17,10 +18,12 @@ import { ToastComponent } from '@shared/components/toast/toast.component';
 export class ArbitrageComponent implements OnInit {
   private arbitrageService = inject(ArbitrageService);
   private projetsService = inject(ProjetsService);
+  private natureDepenseService = inject(NatureDepenseService);
 
   items = signal<AutorisationEngagement[]>([]);
   filteredItems = signal<AutorisationEngagement[]>([]);
   projets = signal<Projet[]>([]);
+  naturesDepense = signal<NatureDepense[]>([]);
   searchTerm = '';
   modalOpen = signal(false);
   editingItem = signal<AutorisationEngagement | null>(null);
@@ -45,6 +48,7 @@ export class ArbitrageComponent implements OnInit {
   ngOnInit(): void {
     this.load();
     this.loadProjets();
+    this.loadNaturesDepense();
   }
 
   private resetForm(): Partial<AutorisationEngagement> {
@@ -53,7 +57,7 @@ export class ArbitrageComponent implements OnInit {
       annee: new Date().getFullYear(),
       montantAE: 0,
       montantCP: undefined,
-      natureDepense: '',
+      natureDepenseId: undefined,
       lignebudgetaire: '',
       dateAutorisation: undefined,
       statut: 'PREVU',
@@ -74,10 +78,17 @@ export class ArbitrageComponent implements OnInit {
     });
   }
 
+  loadNaturesDepense(): void {
+    this.natureDepenseService.getAll().subscribe({
+      next: (data) => this.naturesDepense.set(data)
+    });
+  }
+
   search(): void {
     const term = this.searchTerm.toLowerCase();
     this.filteredItems.set(this.items().filter(i =>
-      i.natureDepense?.toLowerCase().includes(term) ||
+      (i.natureDepenseNom || this.getNatureDepenseNom(i.natureDepenseId)).toLowerCase().includes(term) ||
+      (i.natureDepense || '').toLowerCase().includes(term) ||
       i.annee?.toString().includes(term) ||
       i.lignebudgetaire?.toLowerCase().includes(term) ||
       this.getProjetNom(i.projetId).toLowerCase().includes(term)
@@ -99,8 +110,14 @@ export class ArbitrageComponent implements OnInit {
   }
 
   save(): void {
-    if (!this.formData.projetId || !this.formData.annee || !this.formData.montantAE || !this.formData.statut) {
-      this.showToast('Veuillez remplir tous les champs obligatoires', 'error');
+    if (
+      !this.formData.projetId ||
+      !this.formData.annee ||
+      !this.formData.montantAE ||
+      !this.formData.statut ||
+      !this.formData.natureDepenseId
+    ) {
+      this.showToast('Veuillez remplir tous les champs obligatoires (dont la nature de dépense)', 'error');
       return;
     }
     this.saving.set(true);
@@ -159,6 +176,12 @@ export class ArbitrageComponent implements OnInit {
     if (!id) return '-';
     const projet = this.projets().find(p => String(p.id) === String(id));
     return projet ? (projet.code + ' - ' + projet.titre) : '-';
+  }
+
+  getNatureDepenseNom(id: string | number | undefined): string {
+    if (!id) return '-';
+    const nature = this.naturesDepense().find(n => String(n.id) === String(id));
+    return nature ? nature.nom : '-';
   }
 
   getStatutLabel(statut: string | undefined): string {
