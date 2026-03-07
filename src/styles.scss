@@ -659,10 +659,20 @@ aside .nav-link {
 }
 
 aside .nav-link-active {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
-  color: #ffffff;
+  background: #ffffff;
+  color: #000000;
   font-weight: 600;
-  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.2);
+
+  svg {
+    color: #000000;
+  }
+
+  &:hover {
+    background: #ffffff;
+    color: #000000;
+    transform: translateX(2px);
+  }
 }
 
 // Mini sidebar: icon-only mode
