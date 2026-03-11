@@ -1,13 +1,11 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, tap, catchError, map, throwError, from, of, switchMap } from 'rxjs';
 import { KeycloakService } from 'keycloak-angular';
 import { environment } from '@env/environment';
 import { User, LoginRequest, LoginResponse, RegisterRequest } from '@core/models';
 
 const TOKEN_KEY = 'sygepip_token';
-const REFRESH_TOKEN_KEY = 'sygepip_refresh_token';
 const USER_KEY = 'sygepip_user';
 
 @Injectable({
@@ -15,7 +13,6 @@ const USER_KEY = 'sygepip_user';
 })
 export class AuthService {
   private http = inject(HttpClient);
-  private router = inject(Router);
   private keycloak = inject(KeycloakService);
 
   private currentUserSubject = new BehaviorSubject<User | null>(this.getStoredUser());
@@ -107,7 +104,7 @@ export class AuthService {
   }
 
   // Login via Keycloak
-  login(credentials?: LoginRequest): Observable<LoginResponse> {
+  login(_credentials?: LoginRequest): Observable<LoginResponse> {
     this._isLoading.set(true);
 
     return from(this.keycloak.login({
@@ -123,7 +120,7 @@ export class AuthService {
   }
 
   // Register (redirect to Keycloak registration)
-  register(data?: RegisterRequest): Observable<any> {
+  register(_data?: RegisterRequest): Observable<any> {
     this._isLoading.set(true);
 
     return from(this.keycloak.register({
@@ -140,17 +137,16 @@ export class AuthService {
   // Logout via Keycloak
   logout(): void {
     localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this._isAuthenticated.set(false);
     this._currentUser.set(null);
     this.currentUserSubject.next(null);
 
-    this.keycloak.logout(window.location.origin + '/auth/login');
+    this.keycloak.logout(window.location.origin + '/');
   }
 
   // Forgot password (redirect to Keycloak)
-  forgotPassword(email?: string): Observable<any> {
+  forgotPassword(_email?: string): Observable<any> {
     // Keycloak handles this via its own UI
     window.location.href = `${environment.keycloakUrl || 'http://192.168.11.106:8180'}/realms/sygepip/login-actions/reset-credentials`;
     return of({ success: true });
@@ -162,7 +158,7 @@ export class AuthService {
   }
 
   // Change password (redirect to Keycloak account page)
-  changePassword(currentPassword?: string, newPassword?: string): Observable<any> {
+  changePassword(_currentPassword?: string, _newPassword?: string): Observable<any> {
     window.location.href = `${environment.keycloakUrl || 'http://192.168.11.106:8180'}/realms/sygepip/account/password`;
     return of({ success: true });
   }
@@ -253,18 +249,6 @@ export class AuthService {
   }
 
   // Private methods
-  private storeToken(token: string): void {
-    localStorage.setItem(TOKEN_KEY, token);
-  }
-
-  private storeRefreshToken(token: string): void {
-    localStorage.setItem(REFRESH_TOKEN_KEY, token);
-  }
-
-  private getRefreshToken(): string | null {
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
-  }
-
   private storeUser(user: User): void {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   }

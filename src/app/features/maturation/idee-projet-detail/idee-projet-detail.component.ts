@@ -1,12 +1,12 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Observable } from 'rxjs';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
 import { DocumentIdeeService } from '@core/services/document-idee.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
-import { WorkflowService } from '@core/services/workflow.service';
 import { AuthService } from '@core/services/auth.service';
 import {
   IdeeProjet,
@@ -15,8 +15,6 @@ import {
   Secteur,
   DocumentIdeeProjetResponseDTO,
   TypeDocumentProjet,
-  WorkflowNextAction,
-  WorkflowActionCode,
   StatutIdeeProjet
 } from '@core/models';
 import { ToastComponent } from '@shared/components/toast/toast.component';
@@ -30,11 +28,11 @@ import { ToastComponent } from '@shared/components/toast/toast.component';
 })
 export class IdeeProjetDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private ideesService = inject(IdeesProjetService);
   private documentIdeeService = inject(DocumentIdeeService);
   private ministeresService = inject(MinisteresService);
   private secteursService = inject(SecteursService);
-  private workflowService = inject(WorkflowService);
   private authService = inject(AuthService);
 
   idee = signal<IdeeProjet | null>(null);
@@ -45,8 +43,6 @@ export class IdeeProjetDetailComponent implements OnInit {
   documents = signal<DocumentIdeeProjetResponseDTO[]>([]);
   loadingDocuments = signal(false);
   documentsError = signal<string | null>(null);
-  workflowActions = signal<WorkflowNextAction[]>([]);
-  loadingActions = signal(false);
   actionComment = '';
   actionInProgress = signal(false);
   requiredDocumentType = signal<TypeDocumentProjet | null>(null);
@@ -122,7 +118,6 @@ export class IdeeProjetDetailComponent implements OnInit {
         this.idee.set(data);
         this.loading.set(false);
         this.requiredDocumentType.set(this.getRequiredDocumentType(data.statut));
-        this.loadWorkflowActions(data);
         this.loadNoteConceptuelle(data.id);
         this.loadDocuments(data.id);
       },
@@ -159,15 +154,6 @@ export class IdeeProjetDetailComponent implements OnInit {
         this.documentsError.set('Erreur lors du chargement des documents.');
         this.loadingDocuments.set(false);
       }
-    });
-  }
-
-  private loadWorkflowActions(item: IdeeProjet): void {
-    if (!item.statut) return;
-    this.loadingActions.set(true);
-    this.workflowService.getNextActions('IDEE_PROJET', String(item.statut)).subscribe({
-      next: (actions) => { this.workflowActions.set(actions); this.loadingActions.set(false); },
-      error: () => { this.loadingActions.set(false); }
     });
   }
 
@@ -220,118 +206,182 @@ export class IdeeProjetDetailComponent implements OnInit {
     });
   }
 
-  executeWorkflowAction(action: WorkflowNextAction): void {
+  // ── Actions dédiées par statut ──────────────────────────────────────────
+
+  onSoumettre(): void {
     const item = this.idee();
     if (!item) return;
-    const payload = this.buildActionPayload();
-    if (this.actionRequiresComment(action.actionCode) && !payload.commentaire) {
-      this.showToast('Un commentaire est obligatoire pour cette action', 'error');
+    this.runAction(
+      this.ideesService.soumettre(item.id, this.buildActionPayload()),
+      'Idée soumise avec succès'
+    );
+  }
+
+  onValiderSommaire(): void {
+    const item = this.idee();
+    if (!item) return;
+    this.runAction(
+      this.ideesService.validerSommaire(item.id, this.buildActionPayload()),
+      'Sommaire validé avec succès'
+    );
+  }
+
+  onRejeterSommaire(): void {
+    if (!this.actionComment.trim()) {
+      this.showToast('Un commentaire est obligatoire pour le rejet', 'error');
       return;
     }
+    const item = this.idee();
+    if (!item) return;
+    this.runAction(
+      this.ideesService.rejeterSommaire(item.id, this.buildActionPayload()),
+      'Sommaire rejeté'
+    );
+  }
+
+  onDemarrerNoteConceptuelle(): void {
+    const item = this.idee();
+    if (!item) return;
+    this.runAction(
+      this.ideesService.demarrerNoteConceptuelle(item.id, this.buildActionPayload()),
+      'Rédaction de la note conceptuelle démarrée'
+    );
+  }
+
+  onSoumettreNoteConceptuelle(): void {
+    const item = this.idee();
+    if (!item) return;
+    this.runAction(
+      this.ideesService.soumettreNoteConceptuelle(item.id, this.buildActionPayload()),
+      'Note conceptuelle soumise avec succès'
+    );
+  }
+
+  onValiderFaisabilite(): void {
+    const item = this.idee();
+    if (!item) return;
+    this.runAction(
+      this.ideesService.validerFaisabilite(item.id, this.buildActionPayload()),
+      'Rapport de faisabilité validé'
+    );
+  }
+
+  onSoumettreProdoc(): void {
     if (!this.hasRequiredDocument()) {
-      this.showToast('Document requis absent pour cette transition', 'error');
+      this.showToast('Document ProDoc requis avant la soumission', 'error');
       return;
     }
-    const obs = this.resolveActionCall(item, action.actionCode, payload);
-    if (!obs) {
-      this.showToast('Action non supportée pour ce statut', 'error');
+    const item = this.idee();
+    if (!item) return;
+    this.runAction(
+      this.ideesService.soumettreProdoc(item.id, this.buildActionPayload()),
+      'Document de projet soumis avec succès'
+    );
+  }
+
+  onValiderProdoc(): void {
+    const item = this.idee();
+    if (!item) return;
+    this.runAction(
+      this.ideesService.validerProdoc(item.id, this.buildActionPayload()),
+      'Document de projet validé'
+    );
+  }
+
+  onIdentifierFinancement(): void {
+    if (!this.hasRequiredDocument()) {
+      this.showToast('Acte juridique requis avant cette action', 'error');
       return;
     }
+    const item = this.idee();
+    if (!item) return;
+    this.runAction(
+      this.ideesService.identifierFinancement(item.id, this.buildActionPayload()),
+      'Financement identifié avec succès'
+    );
+  }
+
+  onSoumettreDossierProjet(): void {
+    if (!this.hasRequiredDocument()) {
+      this.showToast('Dossier projet requis avant la soumission', 'error');
+      return;
+    }
+    const item = this.idee();
+    if (!item) return;
+    this.runAction(
+      this.ideesService.soumettreDossierProjet(item.id, this.buildActionPayload()),
+      'Dossier de création de projet soumis avec succès'
+    );
+  }
+
+  onValiderDossierProjet(): void {
+    if (!this.hasRequiredDocument()) {
+      this.showToast('Dossier projet requis avant la validation', 'error');
+      return;
+    }
+    const item = this.idee();
+    if (!item) return;
     this.actionInProgress.set(true);
-    obs.subscribe({
+    this.ideesService.validerDossierProjet(item.id, this.buildActionPayload()).subscribe({
       next: () => {
         this.actionInProgress.set(false);
-        this.showToast('Action effectuée avec succès', 'success');
-        this.ideesService.getById(item.id).subscribe({
-          next: (updated) => {
-            this.idee.set(updated);
-            this.requiredDocumentType.set(this.getRequiredDocumentType(updated.statut));
-            this.loadWorkflowActions(updated);
-            this.loadDocuments(updated.id);
-          },
-          error: () => {}
-        });
+        this.showToast('Dossier de création de projet validé. Le projet a été créé automatiquement.', 'success');
+        this.refreshIdee(item.id, () => this.router.navigate(['/app/pip/projets']));
       },
-      error: () => {
+      error: (err: any) => {
         this.actionInProgress.set(false);
-        this.showToast('Erreur lors de l\'exécution de l\'action', 'error');
+        if (err?.status === 403) {
+          this.showToast(
+            'Vous n\'avez pas la permission de faire: Valider le dossier de creation de projet. Veuillez contacter l\'administrateur de la plateforme.',
+            'error'
+          );
+        } else {
+          this.showToast(err?.message || 'Erreur lors de la validation du dossier', 'error');
+        }
       }
     });
   }
 
-  private resolveActionCall(
-    item: IdeeProjet,
-    actionCode: WorkflowActionCode,
-    payload: { userId?: string; commentaire?: string }
-  ) {
-    const statut = String(item.statut || '');
-    switch (statut) {
-      case 'IDEE_BROUILLON':
-        return this.ideesService.soumettre(item.id, payload);
-      case 'IDEE_SOUMISE':
-        return actionCode === 'REJETER'
-          ? this.ideesService.rejeterSommaire(item.id, payload)
-          : this.ideesService.validerSommaire(item.id, payload);
-      case 'IDEE_SOMMAIRE_SELECTIONNEE':
-        return this.ideesService.demarrerNoteConceptuelle(item.id, payload);
-      case 'IDEE_CONCEPTION_BROUILLON':
-        return this.ideesService.soumettreNoteConceptuelle(item.id, payload);
-      case 'CONCEPTION_SOUMISE':
-        return this.ideesService.validerFaisabilite(item.id, payload);
-      case 'RAPPORT_FAISABILITE_VALIDE':
-        return this.ideesService.soumettreProdoc(item.id, payload);
-      case 'PRODOC_SOUMIS':
-        return this.ideesService.validerProdoc(item.id, payload);
-      case 'PRODOC_VALIDE':
-        return this.ideesService.identifierFinancement(item.id, payload);
-      case 'IDENTIFICATION_FINANCEMENT':
-        return this.ideesService.soumettreDossierProjet(item.id, payload);
-      case 'SOUMISSION_DOSSIER_PROJET':
-        return actionCode === 'RETOUR'
-          ? this.ideesService.retournerDossierProjet(item.id, payload)
-          : this.ideesService.validerDossierProjet(item.id, payload);
-      default:
-        return null;
+  onRetournerDossierProjet(): void {
+    if (!this.actionComment.trim()) {
+      this.showToast('Un commentaire est obligatoire pour retourner le dossier', 'error');
+      return;
     }
+    const item = this.idee();
+    if (!item) return;
+    this.runAction(
+      this.ideesService.retournerDossierProjet(item.id, this.buildActionPayload()),
+      'Dossier retourné avec observations'
+    );
   }
 
-  getActionLabel(action: WorkflowNextAction): string {
-    const labels: Record<WorkflowActionCode, string> = {
-      SOUMETTRE: 'Soumettre',
-      RESOUMETTRE: 'Resoumettre',
-      VALIDER: 'Valider',
-      RETOUR: 'Retourner',
-      REJETER: 'Rejeter',
-      PASSER_ETAPE: 'Passer étape',
-      ARCHIVER: 'Archiver',
-      CREER_PROJET: 'Créer projet',
-      CLOTURER: 'Clôturer',
-      RETENIR: 'Retenir',
-      NON_RETENIR: 'Non retenir',
-      INSCRIRE_PIP: 'Inscrire PIP'
-    };
-    return labels[action.actionCode] || action.actionCode;
+  private runAction(call: Observable<any>, successMessage: string): void {
+    const item = this.idee();
+    if (!item) return;
+    this.actionInProgress.set(true);
+    call.subscribe({
+      next: () => {
+        this.actionInProgress.set(false);
+        this.showToast(successMessage, 'success');
+        this.refreshIdee(item.id);
+      },
+      error: (err: any) => {
+        this.actionInProgress.set(false);
+        this.showToast(err?.message || 'Erreur lors de l\'exécution de l\'action', 'error');
+      }
+    });
   }
 
-  getActionButtonClass(actionCode: WorkflowActionCode): string {
-    if (actionCode === 'REJETER' || actionCode === 'RETOUR') {
-      return 'btn-outline text-bf-red-600 border-bf-red-600';
-    }
-    if (actionCode === 'VALIDER' || actionCode === 'SOUMETTRE' || actionCode === 'RESOUMETTRE') {
-      return 'btn-primary';
-    }
-    return 'btn-outline';
-  }
-
-  canShowAction(action: WorkflowNextAction): boolean {
-    if (!action.roleRequis) return true;
-    const roles = action.roleRequis.split(/[,\\s]+/).filter(Boolean);
-    if (roles.length === 0) return true;
-    return this.authService.hasRole(roles);
-  }
-
-  actionRequiresComment(actionCode: WorkflowActionCode): boolean {
-    return actionCode === 'REJETER' || actionCode === 'RETOUR';
+  private refreshIdee(id: string | number, afterRefresh?: () => void): void {
+    this.ideesService.getById(id).subscribe({
+      next: (updated) => {
+        this.idee.set(updated);
+        this.requiredDocumentType.set(this.getRequiredDocumentType(updated.statut));
+        this.loadDocuments(updated.id);
+        afterRefresh?.();
+      },
+      error: () => {}
+    });
   }
 
   private buildActionPayload(): { userId?: string; commentaire?: string } {

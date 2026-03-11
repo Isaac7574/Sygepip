@@ -25,11 +25,11 @@ export class LoginComponent implements OnInit {
 
       if (isLoggedIn) {
         // Already logged in, redirect to dashboard
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/admin/dashboard';
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/app/dashboard';
         this.router.navigateByUrl(returnUrl);
       } else {
         // Redirect to Keycloak login
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/admin/dashboard';
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/app/dashboard';
         await this.keycloak.login({
           redirectUri: window.location.origin + returnUrl
         });
@@ -47,7 +47,7 @@ export class LoginComponent implements OnInit {
 
     try {
       await this.keycloak.login({
-        redirectUri: window.location.origin + '/admin/dashboard'
+        redirectUri: window.location.origin + '/app/dashboard'
       });
     } catch (err) {
       this.loading.set(false);

@@ -1,39 +1,39 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { AuthService } from '@core/services/auth.service';
+import { keycloakConfig } from '../../../keycloak.config';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, RouterLink],
   templateUrl: './forgot-password.component.html',
   styleUrl: './forgot-password.component.scss'
 })
-export class ForgotPasswordComponent {
-  private fb = inject(FormBuilder);
-  private authService = inject(AuthService);
-  
-  form: FormGroup;
-  loading = signal(false);
+export class ForgotPasswordComponent implements OnInit {
+  loading = signal(true);
   error = signal('');
-  success = signal(false);
-  
-  constructor() {
-    this.form = this.fb.group({
-      email: ['', [Validators.required, Validators.email]]
-    });
+  currentYear = new Date().getFullYear();
+
+  ngOnInit(): void {
+    try {
+      const resetUrl = keycloakConfig.url + '/realms/' + keycloakConfig.realm + '/login-actions/reset-credentials?client_id=' + keycloakConfig.clientId;
+      window.location.href = resetUrl;
+    } catch {
+      this.loading.set(false);
+      this.error.set("Erreur de redirection vers le serveur d'authentification");
+    }
   }
-  
-  onSubmit(): void {
-    if (this.form.invalid) return;
+
+  retry(): void {
     this.loading.set(true);
     this.error.set('');
-    
-    this.authService.forgotPassword(this.form.value.email).subscribe({
-      next: () => { this.loading.set(false); this.success.set(true); },
-      error: (err) => { this.loading.set(false); this.error.set(err.message || 'Erreur'); }
-    });
+    try {
+      const resetUrl = keycloakConfig.url + '/realms/' + keycloakConfig.realm + '/login-actions/reset-credentials?client_id=' + keycloakConfig.clientId;
+      window.location.href = resetUrl;
+    } catch {
+      this.loading.set(false);
+      this.error.set('Erreur de redirection');
+    }
   }
 }

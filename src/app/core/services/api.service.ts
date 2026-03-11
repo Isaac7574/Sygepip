@@ -129,7 +129,9 @@ export class ApiService {
     }
     
     console.error('API Error:', error);
-    return throwError(() => new Error(errorMessage));
+    const appError: any = new Error(errorMessage);
+    appError.status = error.status;
+    return throwError(() => appError);
   }
 }
 

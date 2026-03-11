@@ -347,7 +347,7 @@
       <!-- Colonne droite (1/3) -->
       <div class="space-y-6">
 
-        <!-- Actions workflow -->
+        <!-- Actions par statut -->
         <div class="card p-6">
           <div class="flex items-center gap-2 mb-4">
             <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -358,58 +358,145 @@
             <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Actions</h3>
           </div>
 
-          @if (loadingActions()) {
-            <div class="flex items-center gap-2 py-3 text-gray-400">
-              <div class="w-4 h-4 border-2 border-gray-200 border-t-primary-500 rounded-full animate-spin"></div>
-              <span class="text-sm">Chargement des actions...</span>
-            </div>
-          } @else if (!workflowActions().length) {
-            <p class="text-sm text-gray-400">Aucune action disponible pour ce statut.</p>
-          } @else {
-            <div class="space-y-4">
-              @if (requiredDocumentType()) {
-                <div class="bg-gray-50 rounded-xl p-3">
-                  <div class="flex items-center justify-between gap-3">
-                    <div>
-                      <p class="text-xs font-semibold text-gray-500">Document requis</p>
-                      <p class="text-sm text-gray-800">{{ requiredDocumentType() }}</p>
-                      <p class="text-xs text-gray-400">
-                        @if (hasRequiredDocument()) { Document présent }
-                        @else { Document manquant }
-                      </p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <input type="file" (change)="onFileSelected($event)" class="text-xs text-gray-500">
-                      <button (click)="uploadRequiredDocument()"
-                              [disabled]="!selectedFile || actionInProgress()"
-                              class="btn-outline">
-                        Télécharger
-                      </button>
-                    </div>
+          <div class="space-y-4">
+
+            <!-- Document requis -->
+            @if (requiredDocumentType()) {
+              <div class="bg-gray-50 rounded-xl p-3">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-xs font-semibold text-gray-500">Document requis</p>
+                    <p class="text-sm text-gray-800">{{ requiredDocumentType() }}</p>
+                    <p class="text-xs" [class.text-green-600]="hasRequiredDocument()" [class.text-red-500]="!hasRequiredDocument()">
+                      @if (hasRequiredDocument()) { Document présent } @else { Document manquant }
+                    </p>
                   </div>
+                 <!-- <div class="flex items-center gap-2">
+                    <input type="file" (change)="onFileSelected($event)" class="text-xs text-gray-500">
+                    <button (click)="uploadRequiredDocument()"
+                            [disabled]="!selectedFile || actionInProgress()"
+                            class="btn-outline">
+                      Télécharger
+                    </button>
+                  </div>-->
+                </div>
+              </div>
+            }
+
+            <!-- Commentaire (toujours visible pour les actions qui le nécessitent) -->
+            <div class="form-group">
+              <label class="form-label">Commentaire</label>
+              <textarea [(ngModel)]="actionComment" class="form-input" rows="2"
+                        placeholder="Commentaire (obligatoire pour rejet / retour)"></textarea>
+            </div>
+
+            <!-- Boutons selon le statut -->
+            @switch (idee()!.statut) {
+
+              @case ('IDEE_BROUILLON') {
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="onSoumettre()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
+                    Soumettre l'idée
+                  </button>
                 </div>
               }
 
-              <div class="form-group">
-                <label class="form-label">Commentaire</label>
-                <textarea [(ngModel)]="actionComment" class="form-input" rows="2"
-                          placeholder="Commentaire (obligatoire pour rejet/retour)"></textarea>
-              </div>
+              @case ('IDEE_SOUMISE') {
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="onValiderSommaire()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
+                    Valider le sommaire
+                  </button>
+                  <button (click)="onRejeterSommaire()" [disabled]="actionInProgress()" class="btn-sm btn-outline text-red-600 border-red-400">
+                    Rejeter
+                  </button>
+                </div>
+              }
 
-              <div class="flex flex-wrap gap-2">
-                @for (action of workflowActions(); track action.etapeId + action.actionCode) {
-                  @if (canShowAction(action)) {
-                    <button (click)="executeWorkflowAction(action)"
-                            [disabled]="actionInProgress()"
-                            class="btn-sm"
-                            [ngClass]="getActionButtonClass(action.actionCode)">
-                      {{ getActionLabel(action) }}
-                    </button>
-                  }
-                }
-              </div>
-            </div>
-          }
+              @case ('IDEE_SOMMAIRE_SELECTIONNEE') {
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="onDemarrerNoteConceptuelle()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
+                    Démarrer la note conceptuelle
+                  </button>
+                </div>
+              }
+
+              @case ('IDEE_CONCEPTION_BROUILLON') {
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="onSoumettreNoteConceptuelle()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
+                    Soumettre la note conceptuelle
+                  </button>
+                </div>
+              }
+
+              @case ('CONCEPTION_SOUMISE') {
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="onValiderFaisabilite()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
+                    Valider la faisabilité
+                  </button>
+                </div>
+              }
+
+              @case ('RAPPORT_FAISABILITE_VALIDE') {
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="onSoumettreProdoc()" [disabled]="actionInProgress() || !hasRequiredDocument()" class="btn-sm btn-primary">
+                    Soumettre le ProDoc
+                  </button>
+                </div>
+              }
+
+              @case ('PRODOC_SOUMIS') {
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="onValiderProdoc()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
+                    Valider le ProDoc
+                  </button>
+                </div>
+              }
+
+              @case ('PRODOC_VALIDE') {
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="onIdentifierFinancement()" [disabled]="actionInProgress() || !hasRequiredDocument()" class="btn-sm btn-primary">
+                    Identifier le financement
+                  </button>
+                </div>
+              }
+
+              @case ('IDENTIFICATION_FINANCEMENT') {
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="onSoumettreDossierProjet()" [disabled]="actionInProgress() || !hasRequiredDocument()" class="btn-sm btn-primary">
+                    Soumettre le dossier de projet
+                  </button>
+                </div>
+              }
+
+              @case ('SOUMISSION_DOSSIER_PROJET') {
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="onValiderDossierProjet()"
+                          [disabled]="actionInProgress() || !hasRequiredDocument()"
+                          class="btn-sm btn-primary">
+                    Valider le dossier de projet
+                  </button>
+                  <button (click)="onRetournerDossierProjet()"
+                          [disabled]="actionInProgress()"
+                          class="btn-sm btn-outline text-red-600 border-red-400">
+                    Retourner le dossier
+                  </button>
+                </div>
+              }
+
+              @case ('DOSSIER_PROJET_RETOURNE') {
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="onSoumettreDossierProjet()" [disabled]="actionInProgress() || !hasRequiredDocument()" class="btn-sm btn-primary">
+                    Resoumettre le dossier de projet
+                  </button>
+                </div>
+              }
+
+              @default {
+                <p class="text-sm text-gray-400">Aucune action disponible pour ce statut.</p>
+              }
+
+            }
+          </div>
         </div>
 
         <!-- Statut & Classification -->
