@@ -37,5 +37,9 @@ export class CreditPaiementService {
   getByAutorisationEngagement(aeId: string | number): Observable<CreditPaiement[]> {
     return this.api.get<CreditPaiement[]>(`${this.endpoint}/ae/${aeId}`);
   }
+
+  createForAe(aeId: string, data: any): Observable<CreditPaiement> {
+    return this.api.post<CreditPaiement>(`${this.endpoint}/ae/${aeId}`, data);
+  }
 }
 

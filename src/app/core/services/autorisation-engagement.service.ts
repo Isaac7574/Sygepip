@@ -33,5 +33,13 @@ export class AutorisationEngagementService {
   delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
+
+  createForProjet(projetId: string, data: any): Observable<AutorisationEngagement> {
+    return this.api.post<AutorisationEngagement>(`${this.endpoint}/projet/${projetId}`, data);
+  }
+
+  getByProjet(projetId: string): Observable<AutorisationEngagement[]> {
+    return this.api.get<AutorisationEngagement[]>(this.endpoint, { projetId });
+  }
 }
 

@@ -47,7 +47,7 @@ export class ProjetsService {
   }
 
   updateProgrammationTechnique(id: string | number, data: Partial<Projet>): Observable<Projet> {
-    return this.api.putUrl<Projet>(`${this.endpoint}/${id}/programmation-technique`, data);
+    return this.api.post<Projet>(`${this.endpoint}/${id}/programmation-technique`, data);
   }
 }
 

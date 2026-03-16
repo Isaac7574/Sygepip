@@ -1035,6 +1035,46 @@ export interface AbacEndpointsPageDTO {
   items: string[];
 }
 
+// === PROGRAMMATION TECHNIQUE & FINANCIÈRE ===
+export type ModeFinancement = 'CONTREPARTIE' | 'SUBVENTION' | 'PRET';
+
+export interface ProgrammationTechniqueRequestDTO {
+  code?: string;
+  categorie?: CategorieProjet;
+  programmeId?: string;
+  objectifsStrategiques?: string;
+  objectifsOperationnel?: string;
+  dateDebutPrevu?: string; // ISO 8601 YYYY-MM-DDTHH:mm:ss
+  dateFinPrevu?: string;
+  dureeEnMois?: number;
+  typeProjetPip?: TypeProjetPip;
+  statutInscriptionPip?: StatutInscriptionPip;
+}
+
+export interface AutorisationEngagementRequestDTO {
+  projetId?: string;
+  montantAe?: number;
+  sourceFinancementId?: string;
+  modeFinancement?: ModeFinancement;
+  ligneBudgetaire?: string;
+  natureDepenseId?: string;
+  dateAutorisation?: string; // ISO 8601
+  statut?: string;
+  observations?: string;
+  actif?: boolean;
+}
+
+export interface CreditPaiementRequestDTO {
+  autorisationEngagementId?: string;
+  annee?: number;
+  montantCp?: number;
+  natureDepenseId?: string;
+  montantPaye?: number;
+  dateEcheance?: string; // ISO 8601
+  statut?: string;
+  actif?: boolean;
+}
+
 // === GÉOLOCALISATION ===
 export interface GeoPoint {
   latitude: number;

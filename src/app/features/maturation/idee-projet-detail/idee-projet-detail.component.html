@@ -362,24 +362,82 @@
 
             <!-- Document requis -->
             @if (requiredDocumentType()) {
-              <div class="bg-gray-50 rounded-xl p-3">
-                <div class="flex items-center justify-between gap-3">
-                  <div>
-                    <p class="text-xs font-semibold text-gray-500">Document requis</p>
-                    <p class="text-sm text-gray-800">{{ requiredDocumentType() }}</p>
-                    <p class="text-xs" [class.text-green-600]="hasRequiredDocument()" [class.text-red-500]="!hasRequiredDocument()">
-                      @if (hasRequiredDocument()) { Document présent } @else { Document manquant }
-                    </p>
-                  </div>
-                 <!-- <div class="flex items-center gap-2">
-                    <input type="file" (change)="onFileSelected($event)" class="text-xs text-gray-500">
-                    <button (click)="uploadRequiredDocument()"
-                            [disabled]="!selectedFile || actionInProgress()"
-                            class="btn-outline">
-                      Télécharger
-                    </button>
-                  </div>-->
+              <div class="rounded-xl border-2 p-4"
+                   [class.border-green-200]="hasRequiredDocument()"
+                   [class.bg-green-50]="hasRequiredDocument()"
+                   [class.border-amber-300]="!hasRequiredDocument()"
+                   [class.bg-amber-50]="!hasRequiredDocument()">
+
+                <!-- En-tête étape 1 -->
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold"
+                        [class.bg-green-500]="hasRequiredDocument()"
+                        [class.text-white]="hasRequiredDocument()"
+                        [class.bg-amber-400]="!hasRequiredDocument()"
+                        [class.text-white]="!hasRequiredDocument()">1</span>
+                  <p class="text-xs font-bold uppercase tracking-wide"
+                     [class.text-green-700]="hasRequiredDocument()"
+                     [class.text-amber-700]="!hasRequiredDocument()">
+                    Enregistrer le document
+                  </p>
+                  @if (hasRequiredDocument()) {
+                    <svg class="w-4 h-4 text-green-500 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  } @else {
+                    <svg class="w-4 h-4 text-amber-500 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                  }
                 </div>
+
+                <!-- Statut document -->
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
+                        [class.bg-green-100]="hasRequiredDocument()"
+                        [class.text-green-700]="hasRequiredDocument()"
+                        [class.bg-amber-100]="!hasRequiredDocument()"
+                        [class.text-amber-700]="!hasRequiredDocument()">
+                    {{ requiredDocumentType() | titlecase }}
+                  </span>
+                  <span class="text-xs"
+                        [class.text-green-600]="hasRequiredDocument()"
+                        [class.text-amber-600]="!hasRequiredDocument()">
+                    @if (hasRequiredDocument()) { ✓ Présent } @else { Manquant }
+                  </span>
+                </div>
+
+                <!-- Upload -->
+                <div class="space-y-2">
+                  <input type="file" (change)="onFileSelected($event)"
+                         class="block w-full text-xs text-gray-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-white file:text-gray-700 hover:file:bg-gray-100 cursor-pointer">
+                  <button (click)="uploadRequiredDocument()"
+                          [disabled]="!selectedFile || actionInProgress()"
+                          class="w-full btn-sm btn-primary flex items-center justify-center gap-1.5"
+                          [class.opacity-50]="!selectedFile || actionInProgress()">
+                    @if (actionInProgress() && selectedFile) {
+                      <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                      </svg>
+                      Enregistrement…
+                    } @else {
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                      </svg>
+                      Enregistrer le document
+                    }
+                  </button>
+                </div>
+              </div>
+
+              <!-- Séparateur étape -->
+              <div class="flex items-center gap-2 px-1">
+                <div class="flex-1 border-t border-dashed border-gray-300"></div>
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+                <div class="flex-1 border-t border-dashed border-gray-300"></div>
               </div>
             }
 
@@ -389,6 +447,22 @@
               <textarea [(ngModel)]="actionComment" class="form-input" rows="2"
                         placeholder="Commentaire (obligatoire pour rejet / retour)"></textarea>
             </div>
+
+            <!-- Boutons selon le statut (Étape 2 si document requis) -->
+            @if (requiredDocumentType()) {
+              <div class="flex items-center gap-2 px-1 mb-1">
+                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold"
+                      [class.bg-emerald-500]="hasRequiredDocument()"
+                      [class.text-white]="hasRequiredDocument()"
+                      [class.bg-gray-300]="!hasRequiredDocument()"
+                      [class.text-gray-500]="!hasRequiredDocument()">2</span>
+                <p class="text-xs font-bold uppercase tracking-wide"
+                   [class.text-emerald-700]="hasRequiredDocument()"
+                   [class.text-gray-400]="!hasRequiredDocument()">
+                  Valider
+                </p>
+              </div>
+            }
 
             <!-- Boutons selon le statut -->
             @switch (idee()!.statut) {
