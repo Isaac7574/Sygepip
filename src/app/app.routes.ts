@@ -2,28 +2,8 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  // Public routes
-  {
-    path: '',
-    loadComponent: () => import('./features/public/accueil/accueil.component').then(m => m.AccueilComponent)
-  },
-  {
-    path: 'actualites',
-    loadComponent: () => import('./features/public/actualites/actualites.component').then(m => m.ActualitesComponent)
-  },
-  {
-    path: 'mediatheque',
-    loadComponent: () => import('./features/public/mediatheque/mediatheque.component').then(m => m.MediathequeComponent)
-  },
-  {
-    path: 'textes-reglementaires',
-    loadComponent: () => import('./features/public/textes-reglementaires/textes-reglementaires.component').then(m => m.TextesReglementairesComponent)
-  },
-  {
-    path: 'ministre',
-    loadComponent: () => import('./features/public/ministre/ministre.component').then(m => m.LeMinistreComponent)
-  },
-  
+  // Redirect root to dashboard (authGuard triggers Keycloak login if not authenticated)
+  { path: '', redirectTo: '/app/dashboard', pathMatch: 'full' },
   // App routes (protected)
   {
     path: 'app',
@@ -168,28 +148,6 @@ export const routes: Routes = [
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
       },
-      // Gestion Contenu Public
-      {
-        path: 'gestion',
-        children: [
-          {
-            path: 'actualites',
-            loadComponent: () => import('./features/gestion/gestion-actualites/gestion-actualites.component').then(m => m.GestionActualitesComponent)
-          },
-          {
-            path: 'medias',
-            loadComponent: () => import('./features/gestion/gestion-medias/gestion-medias.component').then(m => m.GestionMediasComponent)
-          },
-          {
-            path: 'textes',
-            loadComponent: () => import('./features/gestion/gestion-textes/gestion-textes.component').then(m => m.GestionTextesComponent)
-          },
-          {
-            path: 'ministre',
-            loadComponent: () => import('./features/gestion/gestion-ministre/gestion-ministre.component').then(m => m.GestionMinistreComponent)
-          }
-        ]
-      },
       // Administration
       {
         path: 'administration',
@@ -209,5 +167,5 @@ export const routes: Routes = [
   },
   
   // Fallback
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: '/app/dashboard' }
 ];

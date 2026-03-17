@@ -251,6 +251,24 @@ export class IdeeProjetDetailComponent implements OnInit {
   onSoumettreNoteConceptuelle(): void {
     const item = this.idee();
     if (!item) return;
+
+    const n = this.note();
+    const champsManquants: string[] = [];
+
+    if (!n.titre?.trim())               champsManquants.push('Titre');
+    if (!n.description?.trim())         champsManquants.push('Description');
+    if (!n.objectifGeneral?.trim())     champsManquants.push('Objectif général');
+    if (!n.problematique?.trim())       champsManquants.push('Problématique');
+    if (!n.contexte?.trim())            champsManquants.push('Contexte');
+
+    if (champsManquants.length > 0) {
+      this.showToast(
+        `Note conceptuelle incomplète. Champs requis : ${champsManquants.join(', ')}.`,
+        'error'
+      );
+      return;
+    }
+
     this.runAction(
       this.ideesService.soumettreNoteConceptuelle(item.id, this.buildActionPayload()),
       'Note conceptuelle soumise avec succès'

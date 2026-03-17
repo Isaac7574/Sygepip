@@ -21,15 +21,6 @@
     <li>
       <a routerLink="/" class="nav-link text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-green-700 transition-colors">Accueil</a>
     </li>
-    <li>
-      <a routerLink="/actualites" class="nav-link text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-green-700 transition-colors">Projets</a>
-    </li>
-    <li>
-      <a routerLink="/mediatheque" class="nav-link text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-green-700 transition-colors">Investissements</a>
-    </li>
-    <li>
-      <a routerLink="/textes-reglementaires" class="nav-link text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-green-700 transition-colors">Rapports</a>
-    </li>
   </ul>
 
   <!-- CTA (droite) -->
@@ -100,74 +91,9 @@
           <button (click)="login()" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-sm px-6 py-3 rounded-lg shadow-lg transition-all hover:scale-105">
             Accéder à la plateforme
           </button>
-          <a routerLink="/actualites" class="border border-white/50 hover:bg-white/10 text-white font-semibold text-sm px-6 py-3 rounded-lg transition-all">
-            Voir les projets →
-          </a>
         </div>
       </div>
     </div>
-
-    <!-- 3 CARTES -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-
-      <a routerLink="/actualites" class="glass-card glass-card-hover armoirie-watermark rounded-xl py-10 px-6 flex flex-col items-center text-center text-white group shadow-lg cursor-pointer">
-        <div class="mb-5 relative z-10">
-          <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto group-hover:bg-white/20 transition-colors">
-            <svg class="w-8 h-8 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-            </svg>
-          </div>
-        </div>
-        <h3 class="text-base font-bold uppercase tracking-widest relative z-10 mb-2">Consulter un projet</h3>
-        <p class="text-xs text-white/70 relative z-10">Accédez à la liste complète des projets d'investissement public</p>
-      </a>
-
-      <a routerLink="/mediatheque" class="glass-card glass-card-hover armoirie-watermark rounded-xl py-10 px-6 flex flex-col items-center text-center text-white group shadow-lg cursor-pointer">
-        <div class="mb-5 relative z-10">
-          <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto group-hover:bg-white/20 transition-colors">
-            <svg class="w-8 h-8 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
-          </div>
-        </div>
-        <h3 class="text-base font-bold uppercase tracking-widest relative z-10 mb-2">Suivi investissements</h3>
-        <p class="text-xs text-white/70 relative z-10">Suivez l'évolution et le taux d'exécution des investissements</p>
-      </a>
-
-      <a routerLink="/textes-reglementaires" class="glass-card glass-card-hover armoirie-watermark rounded-xl py-10 px-6 flex flex-col items-center text-center text-white group shadow-lg cursor-pointer">
-        <div class="mb-5 relative z-10">
-          <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto group-hover:bg-white/20 transition-colors">
-            <svg class="w-8 h-8 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-          </div>
-        </div>
-        <h3 class="text-base font-bold uppercase tracking-widest relative z-10 mb-2">Rapports & Analyses</h3>
-        <p class="text-xs text-white/70 relative z-10">Consultez les rapports d'analyse et bilans d'exécution</p>
-      </a>
-    </div>
-
-    <!-- ACTUALITÉS -->
-    @if (actualites().length > 0) {
-      <div class="w-full">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="h-px flex-1 bg-white/20"></div>
-          <h2 class="text-white font-bold text-sm uppercase tracking-widest opacity-80">Actualités</h2>
-          <div class="h-px flex-1 bg-white/20"></div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          @for (actu of actualites(); track actu.id; let i = $index) {
-            @if (i < 3) {
-              <div class="glass-card rounded-xl p-5 relative z-10">
-                <span class="text-xs font-semibold text-yellow-400 uppercase tracking-wider">{{ actu.categorie }}</span>
-                <h4 class="text-white font-semibold text-sm mt-2 mb-2 leading-snug line-clamp-2">{{ actu.titre }}</h4>
-                <p class="text-white/60 text-xs leading-relaxed line-clamp-2">{{ actu.description }}</p>
-              </div>
-            }
-          }
-        </div>
-      </div>
-    }
 
   </div>
 </main>
@@ -190,15 +116,6 @@
         <p class="text-gray-400 leading-relaxed">
           Système de Gestion Intégrée des Projets et Programmes d'Investissements Publics du Burkina Faso.
         </p>
-      </div>
-
-      <div>
-        <h4 class="text-base font-semibold mb-4">Liens Rapides</h4>
-        <ul class="space-y-2 text-gray-400">
-          <li><a routerLink="/actualites" class="hover:text-white transition-colors">Projets</a></li>
-          <li><a routerLink="/mediatheque" class="hover:text-white transition-colors">Investissements</a></li>
-          <li><a routerLink="/textes-reglementaires" class="hover:text-white transition-colors">Rapports</a></li>
-        </ul>
       </div>
 
       <div>

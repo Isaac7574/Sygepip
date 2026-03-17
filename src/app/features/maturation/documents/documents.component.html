@@ -271,7 +271,7 @@
 <!-- View File Modal -->
 @if (viewModalOpen()) {
   <div class="modal-overlay" (click)="closeViewModal()">
-    <div class="modal-content max-w-5xl" style="height:90vh; max-height:90vh; display:flex; flex-direction:column; overflow:hidden;" (click)="$event.stopPropagation()">
+    <div class="modal-content" style="width:70vw; max-width:70vw; height:82vh; max-height:82vh; display:flex; flex-direction:column; overflow:hidden;" (click)="$event.stopPropagation()">
 
       <!-- Header -->
       <div class="modal-header" style="flex-shrink:0;">

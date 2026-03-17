@@ -108,7 +108,8 @@ export class AuthService {
     this._isLoading.set(true);
 
     return from(this.keycloak.login({
-      redirectUri: window.location.origin + '/app/dashboard'
+      redirectUri: window.location.origin + '/app/dashboard',
+      locale: 'fr'
     })).pipe(
       map(() => ({} as LoginResponse)),
       tap(() => this._isLoading.set(false)),
