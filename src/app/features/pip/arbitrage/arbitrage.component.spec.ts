@@ -1,22 +1,69 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ArbitrageComponent } from './arbitrage.component';
+import { ProjetsService } from '@core/services/projets.service';
 
 describe('ArbitrageComponent', () => {
   let component: ArbitrageComponent;
   let fixture: ComponentFixture<ArbitrageComponent>;
+  let projetsService: jasmine.SpyObj<ProjetsService>;
 
   beforeEach(async () => {
+    projetsService = jasmine.createSpyObj('ProjetsService', ['getAll']);
+    projetsService.getAll.and.returnValue(of([]));
+
     await TestBed.configureTestingModule({
-      imports: [ArbitrageComponent, HttpClientTestingModule]
+      imports: [ArbitrageComponent, HttpClientTestingModule],
+      providers: [
+        { provide: ProjetsService, useValue: projetsService }
+      ]
     }).compileComponents();
+
     fixture = TestBed.createComponent(ArbitrageComponent);
     component = fixture.componentInstance;
   });
 
-  it('should create', () => { expect(component).toBeTruthy(); });
-  it('should load data on init', () => { spyOn(component, 'load'); component.ngOnInit(); expect(component.load).toHaveBeenCalled(); });
-  it('should open modal for new item', () => { component.openModal(); expect(component.modalOpen()).toBeTrue(); expect(component.editingItem()).toBeNull(); });
-  it('should close modal', () => { component.modalOpen.set(true); component.closeModal(); expect(component.modalOpen()).toBeFalse(); });
-  it('should get statut badge class', () => { expect(component.getStatutBadgeClass('AUTORISE')).toBe('badge-info'); expect(component.getStatutBadgeClass('ENGAGE')).toBe('badge-success'); });
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should load only projects with PIP_FINANCIER_CREE status', () => {
+    projetsService.getAll.and.returnValue(of([
+      { id: '1', code: 'P1', titre: 'Projet 1', statut: 'PIP_FINANCIER_CREE', ministereId: 'm1', actif: true },
+      { id: '2', code: 'P2', titre: 'Projet 2', statut: 'EN_ARBITRAGE', ministereId: 'm1', actif: true }
+    ] as any));
+
+    component.loadProjets();
+
+    expect(component.projets().length).toBe(1);
+    expect(component.projets()[0].statut).toBe('PIP_FINANCIER_CREE');
+  });
+
+  it('should normalize status before filtering', () => {
+    projetsService.getAll.and.returnValue(of([
+      { id: '1', code: 'P1', titre: 'Projet 1', statut: ' pip_financier_cree ', ministereId: 'm1', actif: true }
+    ] as any));
+
+    component.loadProjets();
+
+    expect(component.projets().length).toBe(1);
+  });
+
+  it('should open modal for selected project', () => {
+    const projet = { id: '1', code: 'P1', titre: 'Projet 1', statut: 'PIP_FINANCIER_CREE', ministereId: 'm1', actif: true } as any;
+
+    component.openModal(projet);
+
+    expect(component.modalOpen()).toBeTrue();
+    expect(component.selectedProjet()?.id).toBe('1');
+  });
+
+  it('should clear amount CP when CP selection changes', () => {
+    component.formData.montantCp = 100;
+
+    component.onCreditPaiementChange();
+
+    expect(component.formData.montantCp).toBeUndefined();
+  });
 });

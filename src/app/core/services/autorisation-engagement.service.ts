@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AutorisationEngagement, FilterParams, PaginatedResponse } from '@core/models';
 import { ApiService } from '@core/services/api.service';
 
@@ -39,7 +40,9 @@ export class AutorisationEngagementService {
   }
 
   getByProjet(projetId: string): Observable<AutorisationEngagement[]> {
-    return this.api.get<AutorisationEngagement[]>(this.endpoint, { projetId });
+    return this.getAll().pipe(
+      map(items => items.filter(item => String(item.projetId) === String(projetId)))
+    );
   }
 }
 

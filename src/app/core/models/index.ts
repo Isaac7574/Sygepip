@@ -1098,3 +1098,17 @@ export interface HeatmapData {
   points: GeoPoint[];
   intensity: number[];
 }
+
+export interface ArbitrageProjetRequestDTO {
+  coutTotal?: number;
+  autorisationEngagementId?: string;
+  montantAe?: number;
+  creditPaiementId?: string;
+  montantCp?: number;
+}
+
+export interface ArbitrageProjetResponseDTO {
+  projet: Projet;
+  autorisationEngagement?: AutorisationEngagement | null;
+  creditPaiement?: CreditPaiement | null;
+}

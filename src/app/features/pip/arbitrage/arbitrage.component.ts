@@ -1,208 +1,240 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import {
+  ArbitrageProjetRequestDTO,
+  AutorisationEngagement,
+  CreditPaiement,
+  Projet
+} from '@core/models';
 import { ArbitrageService } from '@core/services/arbitrage.service';
+import { AutorisationEngagementService } from '@core/services/autorisation-engagement.service';
+import { CreditPaiementService } from '@core/services/credit-paiement.service';
 import { ProjetsService } from '@core/services/projets.service';
-import { NatureDepenseService } from '@core/services/nature-depense.service';
-import { AutorisationEngagement, NatureDepense, Projet } from '@core/models';
-import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 
 @Component({
   selector: 'app-arbitrage',
   standalone: true,
-  imports: [CommonModule, FormsModule, ConfirmDialogComponent, ToastComponent],
+  imports: [CommonModule, FormsModule, ToastComponent],
   templateUrl: './arbitrage.component.html',
   styleUrl: './arbitrage.component.scss'
 })
 export class ArbitrageComponent implements OnInit {
   private arbitrageService = inject(ArbitrageService);
   private projetsService = inject(ProjetsService);
-  private natureDepenseService = inject(NatureDepenseService);
+  private aeService = inject(AutorisationEngagementService);
+  private cpService = inject(CreditPaiementService);
 
-  items = signal<AutorisationEngagement[]>([]);
-  filteredItems = signal<AutorisationEngagement[]>([]);
   projets = signal<Projet[]>([]);
-  naturesDepense = signal<NatureDepense[]>([]);
-  searchTerm = '';
+  filteredProjets = signal<Projet[]>([]);
+  autorisations = signal<AutorisationEngagement[]>([]);
+  creditPaiements = signal<CreditPaiement[]>([]);
+  selectedProjet = signal<Projet | null>(null);
   modalOpen = signal(false);
-  editingItem = signal<AutorisationEngagement | null>(null);
+  loading = signal(false);
+  loadingAes = signal(false);
+  loadingCps = signal(false);
   saving = signal(false);
-  formData: Partial<AutorisationEngagement> = this.resetForm();
-
-  statuts = [
-    { value: 'PREVU', label: 'Prevu' },
-    { value: 'AUTORISE', label: 'Autorise' },
-    { value: 'ENGAGE', label: 'Engage' }
-  ];
-
-  confirmDialogVisible = signal(false);
-  confirmDialogTitle = '';
-  confirmDialogMessage = '';
-  itemToDelete: AutorisationEngagement | null = null;
+  searchTerm = '';
 
   toastVisible = signal(false);
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
 
+  formData: ArbitrageProjetRequestDTO = this.resetForm();
+
   ngOnInit(): void {
-    this.load();
     this.loadProjets();
-    this.loadNaturesDepense();
   }
 
-  private resetForm(): Partial<AutorisationEngagement> {
+  private resetForm(projet?: Projet | null): ArbitrageProjetRequestDTO {
     return {
-      projetId: undefined,
-      annee: new Date().getFullYear(),
-      montantAE: 0,
-      montantCP: undefined,
-      natureDepenseId: undefined,
-      lignebudgetaire: '',
-      dateAutorisation: undefined,
-      statut: 'PREVU',
-      observations: ''
+      coutTotal: projet?.coutTotal ?? undefined,
+      autorisationEngagementId: undefined,
+      montantAe: undefined,
+      creditPaiementId: undefined,
+      montantCp: undefined
     };
   }
 
-  load(): void {
-    this.arbitrageService.getAll().subscribe({
-      next: (data) => { this.items.set(data); this.filteredItems.set(data); },
-      error: () => this.showToast('Erreur lors du chargement des autorisations', 'error')
-    });
-  }
-
   loadProjets(): void {
+    this.loading.set(true);
     this.projetsService.getAll().subscribe({
-      next: (data) => this.projets.set(data)
-    });
-  }
-
-  loadNaturesDepense(): void {
-    this.natureDepenseService.getAll().subscribe({
-      next: (data) => this.naturesDepense.set(data)
-    });
-  }
-
-  search(): void {
-    const term = this.searchTerm.toLowerCase();
-    this.filteredItems.set(this.items().filter(i =>
-      (i.natureDepenseNom || this.getNatureDepenseNom(i.natureDepenseId)).toLowerCase().includes(term) ||
-      (i.natureDepense || '').toLowerCase().includes(term) ||
-      i.annee?.toString().includes(term) ||
-      i.lignebudgetaire?.toLowerCase().includes(term) ||
-      this.getProjetNom(i.projetId).toLowerCase().includes(term)
-    ));
-  }
-
-  openModal(): void {
-    this.formData = this.resetForm();
-    this.editingItem.set(null);
-    this.modalOpen.set(true);
-  }
-
-  closeModal(): void { this.modalOpen.set(false); }
-
-  edit(item: AutorisationEngagement): void {
-    this.formData = { ...item };
-    this.editingItem.set(item);
-    this.modalOpen.set(true);
-  }
-
-  save(): void {
-    if (
-      !this.formData.projetId ||
-      !this.formData.annee ||
-      !this.formData.montantAE ||
-      !this.formData.statut ||
-      !this.formData.natureDepenseId
-    ) {
-      this.showToast('Veuillez remplir tous les champs obligatoires (dont la nature de dépense)', 'error');
-      return;
-    }
-    this.saving.set(true);
-    const isEdit = !!this.editingItem();
-    const obs = isEdit
-      ? this.arbitrageService.update(this.editingItem()!.id, this.formData)
-      : this.arbitrageService.create(this.formData);
-
-    obs.subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.closeModal();
-        this.load();
-        this.showToast(isEdit ? 'Autorisation modifiee avec succes' : 'Autorisation creee avec succes', 'success');
+      next: (data) => {
+        const projets = data.filter(projet => this.isProjetEligibleForArbitrage(projet));
+        this.projets.set(projets);
+        this.filteredProjets.set(projets);
+        this.loading.set(false);
       },
       error: () => {
-        this.saving.set(false);
-        this.showToast('Erreur lors de l\'enregistrement', 'error');
+        this.loading.set(false);
+        this.showToast('Erreur lors du chargement des projets à arbitrer', 'error');
       }
     });
   }
 
-  confirmDelete(item: AutorisationEngagement): void {
-    this.itemToDelete = item;
-    this.confirmDialogTitle = 'Supprimer l\'autorisation';
-    this.confirmDialogMessage = 'Etes-vous sur de vouloir supprimer cette autorisation d\'engagement ?';
-    this.confirmDialogVisible.set(true);
+  private isProjetEligibleForArbitrage(projet: Projet): boolean {
+    return this.normalizeStatut(projet.statut) === 'PIP_FINANCIER_CREE';
   }
 
-  onConfirmDelete(): void {
-    if (this.itemToDelete) {
-      this.arbitrageService.delete(this.itemToDelete.id).subscribe({
-        next: () => {
-          this.load();
-          this.showToast('Autorisation supprimee avec succes', 'success');
-        },
-        error: () => this.showToast('Erreur lors de la suppression', 'error')
-      });
+  private normalizeStatut(statut: string | undefined): string {
+    return (statut || '').trim().toUpperCase();
+  }
+
+  search(): void {
+    const term = this.searchTerm.trim().toLowerCase();
+    if (!term) {
+      this.filteredProjets.set(this.projets());
+      return;
     }
-    this.confirmDialogVisible.set(false);
-    this.itemToDelete = null;
+
+    this.filteredProjets.set(
+      this.projets().filter(projet =>
+        projet.code.toLowerCase().includes(term) ||
+        projet.titre.toLowerCase().includes(term)
+      )
+    );
   }
 
-  onCancelDelete(): void {
-    this.confirmDialogVisible.set(false);
-    this.itemToDelete = null;
+  openModal(projet: Projet): void {
+    this.selectedProjet.set(projet);
+    this.formData = this.resetForm(projet);
+    this.autorisations.set([]);
+    this.creditPaiements.set([]);
+    this.modalOpen.set(true);
+    this.loadAutorisations(projet.id);
+  }
+
+  closeModal(): void {
+    this.modalOpen.set(false);
+    this.selectedProjet.set(null);
+    this.autorisations.set([]);
+    this.creditPaiements.set([]);
+    this.formData = this.resetForm();
+  }
+
+  loadAutorisations(projetId: string): void {
+    this.loadingAes.set(true);
+    this.aeService.getByProjet(projetId).subscribe({
+      next: (data) => {
+        this.autorisations.set(data);
+        this.loadingAes.set(false);
+      },
+      error: () => {
+        this.loadingAes.set(false);
+        this.showToast('Erreur lors du chargement des AE du projet', 'error');
+      }
+    });
+  }
+
+  onAutorisationChange(): void {
+    this.formData.montantAe = undefined;
+    this.formData.creditPaiementId = undefined;
+    this.formData.montantCp = undefined;
+    this.creditPaiements.set([]);
+
+    if (!this.formData.autorisationEngagementId) {
+      return;
+    }
+
+    this.loadingCps.set(true);
+      this.cpService.getByAutorisationEngagement(this.formData.autorisationEngagementId).subscribe({
+      next: (data) => {
+        this.creditPaiements.set(data);
+        this.loadingCps.set(false);
+      },
+      error: () => {
+        this.loadingCps.set(false);
+        this.showToast('Erreur lors du chargement des CP lies a l\'AE', 'error');
+      }
+    });
+  }
+
+  onCreditPaiementChange(): void {
+    this.formData.montantCp = undefined;
+  }
+
+  save(): void {
+    const projet = this.selectedProjet();
+    if (!projet) {
+      return;
+    }
+
+    if (this.formData.autorisationEngagementId && this.formData.montantAe == null) {
+      this.showToast('Le montant AE est obligatoire si une AE est sélectionnée', 'error');
+      return;
+    }
+
+    if (this.formData.creditPaiementId && this.formData.montantCp == null) {
+      this.showToast('Le montant CP est obligatoire si un CP est sélectionné', 'error');
+      return;
+    }
+
+    this.saving.set(true);
+    this.arbitrageService.arbitrerProjet(projet.id, this.buildPayload()).subscribe({
+      next: (response) => {
+        this.saving.set(false);
+        this.replaceProjet(response.projet);
+        this.closeModal();
+        this.showToast('Arbitrage enregistré avec succès', 'success');
+      },
+      error: (error: HttpErrorResponse | Error) => {
+        this.saving.set(false);
+        this.showToast(this.getErrorMessage(error), 'error');
+      }
+    });
+  }
+
+  private buildPayload(): ArbitrageProjetRequestDTO {
+    return {
+      coutTotal: this.formData.coutTotal ?? undefined,
+      autorisationEngagementId: this.formData.autorisationEngagementId || undefined,
+      montantAe: this.formData.montantAe ?? undefined,
+      creditPaiementId: this.formData.creditPaiementId || undefined,
+      montantCp: this.formData.montantCp ?? undefined
+    };
+  }
+
+  private replaceProjet(updatedProjet: Projet): void {
+    const projets = this.projets().map(projet => projet.id === updatedProjet.id ? updatedProjet : projet);
+    this.projets.set(projets);
+    this.search();
+  }
+
+  private getErrorMessage(error: HttpErrorResponse | Error): string {
+    const status = (error as HttpErrorResponse).status;
+    if (status === 400) {
+      return 'Requête invalide: vérifiez les montants AE/CP obligatoires.';
+    }
+    if (status === 403) {
+      return 'Vous n\'avez pas les droits pour arbitrer ce projet.';
+    }
+    if (status === 404) {
+      return 'Projet, AE ou CP introuvable.';
+    }
+    return error.message || 'Erreur lors de l’enregistrement de l’arbitrage';
+  }
+
+  getAutorisationLabel(ae: AutorisationEngagement): string {
+    return `${ae.natureDepenseNom || ae.natureDepense || 'AE'} - ${this.formatMontant(ae.montantAe ?? ae.montantAE)}`;
+  }
+
+  getCreditPaiementLabel(cp: CreditPaiement): string {
+    return `${cp.annee || '-'} - ${this.formatMontant(cp.montantCp)}`;
+  }
+
+  formatMontant(value: number | undefined): string {
+    if (value == null) {
+      return '-';
+    }
+    return `${value.toLocaleString('fr-FR')} FCFA`;
   }
 
   showToast(message: string, type: 'success' | 'error'): void {
     this.toastMessage = message;
     this.toastType = type;
     this.toastVisible.set(true);
-  }
-
-  getProjetNom(id: string | number | undefined): string {
-    if (!id) return '-';
-    const projet = this.projets().find(p => String(p.id) === String(id));
-    return projet ? (projet.code + ' - ' + projet.titre) : '-';
-  }
-
-  getNatureDepenseNom(id: string | number | undefined): string {
-    if (!id) return '-';
-    const nature = this.naturesDepense().find(n => String(n.id) === String(id));
-    return nature ? nature.nom : '-';
-  }
-
-  getStatutLabel(statut: string | undefined): string {
-    if (!statut) return '-';
-    return this.statuts.find(s => s.value === statut)?.label || statut;
-  }
-
-  getStatutBadgeClass(statut: string | undefined): string {
-    if (!statut) return 'badge-secondary';
-    const classes: Record<string, string> = {
-      'PREVU': 'badge-secondary',
-      'AUTORISE': 'badge-info',
-      'ENGAGE': 'badge-success'
-    };
-    return classes[statut] || 'badge-secondary';
-  }
-
-  formatMontant(value: number | undefined): string {
-    if (!value) return '-';
-    if (value >= 1000000000) return (value / 1000000000).toFixed(1) + ' Mds';
-    if (value >= 1000000) return (value / 1000000).toFixed(1) + ' M';
-    return value.toLocaleString('fr-FR') + ' FCFA';
   }
 }
