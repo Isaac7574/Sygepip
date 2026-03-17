@@ -839,6 +839,22 @@ export interface StatistiquesDashboard {
   ideesProjetsEnAttente: number;
 }
 
+export interface DashboardStats {
+  totalIdees: number;
+  totalProjets: number;
+  totalProjetsActifs: number;
+  ideesEnMaturation: number;
+  projetsEnPlanification: number;
+  projetsEnExecution: number;
+  tauxTransformationIdeesEnProjets: number;
+  tauxRejetIdees: number;
+  projetsParPipAnnuel: { pipAnnuelId: string; annee: number; nombreProjets: number }[];
+  montantParPipAnnuel: { pipAnnuelId: string; annee: number; montantTotal: number }[];
+  repartitionTypeProjetPip: { typeProjetPip: string; nombreProjets: number }[];
+  projetsParSecteur: { secteurId: string; secteurNom: string; nombreProjets: number }[];
+  montantParSecteur: { secteurId: string; secteurNom: string; montantTotal: number }[];
+}
+
 export interface StatistiquesParSecteur {
   secteurId: number;
   secteurNom: string;
