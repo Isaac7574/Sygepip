@@ -228,6 +228,7 @@
   <!-- Graphiques par PIP annuel & type -->
   <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
 
+    <!-- Graphique en barres verticales : Projets par PIP Annuel -->
     <div class="elevated-card">
       <div class="flex items-center gap-3 mb-5">
         <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center">
@@ -240,25 +241,28 @@
           <p class="text-xs text-gray-500">Nombre de projets par année</p>
         </div>
       </div>
-      <div class="space-y-3">
-        @for (item of projetsParPipChart(); track item.label) {
-          <div>
-            <div class="flex justify-between items-center mb-1.5">
-              <span class="text-sm font-medium text-gray-700">{{ item.label }}</span>
-              <span class="text-sm font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg">{{ item.formattedValue }}</span>
+      @if (projetsParPipChart().length > 0) {
+        <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
+          @for (item of projetsParPipChart(); track item.label) {
+            <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
+              <span class="text-xs font-semibold text-blue-700">{{ item.formattedValue }}</span>
+              <div class="w-full rounded-t-md transition-all duration-700"
+                   style="background: linear-gradient(180deg, #3b82f6, #2563eb); min-height: 4px;"
+                   [style.height.%]="item.percent"></div>
             </div>
-            <div class="h-4 rounded-full bg-gray-100 overflow-hidden">
-              <div class="h-full rounded-full transition-all duration-700"
-                   style="background: linear-gradient(90deg, #3b82f6, #2563eb)"
-                   [style.width.%]="item.percent"></div>
-            </div>
-          </div>
-        } @empty {
-          <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
-        }
-      </div>
+          }
+        </div>
+        <div class="flex justify-around gap-3 px-2">
+          @for (item of projetsParPipChart(); track item.label) {
+            <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
+          }
+        </div>
+      } @else {
+        <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
+      }
     </div>
 
+    <!-- Graphique en barres verticales : Montant par PIP Annuel -->
     <div class="elevated-card">
       <div class="flex items-center gap-3 mb-5">
         <div class="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
@@ -271,25 +275,28 @@
           <p class="text-xs text-gray-500">Budget total engagé par année</p>
         </div>
       </div>
-      <div class="space-y-3">
-        @for (item of montantParPipChart(); track item.label) {
-          <div>
-            <div class="flex justify-between items-center mb-1.5">
-              <span class="text-sm font-medium text-gray-700">{{ item.label }}</span>
-              <span class="text-sm font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg">{{ item.formattedValue }}</span>
+      @if (montantParPipChart().length > 0) {
+        <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
+          @for (item of montantParPipChart(); track item.label) {
+            <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
+              <span class="text-xs font-semibold text-emerald-700">{{ item.formattedValue }}</span>
+              <div class="w-full rounded-t-md transition-all duration-700"
+                   style="background: linear-gradient(180deg, #10b981, #059669); min-height: 4px;"
+                   [style.height.%]="item.percent"></div>
             </div>
-            <div class="h-4 rounded-full bg-gray-100 overflow-hidden">
-              <div class="h-full rounded-full transition-all duration-700"
-                   style="background: linear-gradient(90deg, #10b981, #059669)"
-                   [style.width.%]="item.percent"></div>
-            </div>
-          </div>
-        } @empty {
-          <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
-        }
-      </div>
+          }
+        </div>
+        <div class="flex justify-around gap-3 px-2">
+          @for (item of montantParPipChart(); track item.label) {
+            <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
+          }
+        </div>
+      } @else {
+        <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
+      }
     </div>
 
+    <!-- Graphique en barres verticales : Répartition par Type PIP -->
     <div class="elevated-card">
       <div class="flex items-center gap-3 mb-5">
         <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
@@ -302,25 +309,28 @@
           <p class="text-xs text-gray-500">Distribution des types de projets</p>
         </div>
       </div>
-      <div class="space-y-3">
-        @for (item of typeProjetChart(); track item.label) {
-          <div>
-            <div class="flex justify-between items-center mb-1.5">
-              <span class="text-sm font-medium text-gray-700">{{ item.label }}</span>
-              <span class="text-sm font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg">{{ item.formattedValue }}</span>
+      @if (typeProjetChart().length > 0) {
+        <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
+          @for (item of typeProjetChart(); track item.label) {
+            <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
+              <span class="text-xs font-semibold text-amber-700">{{ item.formattedValue }}</span>
+              <div class="w-full rounded-t-md transition-all duration-700"
+                   style="background: linear-gradient(180deg, #f59e0b, #d97706); min-height: 4px;"
+                   [style.height.%]="item.percent"></div>
             </div>
-            <div class="h-4 rounded-full bg-gray-100 overflow-hidden">
-              <div class="h-full rounded-full transition-all duration-700"
-                   style="background: linear-gradient(90deg, #f59e0b, #d97706)"
-                   [style.width.%]="item.percent"></div>
-            </div>
-          </div>
-        } @empty {
-          <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
-        }
-      </div>
+          }
+        </div>
+        <div class="flex justify-around gap-3 px-2">
+          @for (item of typeProjetChart(); track item.label) {
+            <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
+          }
+        </div>
+      } @else {
+        <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
+      }
     </div>
 
+    <!-- Graphique en barres verticales : Projets par Secteur -->
     <div class="elevated-card">
       <div class="flex items-center gap-3 mb-5">
         <div class="w-9 h-9 rounded-xl bg-fuchsia-100 flex items-center justify-center">
@@ -333,23 +343,25 @@
           <p class="text-xs text-gray-500">Répartition sectorielle des projets</p>
         </div>
       </div>
-      <div class="space-y-3">
-        @for (item of projetsParSecteurChart(); track item.label) {
-          <div>
-            <div class="flex justify-between items-center mb-1.5">
-              <span class="text-sm font-medium text-gray-700 truncate max-w-[60%]">{{ item.label }}</span>
-              <span class="text-sm font-semibold text-fuchsia-700 bg-fuchsia-50 px-2 py-0.5 rounded-lg flex-shrink-0">{{ item.formattedValue }}</span>
+      @if (projetsParSecteurChart().length > 0) {
+        <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
+          @for (item of projetsParSecteurChart(); track item.label) {
+            <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
+              <span class="text-xs font-semibold text-fuchsia-700">{{ item.formattedValue }}</span>
+              <div class="w-full rounded-t-md transition-all duration-700"
+                   style="background: linear-gradient(180deg, #d946ef, #a21caf); min-height: 4px;"
+                   [style.height.%]="item.percent"></div>
             </div>
-            <div class="h-4 rounded-full bg-gray-100 overflow-hidden">
-              <div class="h-full rounded-full transition-all duration-700"
-                   style="background: linear-gradient(90deg, #d946ef, #a21caf)"
-                   [style.width.%]="item.percent"></div>
-            </div>
-          </div>
-        } @empty {
-          <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
-        }
-      </div>
+          }
+        </div>
+        <div class="flex justify-around gap-3 px-2">
+          @for (item of projetsParSecteurChart(); track item.label) {
+            <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
+          }
+        </div>
+      } @else {
+        <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
+      }
     </div>
 
   </div>
@@ -367,23 +379,25 @@
         <p class="text-xs text-gray-500">Enveloppes budgétaires par secteur d'activité</p>
       </div>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-3">
-      @for (item of montantParSecteurChart(); track item.label) {
-        <div>
-          <div class="flex justify-between items-center mb-1.5">
-            <span class="text-sm font-medium text-gray-700 truncate max-w-[60%]">{{ item.label }}</span>
-            <span class="text-sm font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-lg flex-shrink-0">{{ item.formattedValue }}</span>
+    @if (montantParSecteurChart().length > 0) {
+      <div class="flex items-end justify-around gap-3 h-52 px-2 border-b border-gray-200 mb-3">
+        @for (item of montantParSecteurChart(); track item.label) {
+          <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
+            <span class="text-xs font-semibold text-rose-700 text-center leading-tight">{{ item.formattedValue }}</span>
+            <div class="w-full rounded-t-md transition-all duration-700"
+                 style="background: linear-gradient(180deg, #fb7185, #e11d48); min-height: 4px;"
+                 [style.height.%]="item.percent"></div>
           </div>
-          <div class="h-4 rounded-full bg-gray-100 overflow-hidden">
-            <div class="h-full rounded-full transition-all duration-700"
-                 style="background: linear-gradient(90deg, #fb7185, #e11d48)"
-                 [style.width.%]="item.percent"></div>
-          </div>
-        </div>
-      } @empty {
-        <div class="col-span-2 text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
-      }
-    </div>
+        }
+      </div>
+      <div class="flex justify-around gap-3 px-2">
+        @for (item of montantParSecteurChart(); track item.label) {
+          <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
+        }
+      </div>
+    } @else {
+      <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
+    }
   </div>
 
   <!-- Projets récents -->

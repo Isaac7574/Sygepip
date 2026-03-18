@@ -2,8 +2,11 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  // Redirect root to dashboard (authGuard triggers Keycloak login if not authenticated)
-  { path: '', redirectTo: '/app/dashboard', pathMatch: 'full' },
+  // Landing page publique
+  {
+    path: '',
+    loadComponent: () => import('./features/landing/landing.component').then(m => m.LandingComponent)
+  },
   // App routes (protected)
   {
     path: 'app',
@@ -167,5 +170,5 @@ export const routes: Routes = [
   },
   
   // Fallback
-  { path: '**', redirectTo: '/app/dashboard' }
+  { path: '**', redirectTo: '/' }
 ];
