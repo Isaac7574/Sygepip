@@ -1,7 +1,7 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { KeycloakService } from 'keycloak-angular';
-import { from, switchMap, catchError, of } from 'rxjs';
+import { from, switchMap, catchError, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const keycloak = inject(KeycloakService);
@@ -32,20 +32,30 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         });
         return next(clonedReq);
       }
-      return next(req);
+      return throwError(() => new HttpErrorResponse({
+        status: 401,
+        statusText: 'Authentication Required',
+        url: req.url,
+        error: { message: 'Authentification Keycloak indisponible ou token manquant.' }
+      }));
     }),
     catchError(() => {
-      // If Keycloak fails, try from localStorage (fallback)
       const storedToken = localStorage.getItem('sygepip_token');
-      if (storedToken) {
-        const clonedReq = req.clone({
-          setHeaders: {
-            Authorization: `Bearer ${storedToken}`
-          }
-        });
-        return next(clonedReq);
+      if (!storedToken) {
+        return throwError(() => new HttpErrorResponse({
+          status: 401,
+          statusText: 'Authentication Required',
+          url: req.url,
+          error: { message: 'Session non initialisee. Rechargez l\'application ou reconnectez-vous.' }
+        }));
       }
-      return next(req);
+
+      const clonedReq = req.clone({
+        setHeaders: {
+          Authorization: `Bearer ${storedToken}`
+        }
+      });
+      return next(clonedReq);
     })
   );
 };

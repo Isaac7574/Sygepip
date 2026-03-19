@@ -292,6 +292,7 @@ export interface DocumentProjet {
 // === DTOs DOCUMENTS API ===
 export type TypeDocumentProjet =
   | 'NOTE_CONCEPTUELLE'
+  | 'DEMANDE_CREATION_PROJET'
   | 'ETUDE_FAISABILITE'
   | 'RAPPORT_TECHNIQUE'
   | 'PLAN_FINANCEMENT'
@@ -301,6 +302,8 @@ export type TypeDocumentProjet =
   | 'RAPPORT_FAISABILITE'
   | 'PRODOC'
   | 'ACTE_JURIDIQUE'
+  | 'PROJET_ARRETE_CONJOINT'
+  | 'PROTOCOLE_ACCORD_ETAT_PARTENAIRE'
   | 'DOSSIER_PROJET'
   | 'AUTRE';
 

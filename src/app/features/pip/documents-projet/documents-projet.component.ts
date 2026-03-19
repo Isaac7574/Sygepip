@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { DocumentProjetService } from '@core/services/document-projet.service';
 import { ProjetsService } from '@core/services/projets.service';
@@ -29,12 +30,10 @@ export class DocumentsProjetComponent implements OnInit {
   modalOpen = signal(false);
   uploading = signal(false);
 
-  // Form data
   selectedFile: File | null = null;
   selectedProjetId = '';
   selectedTypeDocument: TypeDocumentProjet | '' = '';
 
-  // Versions history modal
   versionsModalOpen = signal(false);
   versionsItems = signal<DocumentProjetResponseDTO[]>([]);
   versionsLoading = signal(false);
@@ -44,18 +43,22 @@ export class DocumentsProjetComponent implements OnInit {
   confirmDialogMessage = '';
   itemToDelete: DocumentProjetResponseDTO | null = null;
 
+  replaceDialogVisible = signal(false);
+  replacementTarget: DocumentProjetResponseDTO | null = null;
+  replaceErrorMessage = '';
+
   toastVisible = signal(false);
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
 
   typesDocument: { value: TypeDocumentProjet; label: string }[] = [
     { value: 'NOTE_CONCEPTUELLE', label: 'Note conceptuelle' },
-    { value: 'ETUDE_FAISABILITE', label: 'Étude de faisabilité' },
+    { value: 'ETUDE_FAISABILITE', label: 'Etude de faisabilite' },
     { value: 'RAPPORT_TECHNIQUE', label: 'Rapport technique' },
     { value: 'PLAN_FINANCEMENT', label: 'Plan de financement' },
     { value: 'CAHIER_CHARGES', label: 'Cahier des charges' },
     { value: 'RAPPORT_AVANCEMENT', label: 'Rapport d\'avancement' },
-    { value: 'PV_RECEPTION', label: 'PV de réception' },
+    { value: 'PV_RECEPTION', label: 'PV de reception' },
     { value: 'AUTRE', label: 'Autre' }
   ];
 
@@ -91,11 +94,9 @@ export class DocumentsProjetComponent implements OnInit {
       return;
     }
 
-    // Recherche via API
     this.documentProjetService.recherche(this.searchTerm).subscribe({
       next: (data) => this.filteredItems.set(data),
       error: () => {
-        // Fallback local search
         const term = this.searchTerm.toLowerCase();
         this.filteredItems.set(this.items().filter(i =>
           i.titre?.toLowerCase().includes(term) ||
@@ -128,7 +129,15 @@ export class DocumentsProjetComponent implements OnInit {
 
   upload(): void {
     if (!this.selectedFile || !this.selectedTypeDocument || !this.selectedProjetId) {
-      this.showToast('Veuillez sélectionner un projet, un type et un fichier', 'error');
+      this.showToast('Veuillez selectionner un projet, un type et un fichier', 'error');
+      return;
+    }
+
+    const existingDocument = this.findExistingActiveDocument(this.selectedTypeDocument as TypeDocumentProjet);
+    if (existingDocument) {
+      this.replacementTarget = existingDocument;
+      this.replaceErrorMessage = 'Un document actif du meme type existe deja. Voulez-vous le remplacer par une nouvelle version ?';
+      this.replaceDialogVisible.set(true);
       return;
     }
 
@@ -142,13 +151,46 @@ export class DocumentsProjetComponent implements OnInit {
         this.uploading.set(false);
         this.closeModal();
         this.loadDocumentsByProjet(this.selectedProjetId);
-        this.showToast('Document uploadé avec succès', 'success');
+        this.showToast('Document uploade avec succes', 'success');
       },
-      error: () => {
+      error: (error: HttpErrorResponse | Error) => {
         this.uploading.set(false);
-        this.showToast('Erreur lors de l\'upload du document', 'error');
+        if (this.isDuplicateDocumentError(error) && existingDocument) {
+          this.replacementTarget = existingDocument;
+          this.replaceErrorMessage = this.extractErrorMessage(error);
+          this.replaceDialogVisible.set(true);
+          return;
+        }
+        this.showToast(this.extractErrorMessage(error), 'error');
       }
     });
+  }
+
+  confirmReplace(): void {
+    if (!this.selectedFile || !this.replacementTarget) {
+      return;
+    }
+
+    this.uploading.set(true);
+    this.documentProjetService.uploadVersion(this.replacementTarget.id, this.selectedFile).subscribe({
+      next: () => {
+        this.uploading.set(false);
+        this.cancelReplace();
+        this.closeModal();
+        this.loadDocumentsByProjet(this.selectedProjetId);
+        this.showToast('Nouvelle version du document uploadee avec succes', 'success');
+      },
+      error: (error: HttpErrorResponse | Error) => {
+        this.uploading.set(false);
+        this.showToast(this.extractErrorMessage(error), 'error');
+      }
+    });
+  }
+
+  cancelReplace(): void {
+    this.replaceDialogVisible.set(false);
+    this.replacementTarget = null;
+    this.replaceErrorMessage = '';
   }
 
   download(item: DocumentProjetResponseDTO): void {
@@ -179,7 +221,7 @@ export class DocumentsProjetComponent implements OnInit {
   confirmDelete(item: DocumentProjetResponseDTO): void {
     this.itemToDelete = item;
     this.confirmDialogTitle = 'Supprimer le document';
-    this.confirmDialogMessage = `Êtes-vous sûr de vouloir supprimer le document "${item.titre}" ?`;
+    this.confirmDialogMessage = `Etes-vous sur de vouloir supprimer le document "${item.titre}" ?`;
     this.confirmDialogVisible.set(true);
   }
 
@@ -188,7 +230,7 @@ export class DocumentsProjetComponent implements OnInit {
       this.documentProjetService.delete(this.itemToDelete.id).subscribe({
         next: () => {
           this.loadDocumentsByProjet(this.selectedProjetId);
-          this.showToast('Document supprimé avec succès', 'success');
+          this.showToast('Document supprime avec succes', 'success');
         },
         error: () => this.showToast('Erreur lors de la suppression', 'error')
       });
@@ -210,8 +252,8 @@ export class DocumentsProjetComponent implements OnInit {
 
   getProjetNom(id: string | undefined): string {
     if (!id) return '-';
-    const p = this.projets().find(p => String(p.id) === String(id));
-    return p ? `${p.code} - ${p.titre}` : '-';
+    const projet = this.projets().find(p => String(p.id) === String(id));
+    return projet ? `${projet.code} - ${projet.titre}` : '-';
   }
 
   getTypeDocumentLabel(type: TypeDocumentProjet): string {
@@ -246,5 +288,31 @@ export class DocumentsProjetComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  private findExistingActiveDocument(typeDocument: TypeDocumentProjet): DocumentProjetResponseDTO | null {
+    return this.items().find(item => item.typeDocument === typeDocument && item.actif !== false) || null;
+  }
+
+  private isDuplicateDocumentError(error: HttpErrorResponse | Error): boolean {
+    const message = this.extractErrorMessage(error).toLowerCase();
+    return message.includes('document actif') && message.includes('existe deja');
+  }
+
+  private extractErrorMessage(error: HttpErrorResponse | Error): string {
+    const httpError = error as HttpErrorResponse;
+    if (typeof httpError.error === 'string') {
+      return httpError.error;
+    }
+    if (httpError.error?.error) {
+      return httpError.error.error;
+    }
+    if (httpError.error?.message) {
+      return httpError.error.message;
+    }
+    if (httpError.error?.details) {
+      return httpError.error.details;
+    }
+    return error.message || 'Une erreur est survenue';
   }
 }

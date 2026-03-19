@@ -33,6 +33,12 @@ export class DocumentProjetService {
     return this.http.post<DocumentProjetResponseDTO>(`${this.baseUrl}/upload`, formData);
   }
 
+  uploadVersion(documentIdOriginal: string, file: File): Observable<DocumentProjetResponseDTO> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<DocumentProjetResponseDTO>(`${this.baseUrl}/versions/${documentIdOriginal}`, formData);
+  }
+
   /**
    * Télécharge un document par son ID
    */

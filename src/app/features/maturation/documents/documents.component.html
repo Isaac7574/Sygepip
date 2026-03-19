@@ -356,6 +356,17 @@
   (cancel)="onCancelDelete()">
 </app-confirm-dialog>
 
+<app-confirm-dialog
+  [visible]="replaceDialogVisible()"
+  title="Document deja existant"
+  [message]="replaceErrorMessage || 'Un document actif du meme type existe deja. Voulez-vous le remplacer par une nouvelle version ?'"
+  type="warning"
+  confirmText="Remplacer"
+  cancelText="Annuler"
+  (confirm)="confirmReplace()"
+  (cancel)="cancelReplace()">
+</app-confirm-dialog>
+
 <app-toast
   [visible]="toastVisible()"
   [message]="toastMessage"

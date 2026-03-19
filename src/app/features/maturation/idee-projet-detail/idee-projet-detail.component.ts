@@ -19,6 +19,13 @@ import {
 } from '@core/models';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 
+const DOSSIER_PROJET_REQUIRED_TYPES: TypeDocumentProjet[] = [
+  'DEMANDE_CREATION_PROJET',
+  'PROJET_ARRETE_CONJOINT',
+  'PROTOCOLE_ACCORD_ETAT_PARTENAIRE',
+  'PRODOC'
+];
+
 @Component({
   selector: 'app-idee-projet-detail',
   standalone: true,
@@ -45,8 +52,9 @@ export class IdeeProjetDetailComponent implements OnInit {
   documentsError = signal<string | null>(null);
   actionComment = '';
   actionInProgress = signal(false);
-  requiredDocumentType = signal<TypeDocumentProjet | null>(null);
-  selectedFile: File | null = null;
+  requiredDocumentTypes = signal<TypeDocumentProjet[]>([]);
+  selectedFiles: Partial<Record<TypeDocumentProjet, File>> = {};
+  uploadingDocumentType = signal<TypeDocumentProjet | null>(null);
 
   ministeres = signal<Ministere[]>([]);
   secteurs = signal<Secteur[]>([]);
@@ -78,10 +86,13 @@ export class IdeeProjetDetailComponent implements OnInit {
 
   typesDocument: { value: TypeDocumentProjet; label: string }[] = [
     { value: 'NOTE_CONCEPTUELLE', label: 'Note conceptuelle' },
+    { value: 'DEMANDE_CREATION_PROJET', label: 'Demande de creation de projet' },
     { value: 'ETUDE_FAISABILITE', label: 'Étude de faisabilité' },
     { value: 'RAPPORT_FAISABILITE', label: 'Rapport de faisabilité' },
     { value: 'PRODOC', label: 'ProDoc' },
     { value: 'ACTE_JURIDIQUE', label: 'Acte juridique' },
+    { value: 'PROJET_ARRETE_CONJOINT', label: 'Projet arrete conjoint' },
+    { value: 'PROTOCOLE_ACCORD_ETAT_PARTENAIRE', label: 'Protocole accord Etat partenaire' },
     { value: 'DOSSIER_PROJET', label: 'Dossier projet' },
     { value: 'RAPPORT_TECHNIQUE', label: 'Rapport technique' },
     { value: 'PLAN_FINANCEMENT', label: 'Plan de financement' },
@@ -117,7 +128,7 @@ export class IdeeProjetDetailComponent implements OnInit {
       next: (data) => {
         this.idee.set(data);
         this.loading.set(false);
-        this.requiredDocumentType.set(this.getRequiredDocumentType(data.statut));
+        this.requiredDocumentTypes.set(this.getRequiredDocumentTypes(data.statut));
         this.loadNoteConceptuelle(data.id);
         this.loadDocuments(data.id);
       },
@@ -157,53 +168,160 @@ export class IdeeProjetDetailComponent implements OnInit {
     });
   }
 
-  getRequiredDocumentType(statut?: string): TypeDocumentProjet | null {
+  getRequiredDocumentTypes(statut?: string): TypeDocumentProjet[] {
     switch (statut) {
       case 'CONCEPTION_SOUMISE':
-        return 'RAPPORT_FAISABILITE';
+        return ['RAPPORT_FAISABILITE'];
       case 'RAPPORT_FAISABILITE_VALIDE':
-        return 'PRODOC';
+        return ['PRODOC'];
       case 'PRODOC_SOUMIS':
-        return 'PRODOC';
+        return ['PRODOC'];
       case 'PRODOC_VALIDE':
-        return 'ACTE_JURIDIQUE';
+        return ['ACTE_JURIDIQUE'];
       case 'IDENTIFICATION_FINANCEMENT':
-        return 'DOSSIER_PROJET';
       case 'SOUMISSION_DOSSIER_PROJET':
-        return 'DOSSIER_PROJET';
+      case 'DOSSIER_PROJET_RETOURNE':
+        return DOSSIER_PROJET_REQUIRED_TYPES;
       default:
-        return null;
+        return [];
     }
   }
 
-  hasRequiredDocument(): boolean {
-    const required = this.requiredDocumentType();
-    if (!required) return true;
-    return this.documents().some(d => d.typeDocument === required);
+  hasRequiredDocuments(): boolean {
+    return this.getMissingRequiredDocumentTypes().length === 0;
   }
 
-  onFileSelected(event: Event): void {
+  hasDocumentType(type: TypeDocumentProjet): boolean {
+    return this.documents().some(d => d.actif === true && d.typeDocument === type);
+  }
+
+  getMissingRequiredDocumentTypes(): TypeDocumentProjet[] {
+    return this.requiredDocumentTypes().filter(type => !this.hasDocumentType(type));
+  }
+
+  getRequiredDocumentsSummary(): string {
+    return this.requiredDocumentTypes()
+      .map(type => this.getTypeDocumentLabel(type))
+      .join(', ');
+  }
+
+  getMissingRequiredDocumentsMessage(): string {
+    const missing = this.getMissingRequiredDocumentTypes();
+    if (missing.length === 0) {
+      return '';
+    }
+    return `Dossier projet incomplet. Documents manquants : ${missing.map(type => this.getTypeDocumentLabel(type)).join(', ')}`;
+  }
+
+  isDossierProjetStatus(statut?: string): boolean {
+    return statut === 'IDENTIFICATION_FINANCEMENT'
+      || statut === 'SOUMISSION_DOSSIER_PROJET'
+      || statut === 'DOSSIER_PROJET_RETOURNE';
+  }
+
+  onFileSelected(event: Event, type: TypeDocumentProjet): void {
     const input = event.target as HTMLInputElement;
-    this.selectedFile = input.files && input.files[0] ? input.files[0] : null;
+    this.selectedFiles[type] = input.files && input.files[0] ? input.files[0] : undefined;
   }
 
-  uploadRequiredDocument(): void {
+  getSelectedFile(type: TypeDocumentProjet): File | null {
+    return this.selectedFiles[type] ?? null;
+  }
+
+  uploadRequiredDocument(type: TypeDocumentProjet): void {
     const item = this.idee();
-    const required = this.requiredDocumentType();
-    if (!item || !required || !this.selectedFile) return;
+    const selectedFile = this.getSelectedFile(type);
+    if (!item || !selectedFile) return;
+
     this.actionInProgress.set(true);
-    this.documentIdeeService.upload(this.selectedFile, required, item.id, this.getUserId()).subscribe({
+    this.uploadingDocumentType.set(type);
+    this.documentIdeeService.upload(selectedFile, type, item.id, this.getUserId()).subscribe({
       next: () => {
         this.actionInProgress.set(false);
-        this.selectedFile = null;
+        this.uploadingDocumentType.set(null);
+        delete this.selectedFiles[type];
         this.loadDocuments(item.id);
-        this.showToast('Document téléchargé avec succès', 'success');
+        this.showToast(`${this.getTypeDocumentLabel(type)} telecharge avec succes`, 'success');
       },
       error: () => {
         this.actionInProgress.set(false);
-        this.showToast('Erreur lors du téléchargement du document', 'error');
+        this.uploadingDocumentType.set(null);
+        this.showToast(`Erreur lors du telechargement de ${this.getTypeDocumentLabel(type)}`, 'error');
       }
     });
+  }
+
+  canUploadDocumentType(type: TypeDocumentProjet): boolean {
+    return !this.hasDocumentType(type);
+  }
+
+  onSoumettreDossierProjet(): void {
+    const item = this.idee();
+    if (!item) return;
+
+    const missing = this.getMissingRequiredDocumentTypes();
+    if (missing.length > 0) {
+      this.showToast(this.getMissingRequiredDocumentsMessage(), 'error');
+      return;
+    }
+
+    this.actionInProgress.set(true);
+    this.ideesService.soumettreDossierProjet(item.id, this.buildActionPayload()).subscribe({
+      next: () => {
+        this.actionInProgress.set(false);
+        this.showToast('Dossier de creation de projet soumis avec succes', 'success');
+        this.refreshIdee(item.id);
+      },
+      error: (err: any) => {
+        this.actionInProgress.set(false);
+        this.handleDossierError(err);
+      }
+    });
+  }
+
+  onValiderDossierProjet(): void {
+    const item = this.idee();
+    if (!item) return;
+
+    if (item.statut !== 'SOUMISSION_DOSSIER_PROJET') {
+      this.showToast('Impossible de valider : l\'idee n\'est pas en SOUMISSION_DOSSIER_PROJET.', 'error');
+      return;
+    }
+
+    this.actionInProgress.set(true);
+    this.ideesService.validerDossierProjet(item.id, this.buildActionPayload()).subscribe({
+      next: () => {
+        this.actionInProgress.set(false);
+        this.showToast('Dossier valide. Le projet a ete cree automatiquement.', 'success');
+        this.refreshIdee(item.id, () => this.router.navigate(['/app/pip/projets']));
+      },
+      error: (err: any) => {
+        this.actionInProgress.set(false);
+        this.handleDossierError(err);
+      }
+    });
+  }
+
+  private handleDossierError(err: any): void {
+    const apiError = err?.error;
+    if (apiError?.code === 'DOSSIER_PROJET_INCOMPLET') {
+      const missingTypes = Array.isArray(apiError?.details?.missingTypes)
+        ? apiError.details.missingTypes
+        : [];
+      const missingLabels = missingTypes.length > 0
+        ? missingTypes.map((type: TypeDocumentProjet) => this.getTypeDocumentLabel(type)).join(', ')
+        : this.getMissingRequiredDocumentTypes().map(type => this.getTypeDocumentLabel(type)).join(', ');
+      this.showToast(`Dossier projet incomplet. Documents manquants : ${missingLabels}`, 'error');
+      return;
+    }
+    if (err?.status === 403) {
+      this.showToast(
+        'Vous n\'avez pas la permission d\'executer cette action. Veuillez contacter l\'administrateur de la plateforme.',
+        'error'
+      );
+      return;
+    }
+    this.showToast(apiError?.message || err?.message || 'Erreur lors du traitement du dossier projet', 'error');
   }
 
   // ── Actions dédiées par statut ──────────────────────────────────────────
@@ -285,7 +403,7 @@ export class IdeeProjetDetailComponent implements OnInit {
   }
 
   onSoumettreProdoc(): void {
-    if (!this.hasRequiredDocument()) {
+    if (!this.hasRequiredDocuments()) {
       this.showToast('Document ProDoc requis avant la soumission', 'error');
       return;
     }
@@ -307,7 +425,7 @@ export class IdeeProjetDetailComponent implements OnInit {
   }
 
   onIdentifierFinancement(): void {
-    if (!this.hasRequiredDocument()) {
+    if (!this.hasRequiredDocuments()) {
       this.showToast('Acte juridique requis avant cette action', 'error');
       return;
     }
@@ -317,47 +435,6 @@ export class IdeeProjetDetailComponent implements OnInit {
       this.ideesService.identifierFinancement(item.id, this.buildActionPayload()),
       'Financement identifié avec succès'
     );
-  }
-
-  onSoumettreDossierProjet(): void {
-    if (!this.hasRequiredDocument()) {
-      this.showToast('Dossier projet requis avant la soumission', 'error');
-      return;
-    }
-    const item = this.idee();
-    if (!item) return;
-    this.runAction(
-      this.ideesService.soumettreDossierProjet(item.id, this.buildActionPayload()),
-      'Dossier de création de projet soumis avec succès'
-    );
-  }
-
-  onValiderDossierProjet(): void {
-    if (!this.hasRequiredDocument()) {
-      this.showToast('Dossier projet requis avant la validation', 'error');
-      return;
-    }
-    const item = this.idee();
-    if (!item) return;
-    this.actionInProgress.set(true);
-    this.ideesService.validerDossierProjet(item.id, this.buildActionPayload()).subscribe({
-      next: () => {
-        this.actionInProgress.set(false);
-        this.showToast('Dossier de création de projet validé. Le projet a été créé automatiquement.', 'success');
-        this.refreshIdee(item.id, () => this.router.navigate(['/app/pip/projets']));
-      },
-      error: (err: any) => {
-        this.actionInProgress.set(false);
-        if (err?.status === 403) {
-          this.showToast(
-            'Vous n\'avez pas la permission de faire: Valider le dossier de creation de projet. Veuillez contacter l\'administrateur de la plateforme.',
-            'error'
-          );
-        } else {
-          this.showToast(err?.message || 'Erreur lors de la validation du dossier', 'error');
-        }
-      }
-    });
   }
 
   onRetournerDossierProjet(): void {
@@ -394,7 +471,7 @@ export class IdeeProjetDetailComponent implements OnInit {
     this.ideesService.getById(id).subscribe({
       next: (updated) => {
         this.idee.set(updated);
-        this.requiredDocumentType.set(this.getRequiredDocumentType(updated.statut));
+        this.requiredDocumentTypes.set(this.getRequiredDocumentTypes(updated.statut));
         this.loadDocuments(updated.id);
         afterRefresh?.();
       },

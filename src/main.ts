@@ -10,10 +10,9 @@ import { authInterceptor } from './app/core/interceptors/auth.interceptor';
 import { errorInterceptor } from './app/core/interceptors/error.interceptor';
 import { keycloakConfig } from './app/keycloak.config';
 
-// Keycloak initialization function
 function initializeKeycloak(keycloak: KeycloakService) {
-  return () => {
-    const keycloakInit = keycloak.init({
+  return () =>
+    keycloak.init({
       config: keycloakConfig,
       initOptions: {
         onLoad: 'check-sso',
@@ -33,20 +32,10 @@ function initializeKeycloak(keycloak: KeycloakService) {
       ]
     }).catch((err: unknown) => {
       console.warn('Keycloak initialization failed:', err);
+      throw err;
     });
-
-    const timeout = new Promise<void>((resolve) =>
-      setTimeout(() => {
-        console.warn('Keycloak init timeout — serveur inaccessible, démarrage sans authentification');
-        resolve();
-      }, 30000)
-    );
-
-    return Promise.race([keycloakInit, timeout]);
-  };
 }
 
-// Keycloak providers
 const keycloakProviders: Provider[] = [
   KeycloakService,
   {
@@ -71,4 +60,4 @@ bootstrapApplication(AppComponent, {
     ),
     provideAnimations()
   ]
-}).catch(err => console.error('Erreur de démarrage:', err));
+}).catch(err => console.error('Erreur de demarrage:', err));

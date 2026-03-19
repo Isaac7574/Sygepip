@@ -53,6 +53,9 @@ export class AuthService {
   private async loadUserProfile(): Promise<void> {
     try {
       const token = await this.keycloak.getToken();
+      if (token) {
+        localStorage.setItem(TOKEN_KEY, token);
+      }
       console.log('🔑 Token JWT:', token);
 
       const keycloakProfile = await this.keycloak.loadUserProfile();
@@ -73,34 +76,9 @@ export class AuthService {
       this._currentUser.set(user);
       this.currentUserSubject.next(user);
 
-      // Optionally sync with backend
-      this.syncWithBackend().subscribe({
-        next: (backendUser) => {
-          if (backendUser) {
-            const mergedUser = { ...user, ...backendUser };
-            this.storeUser(mergedUser);
-            this._currentUser.set(mergedUser);
-            this.currentUserSubject.next(mergedUser);
-          }
-        },
-        error: () => {} // Ignore backend sync errors
-      });
     } catch (error) {
       console.error('Error loading user profile:', error);
     }
-  }
-
-  // Sync user with backend
-  private syncWithBackend(): Observable<User | null> {
-    return from(this.keycloak.getToken()).pipe(
-      switchMap(token => {
-        if (!token) return of(null);
-        return this.http.get<User>(`${environment.apiUrl}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      }),
-      catchError(() => of(null))
-    );
   }
 
   // Login via Keycloak
@@ -180,7 +158,13 @@ export class AuthService {
   refreshToken(): Observable<string> {
     return from(this.keycloak.updateToken(30)).pipe(
       switchMap(() => from(this.keycloak.getToken())),
-      map(token => token || ''),
+      map(token => {
+        const resolvedToken = token || '';
+        if (resolvedToken) {
+          localStorage.setItem(TOKEN_KEY, resolvedToken);
+        }
+        return resolvedToken;
+      }),
       catchError(error => {
         console.error('Token refresh failed:', error);
         this.logout();
@@ -191,21 +175,11 @@ export class AuthService {
 
   // Get current user from API
   getCurrentUser(): Observable<User> {
-    return from(this.keycloak.getToken()).pipe(
-      switchMap(token => {
-        if (!token) {
-          return throwError(() => new Error('Token manquant'));
-        }
-        return this.http.get<User>(`${environment.apiUrl}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      }),
-      tap(user => {
-        this.storeUser(user);
-        this._currentUser.set(user);
-        this.currentUserSubject.next(user);
-      })
-    );
+    const user = this._currentUser();
+    if (user) {
+      return of(user);
+    }
+    return throwError(() => new Error('Utilisateur non disponible'));
   }
 
   // Check if user has role
