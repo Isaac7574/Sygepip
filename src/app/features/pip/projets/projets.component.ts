@@ -8,6 +8,8 @@ import { SecteursService } from '@core/services/secteurs.service';
 import { RegionsService } from '@core/services/regions.service';
 import { ProgrammesService } from '@core/services/programmes.service';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
+import { PipAnnuelService } from '@core/services/pip-annuel.service';
+import { UtilisateursService } from '@core/services/utilisateurs.service';
 import {
   Projet,
   Ministere,
@@ -15,8 +17,12 @@ import {
   Region,
   Programme,
   IdeeProjet,
+  PipAnnuel,
+  User,
   CategorieProjet,
-  StatutProjet
+  StatutProjet,
+  TypeProjetPip,
+  StatutInscriptionPip
 } from '@core/models';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ToastComponent } from '@shared/components/toast/toast.component';
@@ -37,6 +43,8 @@ export class ProjetsPIPComponent implements OnInit {
   private regionsService = inject(RegionsService);
   private programmesService = inject(ProgrammesService);
   private ideesProjetService = inject(IdeesProjetService);
+  private pipAnnuelService = inject(PipAnnuelService);
+  private utilisateursService = inject(UtilisateursService);
 
   items = signal<Projet[]>([]);
   filteredItems = signal<Projet[]>([]);
@@ -45,6 +53,8 @@ export class ProjetsPIPComponent implements OnInit {
   regions = signal<Region[]>([]);
   programmes = signal<Programme[]>([]);
   ideesProjet = signal<IdeeProjet[]>([]);
+  pipAnnuels = signal<PipAnnuel[]>([]);
+  utilisateurs = signal<User[]>([]);
   searchTerm = '';
   modalOpen = signal(false);
   editingItem = signal<Projet | null>(null);
@@ -69,6 +79,23 @@ export class ProjetsPIPComponent implements OnInit {
     { value: 'CATEGORIE_2_STRUCTURE_AUTONOME', label: 'Catégorie 2 - Structure autonome' },
     { value: 'CATEGORIE_3_AGENCES_PTF_ONG', label: 'Catégorie 3 - Agences/PTF/ONG' },
     { value: 'CATEGORIE_4_PPP', label: 'Catégorie 4 - PPP' }
+  ];
+
+  typesProjetPip: { value: TypeProjetPip; label: string }[] = [
+    { value: 'NOYAU_SUR', label: 'Noyau sûr' },
+    { value: 'NATIONAL', label: 'National' }
+  ];
+
+  statutsInscriptionPip: { value: StatutInscriptionPip; label: string }[] = [
+    { value: 'EN_EXECUTION', label: 'En exécution' },
+    { value: 'INSTANCE_DEMARRAGE', label: 'Instance de démarrage' }
+  ];
+
+  sourcesFinancement: { value: string; label: string }[] = [
+    { value: 'BUDGET_ETAT', label: 'Budget de l\'État' },
+    { value: 'EXTERIEUR', label: 'Financement extérieur' },
+    { value: 'MIXTE', label: 'Mixte' },
+    { value: 'PPP', label: 'Partenariat Public-Privé' }
   ];
 
   statuts: { value: StatutProjet; label: string }[] = [
@@ -101,6 +128,8 @@ export class ProjetsPIPComponent implements OnInit {
     this.regionsService.getAll().subscribe({ next: (data) => this.regions.set(data) });
     this.programmesService.getAll().subscribe({ next: (data) => this.programmes.set(data) });
     this.ideesProjetService.getAll().subscribe({ next: (data) => this.ideesProjet.set(data) });
+    this.pipAnnuelService.getAll().subscribe({ next: (data) => this.pipAnnuels.set(data) });
+    this.utilisateursService.getAll().subscribe({ next: (data) => this.utilisateurs.set(data) });
   }
 
   private resetForm(): Partial<Projet> {
@@ -110,7 +139,9 @@ export class ProjetsPIPComponent implements OnInit {
       ideeProjetId: undefined, description: '', objectifsStrategiques: '', objectifsOperationnel: '',
       coutTotal: 0,
       dateDebutPrevu: undefined, dateFinPrevu: undefined, dureeEnMois: undefined,
-      statut: 'CREE', latitude: undefined, longitude: undefined, financementBoucle: false, actif: true
+      statut: 'CREE', latitude: undefined, longitude: undefined, financementBoucle: false, actif: true,
+      pipAnnuelId: undefined, sourceFinancement: undefined,
+      chefProjetId: undefined, typeProjetPip: undefined, statutInscriptionPip: undefined
     };
   }
 
@@ -193,20 +224,61 @@ export class ProjetsPIPComponent implements OnInit {
   }
 
 
+  private toIsoDate(val: Date | string | undefined): string | undefined {
+    if (!val) return undefined;
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return undefined;
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  private buildUpdatePayload() {
+    const raw: Record<string, any> = {
+      ideeProjetId: this.formData.ideeProjetId,
+      reference: this.formData.code,
+      categorie: this.formData.categorie,
+      programmeId: this.formData.programmeId,
+      objectifsStrategiques: this.formData.objectifsStrategiques,
+      objectifsOperationnel: this.formData.objectifsOperationnel,
+      coutTotal: this.formData.coutTotal,
+      dateCreation: this.toIsoDate(this.formData.dateCreation),
+      dateDebutPrevu: this.toIsoDate(this.formData.dateDebutPrevu),
+      dateFinPrevu: this.toIsoDate(this.formData.dateFinPrevu),
+      pipAnnuelId: this.formData.pipAnnuelId,
+      sourceFinancement: this.formData.sourceFinancement,
+      dureeEnMois: this.formData.dureeEnMois,
+      statut: this.formData.statut,
+      etapeId: this.formData.etapeId,
+      chefProjetId: this.formData.chefProjetId,
+      typeProjetPip: this.formData.typeProjetPip,
+      statutInscriptionPip: this.formData.statutInscriptionPip,
+      financementBoucle: this.formData.financementBoucle,
+      createdBy: this.formData.createdBy,
+      actif: this.formData.actif
+    };
+    // Supprimer les clés undefined ou null pour ne pas polluer le payload
+    Object.keys(raw).forEach(k => { if (raw[k] === undefined || raw[k] === null) delete raw[k]; });
+    console.log('UPDATE payload:', raw);
+    return raw;
+  }
+
   save(): void {
-    if (!this.formData.code || !this.formData.titre) {
-      this.showToast('Le code et le titre sont obligatoires', 'error');
-      return;
-    }
-    if (!this.formData.ministereId) {
-      this.showToast('Veuillez sélectionner un ministère', 'error');
-      return;
+    if (!this.editingItem()) {
+      if (!this.formData.code || !this.formData.titre) {
+        this.showToast('Le code et le titre sont obligatoires', 'error');
+        return;
+      }
+      if (!this.formData.ministereId) {
+        this.showToast('Veuillez sélectionner un ministère', 'error');
+        return;
+      }
     }
     this.saving.set(true);
     const obs = this.editingItem()
-      ? this.projetsService.update(this.editingItem()!.id, this.formData)
+      ? this.projetsService.update(this.editingItem()!.id, this.buildUpdatePayload())
       : this.projetsService.create(this.formData);
-      console.log(this.formData);
     obs.subscribe({
       next: () => {
         this.saving.set(false);
@@ -214,7 +286,7 @@ export class ProjetsPIPComponent implements OnInit {
         this.load();
         this.showToast(this.editingItem() ? 'Projet modifié avec succès' : 'Projet créé avec succès', 'success');
       },
-      error: () => { this.saving.set(false); this.showToast('Erreur lors de l\'enregistrement', 'error'); }
+      error: (err) => { this.saving.set(false); console.error('Erreur update projet:', err); this.showToast(err?.message || 'Erreur lors de l\'enregistrement', 'error'); }
     });
   }
 
@@ -317,5 +389,16 @@ export class ProjetsPIPComponent implements OnInit {
   formatDate(date: Date | string | undefined): string {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('fr-FR');
+  }
+
+  calculerDuree(): void {
+    const debut = this.formData.dateDebutPrevu;
+    const fin = this.formData.dateFinPrevu;
+    if (!debut || !fin) return;
+    const d = new Date(debut);
+    const f = new Date(fin);
+    if (f <= d) { this.formData.dureeEnMois = 0; return; }
+    const mois = (f.getFullYear() - d.getFullYear()) * 12 + (f.getMonth() - d.getMonth());
+    this.formData.dureeEnMois = mois;
   }
 }

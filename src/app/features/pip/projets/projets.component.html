@@ -264,7 +264,7 @@
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div class="form-group">
-              <label class="form-label">Code <span class="text-red-500">*</span></label>
+              <label class="form-label">Référence <span class="text-red-500">*</span></label>
               <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: PRJ-2026-001">
             </div>
             <div class="form-group">
@@ -381,6 +381,66 @@
           </div>
         </div>
 
+        <!-- ── Classification PIP ── -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Classification PIP</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="form-label">Type de projet PIP</label>
+              <select [(ngModel)]="formData.typeProjetPip" class="form-input">
+                <option [ngValue]="undefined">— Sélectionner —</option>
+                @for (t of typesProjetPip; track t.value) {
+                  <option [value]="t.value">{{ t.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Statut inscription PIP</label>
+              <select [(ngModel)]="formData.statutInscriptionPip" class="form-input">
+                <option [ngValue]="undefined">— Sélectionner —</option>
+                @for (s of statutsInscriptionPip; track s.value) {
+                  <option [value]="s.value">{{ s.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">PIP Annuel</label>
+              <select [(ngModel)]="formData.pipAnnuelId" class="form-input">
+                <option [ngValue]="undefined">— Sélectionner —</option>
+                @for (p of pipAnnuels(); track p.id) {
+                  <option [ngValue]="p.id">{{ p.code }} — {{ p.annee }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Source de financement</label>
+              <select [(ngModel)]="formData.sourceFinancement" class="form-input">
+                <option [ngValue]="undefined">— Sélectionner —</option>
+                @for (s of sourcesFinancement; track s.value) {
+                  <option [value]="s.value">{{ s.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Chef de projet</label>
+              <select [(ngModel)]="formData.chefProjetId" class="form-input">
+                <option [ngValue]="undefined">— Sélectionner —</option>
+                @for (u of utilisateurs(); track u.id) {
+                  <option [ngValue]="u.id">{{ u.prenom }} {{ u.nom }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
         <!-- ── Planification ── -->
         <div>
           <div class="flex items-center gap-2 mb-4">
@@ -395,15 +455,15 @@
           <div class="grid grid-cols-3 gap-4">
             <div class="form-group">
               <label class="form-label">Date de début prévue</label>
-              <input type="date" [(ngModel)]="formData.dateDebutPrevu" class="form-input">
+              <input type="date" [(ngModel)]="formData.dateDebutPrevu" (ngModelChange)="calculerDuree()" class="form-input">
             </div>
             <div class="form-group">
               <label class="form-label">Date de fin prévue</label>
-              <input type="date" [(ngModel)]="formData.dateFinPrevu" class="form-input">
+              <input type="date" [(ngModel)]="formData.dateFinPrevu" (ngModelChange)="calculerDuree()" class="form-input">
             </div>
             <div class="form-group">
               <label class="form-label">Durée (mois)</label>
-              <input type="number" [(ngModel)]="formData.dureeEnMois" class="form-input" placeholder="0" min="0">
+              <input type="number" [(ngModel)]="formData.dureeEnMois" class="form-input" placeholder="Calculé automatiquement" min="0" readonly>
             </div>
           </div>
         </div>
