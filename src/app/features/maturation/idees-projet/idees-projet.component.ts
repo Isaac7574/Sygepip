@@ -2,12 +2,16 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
+import { CiblesService } from '@core/services/cibles.service';
 import {
+  Cible,
   IdeeProjet,
-  IdeeProjetNoteConceptuelle,
+  IdeeProjetNoteConceptuelleRequest,
+  IdeeProjetNoteConceptuelleResponse,
   Ministere,
   Secteur,
   StatutIdeeProjet
@@ -28,11 +32,13 @@ export class IdeesdeProjetComponent implements OnInit {
   private ideesService = inject(IdeesProjetService);
   private ministeresService = inject(MinisteresService);
   private secteursService = inject(SecteursService);
+  private ciblesService = inject(CiblesService);
 
   items = signal<IdeeProjet[]>([]);
   filteredItems = signal<IdeeProjet[]>([]);
   ministeres = signal<Ministere[]>([]);
   secteurs = signal<Secteur[]>([]);
+  cibles = signal<Cible[]>([]);
   searchTerm = '';
 
   // Modal principal
@@ -46,13 +52,15 @@ export class IdeesdeProjetComponent implements OnInit {
   // Modal Vue (lecture seule)
   viewModalOpen = signal(false);
   viewingItem = signal<IdeeProjet | null>(null);
-  viewNote = signal<Partial<IdeeProjetNoteConceptuelle>>({});
+  viewNote = signal<Partial<IdeeProjetNoteConceptuelleResponse>>({});
   loadingNote = signal(false);
 
   // Modal Note Conceptuelle
   noteModalOpen = signal(false);
   selectedItemForNote: IdeeProjet | null = null;
-  noteData: Partial<IdeeProjetNoteConceptuelle> = this.resetNoteForm();
+  noteData: Partial<IdeeProjetNoteConceptuelleResponse> = this.resetNoteForm();
+  selectedCibleIds: string[] = [];
+  beneficiairesOpen = signal(false);
   savingNote = signal(false);
 
   // Confirm dialog
@@ -104,6 +112,7 @@ export class IdeesdeProjetComponent implements OnInit {
     this.load();
     this.loadMinisteres();
     this.loadSecteurs();
+    this.loadCibles();
   }
 
   private resetForm(): Partial<IdeeProjet> {
@@ -121,14 +130,10 @@ export class IdeesdeProjetComponent implements OnInit {
     };
   }
 
-  private resetNoteForm(): Partial<IdeeProjetNoteConceptuelle> {
+  private resetNoteForm(): Partial<IdeeProjetNoteConceptuelleResponse> {
     return {
-      problematique: '',
       contexte: '',
       alignementStrategique: '',
-      beneficiairesCibles: '',
-      objectifGeneral: '',
-      objectifsSpecifiques: '',
       resultatsAttendus: '',
       indicateursPreliminaires: '',
       descriptionSolution: '',
@@ -137,16 +142,11 @@ export class IdeesdeProjetComponent implements OnInit {
       contraintesRisques: '',
       hypotheses: '',
       prerequis: '',
-      beneficiairesEstimes: undefined,
-      coutEstime: undefined,
       sourcesFinancementEnvisagees: '',
-      dureeEstimeeMois: undefined,
       chronogrammeSynthese: '',
       impactSocioEconomique: '',
       impactEnvironnementalSocial: '',
-      durabilite: '',
-      zoneIntervention: '',
-      porteurProjet: ''
+      durabilite: ''
     };
   }
 
@@ -177,6 +177,13 @@ export class IdeesdeProjetComponent implements OnInit {
     this.secteursService.getAll().subscribe({
       next: (data) => this.secteurs.set(data),
       error: () => this.showToast('Impossible de charger la liste des secteurs', 'error')
+    });
+  }
+
+  loadCibles(): void {
+    this.ciblesService.getAll().subscribe({
+      next: (data) => this.cibles.set(data),
+      error: () => this.showToast('Impossible de charger la liste des cibles', 'error')
     });
   }
 
@@ -213,7 +220,23 @@ export class IdeesdeProjetComponent implements OnInit {
   }
 
   getNoteField(key: string): string | number | undefined {
-    return (this.viewNote() as Record<string, string | number | undefined>)[key];
+    const value = (this.viewNote() as Record<string, unknown>)[key];
+
+    if (key === 'cibleIds' && Array.isArray(value)) {
+      const labels = value
+        .map(id => this.cibles().find(cible => cible.id === id))
+        .filter((cible): cible is Cible => !!cible)
+        .map(cible => this.getCibleLabel(cible));
+      return labels.length > 0 ? labels.join(', ') : undefined;
+    }
+
+    if (Array.isArray(value)) {
+      return value.join(', ');
+    }
+
+    return typeof value === 'string' || typeof value === 'number'
+      ? value
+      : undefined;
   }
 
   private openEditById(id: string): void {
@@ -282,44 +305,142 @@ export class IdeesdeProjetComponent implements OnInit {
   openNoteConceptuelle(item: IdeeProjet): void {
     this.selectedItemForNote = item;
     this.noteData = this.resetNoteForm();
+    this.selectedCibleIds = [];
     this.noteModalOpen.set(true);
     // Charger les donn√©es depuis l'API (le endpoint liste peut ne pas retourner les champs de la note)
-    this.ideesService.getNoteConceptuelle(item.id).subscribe({
-      next: (note) => { this.noteData = { ...note }; },
-      error: () => {} // Formulaire vide si pas encore de note
+    forkJoin({
+      cibles: this.ciblesService.getAll(),
+      note: this.ideesService.getNoteConceptuelle(item.id)
+    }).subscribe({
+      next: ({ cibles, note }) => {
+        this.cibles.set(cibles);
+        this.noteData = { ...note };
+        this.selectedCibleIds = note.cibleIds ?? [];
+      },
+      error: () => {
+        this.selectedCibleIds = [];
+      }
     });
   }
 
   closeNoteModal(): void {
     this.noteModalOpen.set(false);
     this.selectedItemForNote = null;
+    this.selectedCibleIds = [];
+    this.beneficiairesOpen.set(false);
+  }
+
+  toggleBeneficiairesOpen(): void {
+    this.beneficiairesOpen.update(open => !open);
+  }
+
+  closeBeneficiairesOpen(): void {
+    this.beneficiairesOpen.set(false);
+  }
+
+  toggleCibleSelection(cibleId: string): void {
+    if (this.selectedCibleIds.includes(cibleId)) {
+      this.selectedCibleIds = this.selectedCibleIds.filter(id => id !== cibleId);
+      return;
+    }
+
+    this.selectedCibleIds = [...this.selectedCibleIds, cibleId];
+  }
+
+  removeSelectedCible(cibleId: string): void {
+    this.selectedCibleIds = this.selectedCibleIds.filter(id => id !== cibleId);
+  }
+
+  isCibleSelected(cibleId: string): boolean {
+    return this.selectedCibleIds.includes(cibleId);
+  }
+
+  getSelectedCibles(): Cible[] {
+    return this.cibles().filter(cible => this.selectedCibleIds.includes(cible.id));
+  }
+
+  getCibleLabel(cible: Cible): string {
+    const rawLabel = cible.libelle || cible.nom || `${cible.annee}`;
+    return this.normalizeDisplayText(rawLabel);
+  }
+
+  formatNoteTitle(code?: string, titre?: string): string {
+    const safeCode = this.normalizeDisplayText(code || '');
+    const safeTitre = this.normalizeDisplayText(titre || '');
+    return [safeCode, safeTitre].filter(Boolean).join(' - ');
+  }
+
+  private normalizeDisplayText(value: string): string {
+    return value
+      .replaceAll('??', '')
+      .replaceAll('??', '®¶')
+      .replaceAll('?°ß', '®®')
+      .replaceAll('?a', '®∫')
+      .replaceAll('??', '?')
+      .replaceAll('? ', '®§')
+      .replaceAll('?°È', 'a')
+      .replaceAll('??', '?')
+      .replaceAll('?°‰', '?')
+      .replaceAll('?1', '®¥')
+      .replaceAll('??', '?')
+      .replaceAll('?°Ï', '?')
+      .replaceAll('?°Î', '®¶')
+      .replaceAll('?Ä', '®§')
+      .replaceAll('aÄ?', "'")
+      .replaceAll('aÄ?', '"')
+      .replaceAll('aÄ?', '"')
+      .replaceAll('aÄ"', '-')
+      .replaceAll('aÄ°∞', '-')
+      .replaceAll('aÄ°±', '-')
+      .replaceAll('B??n??ficiaires', 'B®¶n®¶ficiaires')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
   }
 
   saveNoteConceptuelle(): void {
     if (!this.selectedItemForNote) return;
     this.savingNote.set(true);
-    const noteWithId: IdeeProjetNoteConceptuelle = {
-      ...(this.noteData as IdeeProjetNoteConceptuelle),
-      ideeProjetId: this.selectedItemForNote.id
+    const noteWithId: IdeeProjetNoteConceptuelleRequest = {
+      ideeProjetId: this.selectedItemForNote.id,
+      contexte: this.noteData.contexte,
+      alignementStrategique: this.noteData.alignementStrategique,
+      cibleIds: this.selectedCibleIds,
+      resultatsAttendus: this.noteData.resultatsAttendus,
+      indicateursPreliminaires: this.noteData.indicateursPreliminaires,
+      descriptionSolution: this.noteData.descriptionSolution,
+      composantesProjet: this.noteData.composantesProjet,
+      approcheMiseEnOeuvre: this.noteData.approcheMiseEnOeuvre,
+      contraintesRisques: this.noteData.contraintesRisques,
+      hypotheses: this.noteData.hypotheses,
+      prerequis: this.noteData.prerequis,
+      beneficiairesEstimes: this.noteData.beneficiairesEstimes,
+      coutEstime: this.noteData.coutEstime,
+      sourcesFinancementEnvisagees: this.noteData.sourcesFinancementEnvisagees,
+      dureeEstimeeMois: this.noteData.dureeEstimeeMois,
+      chronogrammeSynthese: this.noteData.chronogrammeSynthese,
+      impactSocioEconomique: this.noteData.impactSocioEconomique,
+      impactEnvironnementalSocial: this.noteData.impactEnvironnementalSocial,
+      durabilite: this.noteData.durabilite
     };
-    this.ideesService.updateNoteConceptuelle(this.selectedItemForNote.id, noteWithId).subscribe({
+    const ideeId = this.selectedItemForNote.id;
+    this.ideesService.updateNoteConceptuelle(ideeId, noteWithId).subscribe({
       next: () => {
         this.savingNote.set(false);
         this.closeNoteModal();
         this.load();
-        this.showToast('Note conceptuelle mise √† jour avec succ√®s', 'success');
+        this.showToast('Note conceptuelle mise a jour avec succes', 'success');
       },
       error: () => {
         this.savingNote.set(false);
-        this.showToast('Erreur lors de la mise √† jour de la note conceptuelle', 'error');
+        this.showToast('Erreur lors de la mise a jour de la note conceptuelle', 'error');
       }
     });
   }
 
   confirmDelete(item: IdeeProjet): void {
     this.itemToDelete = item;
-    this.confirmDialogTitle = 'Supprimer l\'id√©e de projet';
-    this.confirmDialogMessage = `√ätes-vous s√ªr de vouloir supprimer l'id√©e "${item.titre}" ?`;
+    this.confirmDialogTitle = "Supprimer l'idee de projet";
+    this.confirmDialogMessage = `Voulez-vous supprimer l'idee "${item.titre}" ?`;
     this.confirmDialogVisible.set(true);
   }
 
@@ -386,3 +507,4 @@ export class IdeesdeProjetComponent implements OnInit {
     return classes[statut] || 'badge-gray';
   }
 }
+

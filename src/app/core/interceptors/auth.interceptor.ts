@@ -21,8 +21,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
-  // Get token from Keycloak and add to request
-  return from(keycloak.getToken()).pipe(
+  // Refresh the token before protected calls so idle users are not logged out
+  return from(keycloak.updateToken(30)).pipe(
+    switchMap(() => from(keycloak.getToken())),
     switchMap(token => {
       if (token) {
         const clonedReq = req.clone({

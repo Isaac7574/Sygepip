@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { FilterParams, PaginatedResponse, IdeeProjet, IdeeProjetNoteConceptuelle, MaturationActionRequestDTO } from '@core/models';
+import { FilterParams, PaginatedResponse, IdeeProjet, IdeeProjetNoteConceptuelleRequest, IdeeProjetNoteConceptuelleResponse, MaturationActionRequestDTO } from '@core/models';
 import { ApiService } from '@core/services/api.service';
 
 @Injectable({
@@ -102,12 +102,12 @@ export class IdeesProjetService {
   }
 
   // Note conceptuelle
-  getNoteConceptuelle(id: string | number): Observable<IdeeProjetNoteConceptuelle> {
-    return this.api.get<IdeeProjetNoteConceptuelle>(`${this.endpoint}/${id}/note-conceptuelle`);
+  getNoteConceptuelle(id: string | number): Observable<IdeeProjetNoteConceptuelleResponse> {
+    return this.api.get<IdeeProjetNoteConceptuelleResponse>(`${this.endpoint}/${id}/note-conceptuelle`);
   }
 
-  updateNoteConceptuelle(id: string | number, data: IdeeProjetNoteConceptuelle): Observable<IdeeProjetNoteConceptuelle> {
-    return this.api.putUrl<IdeeProjetNoteConceptuelle>(`${this.endpoint}/${id}/note-conceptuelle`, data);
+  updateNoteConceptuelle(id: string | number, data: IdeeProjetNoteConceptuelleRequest): Observable<IdeeProjetNoteConceptuelleResponse> {
+    return this.api.putUrl<IdeeProjetNoteConceptuelleResponse>(`${this.endpoint}/${id}/note-conceptuelle`, data);
   }
 }
 

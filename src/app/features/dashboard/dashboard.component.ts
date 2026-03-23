@@ -83,6 +83,26 @@ export class DashboardComponent implements OnInit {
     )
   );
 
+  ideesParCibleChart = computed(() =>
+    this.toChartItems(
+      this.stats().ideesParCible.map(item => ({
+        label: item.cibleLibelle,
+        value: item.nombre,
+        formattedValue: item.nombre.toLocaleString('fr-FR')
+      }))
+    )
+  );
+
+  projetsParCibleChart = computed(() =>
+    this.toChartItems(
+      this.stats().projetsParCible.map(item => ({
+        label: item.cibleLibelle,
+        value: item.nombre,
+        formattedValue: item.nombre.toLocaleString('fr-FR')
+      }))
+    )
+  );
+
   ngOnInit(): void {
     this.loadStats();
     this.loadProjets();
@@ -141,7 +161,9 @@ export class DashboardComponent implements OnInit {
       montantParPipAnnuel: [],
       repartitionTypeProjetPip: [],
       projetsParSecteur: [],
-      montantParSecteur: []
+      montantParSecteur: [],
+      ideesParCible: [],
+      projetsParCible: []
     };
   }
 
@@ -153,7 +175,9 @@ export class DashboardComponent implements OnInit {
       montantParPipAnnuel: stats?.montantParPipAnnuel ?? [],
       repartitionTypeProjetPip: stats?.repartitionTypeProjetPip ?? [],
       projetsParSecteur: stats?.projetsParSecteur ?? [],
-      montantParSecteur: stats?.montantParSecteur ?? []
+      montantParSecteur: stats?.montantParSecteur ?? [],
+      ideesParCible: stats?.ideesParCible ?? [],
+      projetsParCible: stats?.projetsParCible ?? []
     };
   }
 

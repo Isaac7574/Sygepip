@@ -208,6 +208,7 @@ export interface IdeeProjet {
   pointFocalEmail?: string;
   pointFocalTelephone?: string;
   dateSoumission?: Date;
+  cibleIds?: string[];
   statut?: StatutIdeeProjet | string;
   etapeId?: string;
   scoreSelection?: number;
@@ -542,9 +543,13 @@ export interface Indicateur {
 
 export interface Cible {
   id: string;
-  indicateurId: string;
-  annee: number;
-  valeurCible: number;
+  libelle?: string;
+  description?: string;
+  quantiteEstimee?: number;
+  nom?: string;
+  indicateurId?: string;
+  annee?: number;
+  valeurCible?: number;
   valeurRealisee?: number;
   tauxRealisation?: number;
   actif: boolean;
@@ -856,6 +861,8 @@ export interface DashboardStats {
   repartitionTypeProjetPip: { typeProjetPip: string; nombreProjets: number }[];
   projetsParSecteur: { secteurId: string; secteurNom: string; nombreProjets: number }[];
   montantParSecteur: { secteurId: string; secteurNom: string; montantTotal: number }[];
+  ideesParCible: { cibleId: string; cibleLibelle: string; nombre: number }[];
+  projetsParCible: { cibleId: string; cibleLibelle: string; nombre: number }[];
 }
 
 export interface StatistiquesParSecteur {
@@ -900,7 +907,30 @@ export interface Decaissement {
 }
 
 // === NOTE CONCEPTUELLE ===
-export interface IdeeProjetNoteConceptuelle {
+export interface IdeeProjetNoteConceptuelleRequest {
+  ideeProjetId: string;
+  contexte?: string;
+  alignementStrategique?: string;
+  cibleIds?: string[];
+  beneficiairesEstimes?: number;
+  coutEstime?: number;
+  resultatsAttendus?: string;
+  indicateursPreliminaires?: string;
+  descriptionSolution?: string;
+  composantesProjet?: string;
+  approcheMiseEnOeuvre?: string;
+  contraintesRisques?: string;
+  hypotheses?: string;
+  prerequis?: string;
+  sourcesFinancementEnvisagees?: string;
+  dureeEstimeeMois?: number;
+  chronogrammeSynthese?: string;
+  impactSocioEconomique?: string;
+  impactEnvironnementalSocial?: string;
+  durabilite?: string;
+}
+
+export interface IdeeProjetNoteConceptuelleResponse {
   id?: string;
   ideeProjetId: string;
   code?: string;
@@ -919,6 +949,7 @@ export interface IdeeProjetNoteConceptuelle {
   problematique?: string;
   contexte?: string;
   alignementStrategique?: string;
+  cibleIds?: string[];
   beneficiairesCibles?: string;
   objectifGeneral?: string;
   objectifsSpecifiques?: string;

@@ -56,6 +56,10 @@ export const routes: Routes = [
           {
             path: 'directions',
             loadComponent: () => import('./features/referentiels/directions/directions.component').then(m => m.DirectionsComponent)
+          },
+          {
+            path: 'beneficiaires',
+            loadComponent: () => import('./features/referentiels/beneficiaires/beneficiaires.component').then(m => m.BeneficiairesComponent)
           }
         ]
       },

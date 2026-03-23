@@ -61,7 +61,7 @@
               @if (item.portee) {
                 <span class="badge badge-primary">{{ item.portee }}</span>
               } @else {
-                <span class="text-gray-300 text-sm">—</span>
+                <span class="text-gray-300 text-sm">-</span>
               }
             </td>
             <td class="px-6 py-4">
@@ -157,7 +157,7 @@
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">Portée</p>
-              <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.portee || '—' }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.portee || '�? }}</p>
             </div>
             @if (viewingItem()?.regionsIntervention) {
               <div class="bg-gray-50 rounded-xl p-3 col-span-3">
@@ -181,15 +181,15 @@
             <div class="grid grid-cols-3 gap-3">
               <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs text-gray-400 mb-1">Nom</p>
-                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalNom || '—' }}</p>
+                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalNom || '�? }}</p>
               </div>
               <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs text-gray-400 mb-1">Email</p>
-                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalEmail || '—' }}</p>
+                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalEmail || '�? }}</p>
               </div>
               <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs text-gray-400 mb-1">Téléphone</p>
-                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalTelephone || '—' }}</p>
+                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalTelephone || '�? }}</p>
               </div>
             </div>
           </div>
@@ -201,7 +201,7 @@
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Note conceptuelle</p>
             <button (click)="closeView(); openNoteConceptuelle(viewingItem()!)"
                     class="text-xs text-blue-500 hover:text-blue-700 font-medium">
-              Modifier la note →
+              Modifier la note �?
             </button>
           </div>
           @if (loadingNote()) {
@@ -215,7 +215,7 @@
                 {key: 'problematique', label: 'Problématique'},
                 {key: 'contexte', label: 'Contexte'},
                 {key: 'alignementStrategique', label: 'Alignement stratégique'},
-                {key: 'beneficiairesCibles', label: 'Bénéficiaires cibles'},
+                {key: 'cibleIds', label: 'B��n��ficiaires'},
                 {key: 'objectifGeneral', label: 'Objectif général'},
                 {key: 'objectifsSpecifiques', label: 'Objectifs spécifiques'},
                 {key: 'resultatsAttendus', label: 'Résultats attendus'},
@@ -318,7 +318,7 @@
             <div class="form-group">
               <label class="form-label">Ministère <span class="text-red-500">*</span></label>
               <select [(ngModel)]="formData.ministereId" class="form-input">
-                <option [ngValue]="undefined">— Sélectionner —</option>
+                <option [ngValue]="undefined">�?Sélectionner �?/option>
                 @for (m of ministeres(); track m.id) {
                   <option [ngValue]="m.id">{{ m.sigle || m.nom }}</option>
                 }
@@ -327,7 +327,7 @@
             <div class="form-group">
               <label class="form-label">Secteur</label>
               <select [(ngModel)]="formData.secteurId" class="form-input">
-                <option [ngValue]="undefined">— Sélectionner —</option>
+                <option [ngValue]="undefined">�?Sélectionner �?/option>
                 @for (s of secteurs(); track s.id) {
                   <option [ngValue]="s.id">{{ s.nom }}</option>
                 }
@@ -394,7 +394,7 @@
       <div class="modal-header">
         <div>
           <h3 class="text-lg font-semibold">Note Conceptuelle</h3>
-          <p class="text-sm text-gray-500">{{ selectedItemForNote?.code }} — {{ selectedItemForNote?.titre }}</p>
+          <p class="text-sm text-gray-500">{{ formatNoteTitle(selectedItemForNote?.code, selectedItemForNote?.titre) }}</p>
         </div>
         <button (click)="closeNoteModal()" class="text-gray-400 hover:text-gray-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -417,11 +417,6 @@
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div class="form-group col-span-2">
-              <label class="form-label">Problématique</label>
-              <textarea [(ngModel)]="noteData.problematique" class="form-input" rows="2"
-                        placeholder="Problématique à résoudre"></textarea>
-            </div>
-            <div class="form-group col-span-2">
               <label class="form-label">Contexte</label>
               <textarea [(ngModel)]="noteData.contexte" class="form-input" rows="3"
                         placeholder="Contexte général du projet"></textarea>
@@ -431,30 +426,45 @@
               <textarea [(ngModel)]="noteData.alignementStrategique" class="form-input" rows="2"
                         placeholder="Alignement avec les politiques nationales"></textarea>
             </div>
-            <div class="form-group">
-              <label class="form-label">Bénéficiaires cibles</label>
-              <textarea [(ngModel)]="noteData.beneficiairesCibles" class="form-input" rows="2"
-                        placeholder="Groupes bénéficiaires"></textarea>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Objectif général</label>
-              <textarea [(ngModel)]="noteData.objectifGeneral" class="form-input" rows="2"
-                        placeholder="Objectif général"></textarea>
-            </div>
             <div class="form-group col-span-2">
-              <label class="form-label">Objectifs spécifiques</label>
-              <textarea [(ngModel)]="noteData.objectifsSpecifiques" class="form-input" rows="2"
-                        placeholder="Objectifs spécifiques"></textarea>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Zone d'intervention</label>
-              <input type="text" [(ngModel)]="noteData.zoneIntervention" class="form-input"
-                     placeholder="Zone d'intervention">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Porteur du projet</label>
-              <input type="text" [(ngModel)]="noteData.porteurProjet" class="form-input"
-                     placeholder="Porteur du projet">
+              <label class="form-label">Beneficiaires</label>
+              <div class="beneficiaires-select">
+                <button type="button" class="beneficiaires-trigger" (click)="toggleBeneficiairesOpen()">
+                  @if (getSelectedCibles().length === 0) {
+                    <span class="beneficiaires-placeholder">Selectionner un ou plusieurs beneficiaires</span>
+                  } @else {
+                    <div class="beneficiaires-tags">
+                      @for (cible of getSelectedCibles(); track cible.id) {
+                        <span class="beneficiaire-tag">
+                          {{ getCibleLabel(cible) }}
+                          <button type="button" class="beneficiaire-tag-remove" (click)="$event.stopPropagation(); removeSelectedCible(cible.id)" aria-label="Retirer le beneficiaire">
+                            x
+                          </button>
+                        </span>
+                      }
+                    </div>
+                  }
+                </button>
+
+                @if (beneficiairesOpen()) {
+                  <div class="beneficiaires-dropdown">
+                    @for (cible of cibles(); track cible.id) {
+                      <label class="beneficiaires-option">
+                        <input type="checkbox" class="form-checkbox" [checked]="isCibleSelected(cible.id)" (change)="toggleCibleSelection(cible.id)">
+                        <span class="text-sm text-gray-700">{{ getCibleLabel(cible) }}</span>
+                      </label>
+                    } @empty {
+                      <div class="px-3 py-2 text-sm text-gray-400">Aucun beneficiaire disponible</div>
+                    }
+                    <div class="flex justify-end border-t border-gray-100 px-3 py-2">
+                      <button type="button" class="text-sm font-medium text-primary-600 hover:text-primary-700" (click)="closeBeneficiairesOpen()">
+                        Fermer
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+              <p class="text-xs text-gray-400 mt-1">Cliquez sur un beneficiaire pour le selectionner, puis utilisez la croix pour le retirer.</p>
             </div>
           </div>
         </div>
@@ -611,3 +621,9 @@
   [type]="toastType"
   (close)="toastVisible.set(false)">
 </app-toast>
+
+
+
+
+
+

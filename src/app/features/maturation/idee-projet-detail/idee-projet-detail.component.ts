@@ -7,10 +7,12 @@ import { IdeesProjetService } from '@core/services/idees-projet.service';
 import { DocumentIdeeService } from '@core/services/document-idee.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
+import { CiblesService } from '@core/services/cibles.service';
 import { AuthService } from '@core/services/auth.service';
 import {
+  Cible,
   IdeeProjet,
-  IdeeProjetNoteConceptuelle,
+  IdeeProjetNoteConceptuelleResponse,
   Ministere,
   Secteur,
   DocumentIdeeProjetResponseDTO,
@@ -40,10 +42,11 @@ export class IdeeProjetDetailComponent implements OnInit {
   private documentIdeeService = inject(DocumentIdeeService);
   private ministeresService = inject(MinisteresService);
   private secteursService = inject(SecteursService);
+  private ciblesService = inject(CiblesService);
   private authService = inject(AuthService);
 
   idee = signal<IdeeProjet | null>(null);
-  note = signal<Partial<IdeeProjetNoteConceptuelle>>({});
+  note = signal<Partial<IdeeProjetNoteConceptuelleResponse>>({});
   loading = signal(true);
   loadingNote = signal(false);
   error = signal<string | null>(null);
@@ -58,6 +61,7 @@ export class IdeeProjetDetailComponent implements OnInit {
 
   ministeres = signal<Ministere[]>([]);
   secteurs = signal<Secteur[]>([]);
+  cibles = signal<Cible[]>([]);
 
   portees = [
     { value: 'NATIONALE', label: 'Nationale' },
@@ -109,6 +113,7 @@ export class IdeeProjetDetailComponent implements OnInit {
   ngOnInit(): void {
     this.loadMinisteres();
     this.loadSecteurs();
+    this.loadCibles();
 
     this.route.paramMap.subscribe(params => {
       const id = params.get('ididee') ?? params.get('id');
@@ -187,12 +192,39 @@ export class IdeeProjetDetailComponent implements OnInit {
     }
   }
 
+  private loadCibles(): void {
+    this.ciblesService.getAll().subscribe({
+      next: (data) => this.cibles.set(data),
+      error: () => {}
+    });
+  }
+
   hasRequiredDocuments(): boolean {
     return this.getMissingRequiredDocumentTypes().length === 0;
   }
 
   hasDocumentType(type: TypeDocumentProjet): boolean {
-    return this.documents().some(d => d.actif === true && d.typeDocument === type);
+    return this.getDocumentForType(type) !== null;
+  }
+
+  getDocumentForType(type: TypeDocumentProjet): DocumentIdeeProjetResponseDTO | null {
+    const matchingDocuments = this.documents().filter(d => d.typeDocument === type);
+    if (matchingDocuments.length === 0) {
+      return null;
+    }
+
+    const activeDocument = matchingDocuments.find(d => d.actif !== false);
+    if (activeDocument) {
+      return activeDocument;
+    }
+
+    return matchingDocuments
+      .slice()
+      .sort((a, b) => {
+        const dateA = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime();
+        const dateB = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime();
+        return dateB - dateA;
+      })[0] ?? null;
   }
 
   getMissingRequiredDocumentTypes(): TypeDocumentProjet[] {
@@ -373,11 +405,9 @@ export class IdeeProjetDetailComponent implements OnInit {
     const n = this.note();
     const champsManquants: string[] = [];
 
-    if (!n.titre?.trim())               champsManquants.push('Titre');
-    if (!n.description?.trim())         champsManquants.push('Description');
-    if (!n.objectifGeneral?.trim())     champsManquants.push('Objectif général');
-    if (!n.problematique?.trim())       champsManquants.push('Problématique');
     if (!n.contexte?.trim())            champsManquants.push('Contexte');
+    if (!n.resultatsAttendus?.trim())   champsManquants.push('Resultats attendus');
+    if (!n.descriptionSolution?.trim()) champsManquants.push('Description de la solution');
 
     if (champsManquants.length > 0) {
       this.showToast(
@@ -543,7 +573,24 @@ export class IdeeProjetDetailComponent implements OnInit {
   }
 
   getNoteField(key: string): string | number | undefined {
-    return (this.note() as Record<string, string | number | undefined>)[key];
+    const value = (this.note() as Record<string, unknown>)[key];
+
+    if (key === 'cibleIds' && Array.isArray(value)) {
+      const labels = value
+        .map(id => this.cibles().find(cible => cible.id === id))
+        .filter((cible): cible is Cible => !!cible)
+        .map(cible => cible.libelle || cible.nom || `${cible.annee ?? ''}`)
+        .filter(label => !!label);
+      return labels.length > 0 ? labels.join(', ') : undefined;
+    }
+
+    if (Array.isArray(value)) {
+      return value.join(', ');
+    }
+
+    return typeof value === 'string' || typeof value === 'number'
+      ? value
+      : undefined;
   }
 
   getTypeDocumentLabel(type: TypeDocumentProjet): string {
