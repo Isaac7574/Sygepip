@@ -12,6 +12,7 @@ import { PipAnnuelService } from '@core/services/pip-annuel.service';
 import { UtilisateursService } from '@core/services/utilisateurs.service';
 import {
   Projet,
+  ProjetEditResponseDTO,
   Ministere,
   Secteur,
   Region,
@@ -59,7 +60,7 @@ export class ProjetsPIPComponent implements OnInit {
   modalOpen = signal(false);
   editingItem = signal<Projet | null>(null);
   saving = signal(false);
-  formData: Partial<Projet> = this.resetForm();
+  formData: Partial<ProjetEditResponseDTO> & { code?: string; titre?: string } = this.resetForm();
   private pendingEditId: string | null = null;
 
   viewingItem = signal<Projet | null>(null);
@@ -132,14 +133,13 @@ export class ProjetsPIPComponent implements OnInit {
     this.utilisateursService.getAll().subscribe({ next: (data) => this.utilisateurs.set(data) });
   }
 
-  private resetForm(): Partial<Projet> {
+  private resetForm(): Partial<ProjetEditResponseDTO> & { code?: string; titre?: string } {
     return {
-      code: '', titre: '', categorie: 'CATEGORIE_1_ADMINISTRATION_DIRECTE', ministereId: undefined,
-      secteurId: undefined, regionId: undefined, programmeId: undefined,
-      ideeProjetId: undefined, description: '', objectifsStrategiques: '', objectifsOperationnel: '',
+      code: '', titre: '', categorie: 'CATEGORIE_1_ADMINISTRATION_DIRECTE',
+      ideeProjetId: undefined, objectifsStrategiques: '', objectifsOperationnel: '',
       coutTotal: 0,
       dateDebutPrevu: undefined, dateFinPrevu: undefined, dureeEnMois: undefined,
-      statut: 'CREE', latitude: undefined, longitude: undefined, financementBoucle: false, actif: true,
+      statut: 'CREE', financementBoucle: false, actif: true,
       pipAnnuelId: undefined, sourceFinancement: undefined,
       chefProjetId: undefined, typeProjetPip: undefined, statutInscriptionPip: undefined
     };
@@ -218,9 +218,23 @@ export class ProjetsPIPComponent implements OnInit {
   }
 
    edit(item: Projet): void {
-    this.formData = this.adaptProjetDates(item);
     this.editingItem.set(item);
-    this.modalOpen.set(true);
+    this.saving.set(true);
+    this.projetsService.getEditById(item.id).subscribe({
+      next: (data) => {
+        this.formData = {
+          ...data,
+          code: data.reference,
+          titre: item.titre
+        };
+        this.saving.set(false);
+        this.modalOpen.set(true);
+      },
+      error: () => {
+        this.saving.set(false);
+        this.showToast('Erreur lors du chargement du projet pour modification', 'error');
+      }
+    });
   }
 
 
@@ -266,12 +280,13 @@ export class ProjetsPIPComponent implements OnInit {
 
   save(): void {
     if (!this.editingItem()) {
+      const createForm = this.formData as Partial<Projet>;
       if (!this.formData.code || !this.formData.titre) {
         this.showToast('Le code et le titre sont obligatoires', 'error');
         return;
       }
-      if (!this.formData.ministereId) {
-        this.showToast('Veuillez sélectionner un ministère', 'error');
+      if (!createForm.ministereId) {
+        this.showToast('Veuillez selectionner un ministere', 'error');
         return;
       }
     }

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Projet, FilterParams, PaginatedResponse } from '@core/models';
+import { Projet, ProjetEditResponseDTO, FilterParams, PaginatedResponse } from '@core/models';
 import { ApiService } from '@core/services/api.service';
 
 @Injectable({
@@ -20,6 +20,10 @@ export class ProjetsService {
 
   getById(id: string | number): Observable<Projet> {
     return this.api.getById<Projet>(this.endpoint, id);
+  }
+
+  getEditById(id: string | number): Observable<ProjetEditResponseDTO> {
+    return this.api.get<ProjetEditResponseDTO>(`${this.endpoint}/${id}/edit`);
   }
 
   create(data: Partial<Projet>): Observable<Projet> {

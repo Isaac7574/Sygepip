@@ -397,6 +397,7 @@ export interface Projet {
   id: string;
   ideeProjetId?: string;
   code: string;
+  reference?: string;
   titre: string;
   categorie?: CategorieProjet | string;
   ministereId: string;
@@ -553,6 +554,40 @@ export interface Cible {
   valeurRealisee?: number;
   tauxRealisation?: number;
   actif: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ProjetEditResponseDTO {
+  id: string;
+  ideeProjetId?: string;
+  reference?: string;
+  titre?: string;
+  ministereId?: string;
+  secteurId?: string;
+  regionId?: string;
+  description?: string;
+  categorie?: CategorieProjet | string;
+  programmeId?: string;
+  objectifsStrategiques?: string;
+  objectifsOperationnel?: string;
+  coutTotal?: number;
+  dateCreation?: Date;
+  dateDebutPrevu?: Date;
+  dateFinPrevu?: Date;
+  pipAnnuelId?: string;
+  sourceFinancement?: string;
+  dureeEnMois?: number;
+  statut?: StatutProjet | string;
+  etapeId?: string;
+  chefProjetId?: string;
+  latitude?: number;
+  longitude?: number;
+  typeProjetPip?: TypeProjetPip | string;
+  statutInscriptionPip?: StatutInscriptionPip | string;
+  financementBoucle?: boolean;
+  createdBy?: string;
+  actif?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

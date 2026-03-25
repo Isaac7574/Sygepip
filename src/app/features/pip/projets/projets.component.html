@@ -119,23 +119,23 @@
           <div class="grid grid-cols-3 gap-3">
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">MinistÃ¨re</p>
-              <p class="text-sm font-medium text-gray-800">{{ getMinistereNom(viewingItem()!.ministereId) || 'â€”' }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ getMinistereNom(viewingItem()!.ministereId) || 'â€? }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">Secteur</p>
-              <p class="text-sm font-medium text-gray-800">{{ getSecteurNom(viewingItem()!.secteurId) || 'â€”' }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ getSecteurNom(viewingItem()!.secteurId) || 'â€? }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">RÃ©gion</p>
-              <p class="text-sm font-medium text-gray-800">{{ getRegionNom(viewingItem()!.regionId) || 'â€”' }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ getRegionNom(viewingItem()!.regionId) || 'â€? }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">Programme</p>
-              <p class="text-sm font-medium text-gray-800">{{ getProgrammeNom(viewingItem()!.programmeId) || 'â€”' }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ getProgrammeNom(viewingItem()!.programmeId) || 'â€? }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3 col-span-2">
               <p class="text-xs text-gray-400 mb-1">IdÃ©e de projet source</p>
-              <p class="text-sm font-medium text-gray-800">{{ getIdeeProjetNom(viewingItem()!.ideeProjetId) || 'â€”' }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ getIdeeProjetNom(viewingItem()!.ideeProjetId) || 'â€? }}</p>
             </div>
           </div>
         </div>
@@ -146,7 +146,7 @@
           <div class="grid grid-cols-3 gap-3">
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">CatÃ©gorie</p>
-              <p class="text-sm font-medium text-gray-800">{{ getCategorieLabel(viewingItem()!.categorie) || 'â€”' }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ getCategorieLabel(viewingItem()!.categorie) || 'â€? }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">Statut</p>
@@ -192,15 +192,15 @@
           <div class="grid grid-cols-3 gap-3">
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">Date de dÃ©but prÃ©vue</p>
-              <p class="text-sm font-medium text-gray-800">{{ formatDate(viewingItem()!.dateDebutPrevu) || 'â€”' }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ formatDate(viewingItem()!.dateDebutPrevu) || 'â€? }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">Date de fin prÃ©vue</p>
-              <p class="text-sm font-medium text-gray-800">{{ formatDate(viewingItem()!.dateFinPrevu) || 'â€”' }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ formatDate(viewingItem()!.dateFinPrevu) || 'â€? }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">DurÃ©e</p>
-              <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.dureeEnMois ? viewingItem()!.dureeEnMois + ' mois' : 'â€”' }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.dureeEnMois ? viewingItem()!.dureeEnMois + ' mois' : 'â€? }}</p>
             </div>
           </div>
         </div>
@@ -212,11 +212,11 @@
             <div class="grid grid-cols-3 gap-3">
               <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs text-gray-400 mb-1">Latitude</p>
-                <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.latitude ?? 'â€”' }}</p>
+                <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.latitude ?? 'â€? }}</p>
               </div>
               <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs text-gray-400 mb-1">Longitude</p>
-                <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.longitude ?? 'â€”' }}</p>
+                <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.longitude ?? 'â€? }}</p>
               </div>
             </div>
           </div>
@@ -270,19 +270,19 @@
             <div class="form-group">
               <label class="form-label">IdÃ©e de projet source</label>
               <select [(ngModel)]="formData.ideeProjetId" class="form-input">
-                <option [ngValue]="undefined">â€” Aucune â€”</option>
+                <option [ngValue]="undefined">â€?Aucune â€?/option>
                 @for (ip of ideesProjet(); track ip.id) {
-                  <option [ngValue]="ip.id">{{ ip.code }} â€” {{ ip.titre }}</option>
+                  <option [ngValue]="ip.id">{{ ip.code }} â€?{{ ip.titre }}</option>
                 }
               </select>
             </div>
             <div class="form-group col-span-2">
-              <label class="form-label">Titre <span class="text-red-500">*</span></label>
-              <input type="text" [(ngModel)]="formData.titre" class="form-input" placeholder="Titre complet du projet">
+              <label class="form-label">Titre</label>
+              <input type="text" [(ngModel)]="formData.titre" class="form-input" placeholder="Titre du projet" readonly>
             </div>
             <div class="form-group col-span-2">
               <label class="form-label">Description</label>
-              <textarea [(ngModel)]="formData.description" class="form-input" rows="2" placeholder="Description du projet"></textarea>
+              <textarea [(ngModel)]="formData.description" class="form-input" rows="2" placeholder="Description du projet" readonly></textarea>
             </div>
             <div class="form-group col-span-2">
               <label class="form-label">Objectifs stratÃ©giques</label>
@@ -309,17 +309,17 @@
           <div class="grid grid-cols-2 gap-4">
             <div class="form-group">
               <label class="form-label">MinistÃ¨re <span class="text-red-500">*</span></label>
-              <select [(ngModel)]="formData.ministereId" class="form-input">
-                <option [ngValue]="undefined">â€” SÃ©lectionner â€”</option>
+              <select [(ngModel)]="formData.ministereId" class="form-input" disabled>
+                <option [ngValue]="undefined">â€?SÃ©lectionner â€?/option>
                 @for (m of ministeres(); track m.id) {
-                  <option [ngValue]="m.id">{{ m.sigle }} â€” {{ m.nom }}</option>
+                  <option [ngValue]="m.id">{{ m.sigle }} â€?{{ m.nom }}</option>
                 }
               </select>
             </div>
             <div class="form-group">
               <label class="form-label">Secteur</label>
-              <select [(ngModel)]="formData.secteurId" class="form-input">
-                <option [ngValue]="undefined">â€” SÃ©lectionner â€”</option>
+              <select [(ngModel)]="formData.secteurId" class="form-input" disabled>
+                <option [ngValue]="undefined">â€?SÃ©lectionner â€?/option>
                 @for (s of secteurs(); track s.id) {
                   <option [ngValue]="s.id">{{ s.nom }}</option>
                 }
@@ -327,8 +327,8 @@
             </div>
             <div class="form-group">
               <label class="form-label">RÃ©gion</label>
-              <select [(ngModel)]="formData.regionId" class="form-input">
-                <option [ngValue]="undefined">â€” SÃ©lectionner â€”</option>
+              <select [(ngModel)]="formData.regionId" class="form-input" disabled>
+                <option [ngValue]="undefined">â€?SÃ©lectionner â€?/option>
                 @for (r of regions(); track r.id) {
                   <option [ngValue]="r.id">{{ r.nom }}</option>
                 }
@@ -337,9 +337,9 @@
             <div class="form-group">
               <label class="form-label">Programme</label>
               <select [(ngModel)]="formData.programmeId" class="form-input">
-                <option [ngValue]="undefined">â€” SÃ©lectionner â€”</option>
+                <option [ngValue]="undefined">â€?SÃ©lectionner â€?/option>
                 @for (p of programmes(); track p.id) {
-                  <option [ngValue]="p.id">{{ p.code }} â€” {{ p.nom }}</option>
+                  <option [ngValue]="p.id">{{ p.code }} â€?{{ p.nom }}</option>
                 }
               </select>
             </div>
@@ -396,7 +396,7 @@
             <div class="form-group">
               <label class="form-label">Type de projet PIP</label>
               <select [(ngModel)]="formData.typeProjetPip" class="form-input">
-                <option [ngValue]="undefined">â€” SÃ©lectionner â€”</option>
+                <option [ngValue]="undefined">â€?SÃ©lectionner â€?/option>
                 @for (t of typesProjetPip; track t.value) {
                   <option [value]="t.value">{{ t.label }}</option>
                 }
@@ -405,7 +405,7 @@
             <div class="form-group">
               <label class="form-label">Statut inscription PIP</label>
               <select [(ngModel)]="formData.statutInscriptionPip" class="form-input">
-                <option [ngValue]="undefined">â€” SÃ©lectionner â€”</option>
+                <option [ngValue]="undefined">â€?SÃ©lectionner â€?/option>
                 @for (s of statutsInscriptionPip; track s.value) {
                   <option [value]="s.value">{{ s.label }}</option>
                 }
@@ -414,16 +414,16 @@
             <div class="form-group">
               <label class="form-label">PIP Annuel</label>
               <select [(ngModel)]="formData.pipAnnuelId" class="form-input">
-                <option [ngValue]="undefined">â€” SÃ©lectionner â€”</option>
+                <option [ngValue]="undefined">â€?SÃ©lectionner â€?/option>
                 @for (p of pipAnnuels(); track p.id) {
-                  <option [ngValue]="p.id">{{ p.code }} â€” {{ p.annee }}</option>
+                  <option [ngValue]="p.id">{{ p.code }} â€?{{ p.annee }}</option>
                 }
               </select>
             </div>
             <div class="form-group">
               <label class="form-label">Source de financement</label>
               <select [(ngModel)]="formData.sourceFinancement" class="form-input">
-                <option [ngValue]="undefined">â€” SÃ©lectionner â€”</option>
+                <option [ngValue]="undefined">â€?SÃ©lectionner â€?/option>
                 @for (s of sourcesFinancement; track s.value) {
                   <option [value]="s.value">{{ s.label }}</option>
                 }
@@ -432,7 +432,7 @@
             <div class="form-group col-span-2">
               <label class="form-label">Chef de projet</label>
               <select [(ngModel)]="formData.chefProjetId" class="form-input">
-                <option [ngValue]="undefined">â€” SÃ©lectionner â€”</option>
+                <option [ngValue]="undefined">â€?SÃ©lectionner â€?/option>
                 @for (u of utilisateurs(); track u.id) {
                   <option [ngValue]="u.id">{{ u.prenom }} {{ u.nom }}</option>
                 }
@@ -531,3 +531,4 @@
   [type]="toastType"
   (close)="toastVisible.set(false)">
 </app-toast>
+
