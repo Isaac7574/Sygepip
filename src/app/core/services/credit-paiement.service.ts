@@ -38,6 +38,10 @@ export class CreditPaiementService {
     return this.api.get<CreditPaiement[]>(`${this.endpoint}/ae/${aeId}`);
   }
 
+  getByProjet(projetId: string | number): Observable<CreditPaiement[]> {
+    return this.api.get<CreditPaiement[]>(this.endpoint, { projetId });
+  }
+
   createForAe(aeId: string, data: any): Observable<CreditPaiement> {
     return this.api.post<CreditPaiement>(`${this.endpoint}/ae/${aeId}`, data);
   }

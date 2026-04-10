@@ -1,8 +1,8 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+﻿import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, switchMap } from 'rxjs';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
 import { DocumentIdeeService } from '@core/services/document-idee.service';
 import { MinisteresService } from '@core/services/ministeres.service';
@@ -109,6 +109,12 @@ export class IdeeProjetDetailComponent implements OnInit {
   toastVisible = signal(false);
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
+
+  getIdeesListRoute(): string {
+    return this.authService.hasRole('AGENT')
+      ? '/app/maturation/mes-idees'
+      : '/app/maturation/idees-projet';
+  }
 
   ngOnInit(): void {
     this.loadMinisteres();
@@ -361,10 +367,20 @@ export class IdeeProjetDetailComponent implements OnInit {
   onSoumettre(): void {
     const item = this.idee();
     if (!item) return;
-    this.runAction(
-      this.ideesService.soumettre(item.id, this.buildActionPayload()),
-      'Idée soumise avec succès'
-    );
+    this.actionInProgress.set(true);
+    this.ideesService.update(item.id, { dateSoumission: new Date() })
+      .pipe(switchMap(() => this.ideesService.soumettre(item.id, this.buildActionPayload())))
+      .subscribe({
+        next: () => {
+          this.actionInProgress.set(false);
+          this.showToast('Idée soumise avec succès', 'success');
+          this.refreshIdee(item.id);
+        },
+        error: (err: any) => {
+          this.actionInProgress.set(false);
+          this.showToast(err?.message || 'Erreur lors de l\'exécution de l\'action', 'error');
+        }
+      });
   }
 
   onValiderSommaire(): void {
@@ -637,3 +653,4 @@ export class IdeeProjetDetailComponent implements OnInit {
     this.toastVisible.set(true);
   }
 }
+

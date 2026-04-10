@@ -136,11 +136,71 @@
             <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">{{ aes().length }}</span>
           }
         </button>
+        <button (click)="activeTab.set('indicateurs')"
+                class="flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition-colors border-b-2 -mb-px"
+                [class.border-blue-600]="activeTab() === 'indicateurs'"
+                [class.text-blue-700]="activeTab() === 'indicateurs'"
+                [class.border-transparent]="activeTab() !== 'indicateurs'"
+                [class.text-gray-500]="activeTab() !== 'indicateurs'">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+          </svg>
+          Indicateurs
+          @if (projetIndicateurs().length > 0) {
+            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">{{ projetIndicateurs().length }}</span>
+          }
+        </button>
+        <button (click)="activeTab.set('suivi-indicateurs')"
+                class="flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition-colors border-b-2 -mb-px"
+                [class.border-blue-600]="activeTab() === 'suivi-indicateurs'"
+                [class.text-blue-700]="activeTab() === 'suivi-indicateurs'"
+                [class.border-transparent]="activeTab() !== 'suivi-indicateurs'"
+                [class.text-gray-500]="activeTab() !== 'suivi-indicateurs'">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6m4 6V7m4 10v-4M5 21h14"/>
+          </svg>
+          Suivi indicateurs
+        </button>
       </div>
 
       <!-- ══ CONTENU ONGLET GÉNÉRAL ══ -->
       @if (activeTab() === 'general') {
         <div class="p-6 space-y-6">
+
+          <div class="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div class="space-y-2">
+                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Pilotage du decaissement</h3>
+                <div class="flex flex-wrap gap-2">
+                  <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                        [class.bg-green-100]="isProjetEnExecution()"
+                        [class.text-green-700]="isProjetEnExecution()"
+                        [class.bg-amber-100]="!isProjetEnExecution()"
+                        [class.text-amber-700]="!isProjetEnExecution()">
+                    {{ isProjetEnExecution() ? 'Projet en execution' : 'Projet hors execution' }}
+                  </span>
+                  <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                        [class.bg-green-100]="projet()!.decaissementActif === true"
+                        [class.text-green-700]="projet()!.decaissementActif === true"
+                        [class.bg-gray-200]="projet()!.decaissementActif !== true"
+                        [class.text-gray-700]="projet()!.decaissementActif !== true">
+                    {{ projet()!.decaissementActif === true ? 'Decaissement active' : 'Decaissement desactive' }}
+                  </span>
+                </div>
+                <p class="text-sm text-gray-600">{{ getDecaissementMessage() || 'Le projet peut recevoir des decaissements.' }}</p>
+              </div>
+              <div class="flex flex-wrap gap-3">
+                <button (click)="passerEnExecution()" class="btn-outline"
+                        [disabled]="isProjetEnExecution() || switchingToExecution()">
+                  {{ switchingToExecution() ? 'Passage...' : 'Passer en execution' }}
+                </button>
+                <button (click)="activateDecaissement()" class="btn-primary"
+                        [disabled]="!canActivateDecaissement() || activatingDecaissement()">
+                  {{ activatingDecaissement() ? 'Activation...' : 'Activer decaissement' }}
+                </button>
+              </div>
+            </div>
+          </div>
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             <!-- Colonne gauche -->
@@ -216,7 +276,9 @@
                     }
                   </div>
                 </div>
+
               }
+
             </div>
 
             <!-- Colonne droite -->
@@ -720,7 +782,9 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                       @for (cp of cps(); track cp.id) {
-                        <tr class="hover:bg-gray-50 transition-colors">
+                        <tr class="hover:bg-gray-50 transition-colors cursor-pointer"
+                            [class.bg-blue-50]="selectedCp()?.id === cp.id"
+                            (click)="selectCp(cp)">
                           <td class="px-4 py-3 text-sm font-bold text-gray-900">{{ cp.annee }}</td>
                           <td class="px-4 py-3 text-sm font-semibold text-indigo-700">{{ formatBudget(cp.montantCp) }}</td>
                           <td class="px-4 py-3 text-sm text-gray-600">{{ cp.montantPaye ? formatBudget(cp.montantPaye) : '—' }}</td>
@@ -732,10 +796,223 @@
                     </tbody>
                   </table>
                 </div>
+
+                @if (selectedCp()) {
+                  <div class="mt-6 border-t border-gray-200 pt-6">
+                    <div class="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Decaissements</h4>
+                        <p class="text-xs text-gray-500 mt-1">CP selectionne : <strong>{{ formatBudget(selectedCp()!.montantCp) }}</strong></p>
+                      </div>
+                      @if (!showDecaissementForm()) {
+                        <button (click)="openDecaissementForm()" class="btn-sm btn-primary flex items-center gap-1.5"
+                                [disabled]="!canCreateDecaissement()">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                          </svg>
+                          Ajouter decaissement
+                        </button>
+                      }
+                    </div>
+
+                    @if (getDecaissementMessage()) {
+                      <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                        {{ getDecaissementMessage() }}
+                        @if (isProjetEnExecution() && projet()!.decaissementActif !== true) {
+                          <button (click)="activateDecaissement()" class="ml-3 text-sm font-semibold text-amber-800 underline">
+                            Activer maintenant
+                          </button>
+                        }
+                      </div>
+                    }
+
+                    @if (showDecaissementForm()) {
+                      <div class="bg-rose-50 border border-rose-200 rounded-xl p-5 mb-4">
+                        <h5 class="text-sm font-bold text-rose-800 mb-4">Nouveau decaissement</h5>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div class="form-group">
+                            <label class="form-label">Date de decaissement <span class="text-red-500">*</span></label>
+                            <input type="datetime-local" [(ngModel)]="decaissementForm.dateDecaissement" class="form-input">
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Montant <span class="text-red-500">*</span></label>
+                            <input type="number" [(ngModel)]="decaissementForm.montant" class="form-input" min="0" placeholder="0">
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Reference piece</label>
+                            <input type="text" [(ngModel)]="decaissementForm.referencePiece" class="form-input" placeholder="Ex: OP-2026-001">
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Commentaire</label>
+                            <input type="text" [(ngModel)]="decaissementForm.commentaire" class="form-input" placeholder="Commentaire">
+                          </div>
+                        </div>
+                        <div class="flex items-center gap-3 pt-3 border-t border-rose-200 mt-3">
+                          <button (click)="saveDecaissement()"
+                                  [disabled]="savingDecaissement() || !decaissementForm.dateDecaissement || !decaissementForm.montant || !canCreateDecaissement()"
+                                  class="btn-sm btn-primary">
+                            {{ savingDecaissement() ? 'Enregistrement...' : 'Enregistrer le decaissement' }}
+                          </button>
+                          <button (click)="cancelDecaissementForm()" class="btn-sm btn-outline">Annuler</button>
+                        </div>
+                      </div>
+                    }
+
+                    @if (loadingDecaissements()) {
+                      <div class="flex items-center justify-center gap-2 py-6 text-gray-400">
+                        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                        <span class="text-sm">Chargement des decaissements...</span>
+                      </div>
+                    } @else if (decaissements().length === 0) {
+                      <div class="flex flex-col items-center justify-center py-6 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                        <p class="text-sm">Aucun decaissement pour ce credit de paiement</p>
+                      </div>
+                    } @else {
+                      <div class="overflow-x-auto border border-gray-100 rounded-xl">
+                        <table class="w-full">
+                          <thead class="bg-gray-50">
+                            <tr>
+                              <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                              <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Montant</th>
+                              <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                              <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Commentaire</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-100">
+                            @for (decaissement of decaissements(); track decaissement.id) {
+                              <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 text-sm text-gray-700">{{ decaissement.dateDecaissement ? formatDate(decaissement.dateDecaissement) : '-' }}</td>
+                                <td class="px-4 py-3 text-sm font-semibold text-gray-900">{{ formatBudget(decaissement.montant) }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-600">{{ decaissement.referencePiece || '-' }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-600">{{ decaissement.commentaire || '-' }}</td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    }
+                  </div>
+                }
               }
             </div>
           }
 
+        </div>
+      }
+
+      @if (activeTab() === 'indicateurs') {
+        <div class="p-6 space-y-6">
+          <div class="rounded-2xl border border-gray-200 bg-gray-50 p-5 space-y-4">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Indicateurs du projet</h3>
+                <p class="text-sm mt-2"
+                   [class.text-green-700]="canManageIndicateurs()"
+                   [class.text-amber-700]="!canManageIndicateurs()">
+                  {{ getIndicateursMessage() }}
+                </p>
+              </div>
+              @if (hasMoreIndicateurs()) {
+                <button (click)="toggleShowAllIndicateurs()" class="btn-outline">
+                  {{ showAllIndicateurs() ? 'Voir moins' : 'Voir la liste totale' }}
+                </button>
+              }
+            </div>
+
+            @if (loadingIndicateurs()) {
+              <p class="text-sm text-gray-500">Chargement des indicateurs...</p>
+            } @else if (allIndicateurs().length === 0) {
+              <p class="text-sm text-gray-500">Aucun indicateur disponible.</p>
+            } @else {
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-white">
+                    <tr>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lier</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unite</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    @for (indicateur of getVisibleIndicateurs(); track indicateur.id) {
+                      <tr class="hover:bg-white" [attr.title]="indicateur.description || 'Aucune description'">
+                        <td class="px-4 py-4">
+                          <input type="checkbox"
+                                 [checked]="isIndicateurLinked(indicateur)"
+                                 [disabled]="!canManageIndicateurs() || associatingIndicateur()"
+                                 (change)="toggleIndicateurAssociation(indicateur, $any($event.target).checked)">
+                        </td>
+                        <td class="px-4 py-4 font-medium text-gray-900">{{ indicateur.code }}</td>
+                        <td class="px-4 py-4 text-gray-900">{{ indicateur.nom }}</td>
+                        <td class="px-4 py-4 text-gray-500">{{ indicateur.unite || '-' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      @if (activeTab() === 'suivi-indicateurs') {
+        <div class="p-6 space-y-6">
+          <div class="rounded-2xl border border-gray-200 bg-gray-50 p-5 space-y-4">
+            <div>
+              <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Suivi des indicateurs du projet</h3>
+              <p class="text-sm text-gray-600 mt-2">Visualisation des valeurs cibles, valeurs actuelles et de leur evolution.</p>
+            </div>
+
+            @if (loadingIndicateurs()) {
+              <p class="text-sm text-gray-500">Chargement des indicateurs...</p>
+            } @else if (projetIndicateurs().length === 0) {
+              <p class="text-sm text-gray-500">Aucun indicateur lie a ce projet.</p>
+            } @else {
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-white">
+                    <tr>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Indicateur</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valeur cible</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valeur actuelle</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Evolution</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    @for (indicateur of projetIndicateurs(); track indicateur.id) {
+                      <tr class="hover:bg-white">
+                        <td class="px-4 py-4 font-medium text-gray-900">{{ indicateur.code }}</td>
+                        <td class="px-4 py-4 text-gray-900">
+                          <div class="space-y-1">
+                            <p>{{ indicateur.nom }}</p>
+                            <p class="text-xs text-gray-500">{{ indicateur.unite || '-' }}</p>
+                          </div>
+                        </td>
+                        <td class="px-4 py-4 text-gray-600">{{ formatIndicateurValeur(indicateur.valeurCible, indicateur.unite) }}</td>
+                        <td class="px-4 py-4 text-gray-600">{{ formatIndicateurValeur(indicateurValeursActuelles[indicateur.id], indicateur.unite) }}</td>
+                        <td class="px-4 py-4">
+                          <div class="space-y-2">
+                            <div class="flex items-center gap-3">
+                              <div class="w-28 bg-gray-200 rounded-full h-2">
+                                <div class="bg-bf-green-500 h-2 rounded-full" [style.width.%]="getIndicateurProgress(indicateur)"></div>
+                              </div>
+                              <span class="text-sm text-gray-600">{{ getIndicateurProgress(indicateur) }}%</span>
+                            </div>
+                            <p class="text-xs text-gray-500">{{ getIndicateurEvolution(indicateur) }}</p>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
         </div>
       }
 

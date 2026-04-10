@@ -22,6 +22,14 @@ export class DecaissementService {
     return this.api.getById<Decaissement>(this.endpoint, id);
   }
 
+  getByProjet(projetId: string): Observable<Decaissement[]> {
+    return this.api.get<Decaissement[]>(this.endpoint, { projetId });
+  }
+
+  getByCreditPaiement(creditPaiementId: string): Observable<Decaissement[]> {
+    return this.api.get<Decaissement[]>(this.endpoint, { creditPaiementId });
+  }
+
   create(data: Partial<Decaissement>): Observable<Decaissement> {
     return this.api.post<Decaissement>(this.endpoint, data);
   }

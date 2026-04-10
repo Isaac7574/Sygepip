@@ -6,7 +6,7 @@ export const authGuard: CanActivateFn = async (_route, state) => {
   const keycloak = inject(KeycloakService);
 
   try {
-    const isLoggedIn = keycloak.isLoggedIn();
+    const isLoggedIn = await keycloak.isLoggedIn();
 
     if (isLoggedIn) {
       return true;

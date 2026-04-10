@@ -8,7 +8,7 @@
       </div>
       <div class="page-header-text">
         <h1>
-          Suivi d'Exécution
+          Suivi d'execution
           <span class="page-header-badge">Suivi</span>
         </h1>
         <p>Suivi de l'avancement physique et financier des projets</p>
@@ -24,30 +24,25 @@
         </svg>
         <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher..." class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
       </div>
-      <button (click)="openModal()" class="btn-primary">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        Nouveau Suivi
-      </button>
     </div>
     <table class="w-full">
       <thead class="bg-gray-50">
         <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Projet</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Période</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Periode</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Avancement physique</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Avancement financier</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Taux decaissement</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Execution financiere</th>
           <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-100">
         @for (item of filteredItems(); track item.id) {
           <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 text-gray-900">{{ getProjetNom(item.projetId) }}</td>
             <td class="px-6 py-4 font-medium text-gray-900">{{ item.code }}</td>
-            <td class="px-6 py-4 text-gray-500">{{ item.periode }} ({{ item.annee }})</td>
-            <td class="px-6 py-4 text-gray-500">{{ item.typePeriode }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ item.periode || '-' }}</td>
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
                 <div class="w-20 bg-gray-200 rounded-full h-2">
@@ -59,22 +54,27 @@
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
                 <div class="w-20 bg-gray-200 rounded-full h-2">
-                  <div class="bg-primary-500 h-2 rounded-full" [style.width.%]="item.tauxAvancementFinancier || 0"></div>
+                  <div class="bg-primary-500 h-2 rounded-full" [style.width.%]="item.tauxDecaissement || 0"></div>
                 </div>
-                <span class="text-sm text-gray-500">{{ item.tauxAvancementFinancier || 0 }}%</span>
+                <span class="text-sm text-gray-500">{{ item.tauxDecaissement || 0 }}%</span>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <div class="w-20 bg-gray-200 rounded-full h-2">
+                  <div class="bg-amber-500 h-2 rounded-full" [style.width.%]="item.tauxExecutionFinanciere || 0"></div>
+                </div>
+                <span class="text-sm text-gray-500">{{ item.tauxExecutionFinanciere || 0 }}%</span>
               </div>
             </td>
             <td class="px-6 py-4 text-right">
               <button (click)="edit(item)" class="text-primary-600 hover:text-primary-800 mr-2" title="Modifier">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
               </button>
-              <button (click)="confirmDelete(item)" class="text-bf-red-600 hover:text-bf-red-800" title="Supprimer">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-              </button>
             </td>
           </tr>
         } @empty {
-          <tr><td colspan="6" class="px-6 py-12 text-center text-gray-500">Aucun suivi trouvé</td></tr>
+          <tr><td colspan="7" class="px-6 py-12 text-center text-gray-500">Aucun suivi trouve</td></tr>
         }
       </tbody>
     </table>
@@ -83,9 +83,9 @@
 
 @if (modalOpen()) {
   <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-content-fit max-w-3xl" (click)="$event.stopPropagation()">
+    <div class="modal-content-fit max-w-4xl" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier le suivi' : 'Nouveau suivi d\'exécution' }}</h3>
+        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier le suivi' : 'Nouveau suivi d\'execution' }}</h3>
         <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -93,8 +93,6 @@
         </button>
       </div>
       <div class="modal-body space-y-6">
-
-        <!-- Identification -->
         <div>
           <div class="flex items-center gap-2 mb-4">
             <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
@@ -106,76 +104,72 @@
             <div class="flex-1 h-px bg-gray-200"></div>
           </div>
           <div class="grid grid-cols-2 gap-4">
-            <div class="form-group">
-              <label class="form-label">Code <span class="text-red-500">*</span></label>
-              <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: SE-001">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Année <span class="text-red-500">*</span></label>
-              <input type="number" [(ngModel)]="formData.annee" class="form-input">
-            </div>
-          </div>
-        </div>
-
-        <!-- Période -->
-        <div>
-          <div class="flex items-center gap-2 mb-4">
-            <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
-              <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-            </div>
-            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Période</span>
-            <div class="flex-1 h-px bg-gray-200"></div>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="form-group">
-              <label class="form-label">Période <span class="text-red-500">*</span></label>
-              <input type="text" [(ngModel)]="formData.periode" class="form-input" placeholder="Ex: T1, S1">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Type période <span class="text-red-500">*</span></label>
-              <select [(ngModel)]="formData.typePeriode" class="form-input">
-                @for (t of typesPeriode; track t.value) {
-                  <option [value]="t.value">{{ t.label }}</option>
+            <div class="form-group col-span-2">
+              <label class="form-label">Projet <span class="text-red-500">*</span></label>
+              <select [(ngModel)]="formData.projetId" class="form-input bg-gray-100 text-gray-500" disabled>
+                <option value="">Selectionner un projet</option>
+                @for (projet of projets(); track projet.id) {
+                  <option [value]="projet.id">{{ projet.titre }}</option>
                 }
               </select>
             </div>
+            <div class="form-group">
+              <label class="form-label">Code</label>
+              <input type="text" [ngModel]="formData.code || ''" class="form-input bg-gray-100 text-gray-500" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Periode</label>
+              <input type="text" [ngModel]="formData.periode || ''" class="form-input bg-gray-100 text-gray-500" readonly>
+            </div>
           </div>
         </div>
 
-        <!-- Avancement -->
         <div>
           <div class="flex items-center gap-2 mb-4">
             <div class="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
-              <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
               </svg>
             </div>
-            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Avancement</span>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Suivi automatique</span>
             <div class="flex-1 h-px bg-gray-200"></div>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div class="form-group">
-              <label class="form-label">Avancement physique (%)</label>
-              <input type="number" [(ngModel)]="formData.tauxAvancementPhysique" class="form-input" min="0" max="100" placeholder="0">
+              <label class="form-label">Taux avancement physique</label>
+              <input type="number" [(ngModel)]="formData.tauxAvancementPhysique" class="form-input" min="0" max="100">
             </div>
             <div class="form-group">
-              <label class="form-label">Avancement financier (%)</label>
-              <input type="number" [(ngModel)]="formData.tauxAvancementFinancier" class="form-input" min="0" max="100" placeholder="0">
+              <label class="form-label">Taux decaissement</label>
+              <input type="number" [ngModel]="formData.tauxDecaissement || 0" class="form-input bg-gray-100 text-gray-500" readonly>
             </div>
-            <div class="form-group col-span-2">
-              <label class="form-label">Observations</label>
-              <textarea [(ngModel)]="formData.observations" class="form-input" rows="2" placeholder="Observations sur l'avancement"></textarea>
+            <div class="form-group">
+              <label class="form-label">Montant decaisse</label>
+              <input type="number" [ngModel]="formData.montantDecaisse || 0" class="form-input bg-gray-100 text-gray-500" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total montants CP</label>
+              <input type="number" [ngModel]="formData.totalMontantsCp || 0" class="form-input bg-gray-100 text-gray-500" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total decaissements projet</label>
+              <input type="number" [ngModel]="formData.totalDecaissementsProjet || 0" class="form-input bg-gray-100 text-gray-500" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Taux execution financiere</label>
+              <input type="number" [ngModel]="formData.tauxExecutionFinanciere || 0" class="form-input bg-gray-100 text-gray-500" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Taux couverture budgetaire</label>
+              <input type="number" [ngModel]="formData.tauxCouvertureBudgetaire || 0" class="form-input bg-gray-100 text-gray-500" readonly>
             </div>
           </div>
         </div>
-
       </div>
       <div class="modal-footer">
         <button (click)="closeModal()" class="btn-outline">Annuler</button>
         <button (click)="save()" [disabled]="saving()" class="btn-primary">
-          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer le suivi') }}
+          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Creer le suivi') }}
         </button>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { ProjetsService } from '@core/services/projets.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
@@ -10,16 +11,19 @@ import { ProgrammesService } from '@core/services/programmes.service';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
 import { AutorisationEngagementService } from '@core/services/autorisation-engagement.service';
 import { CreditPaiementService } from '@core/services/credit-paiement.service';
+import { DecaissementService } from '@core/services/decaissement.service';
+import { IndicateursService } from '@core/services/indicateurs.service';
 import { SourcesFinancementService } from '@core/services/sources-financement.service';
 import { NatureDepenseService } from '@core/services/nature-depense.service';
+import { SuiviExecutionService } from '@core/services/suivi-execution.service';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 import {
   Projet, Ministere, Secteur, Region, Programme, IdeeProjet,
   AutorisationEngagement, CreditPaiement, SourceFinancement, NatureDepense,
-  CategorieProjet, TypeProjetPip, StatutInscriptionPip, ModeFinancement
+  CategorieProjet, TypeProjetPip, StatutInscriptionPip, ModeFinancement, Decaissement, Indicateur
 } from '@core/models';
 
-type ActiveTab = 'general' | 'technique' | 'financier';
+type ActiveTab = 'general' | 'technique' | 'financier' | 'indicateurs' | 'suivi-indicateurs';
 
 @Component({
   selector: 'app-projet-detail',
@@ -38,8 +42,11 @@ export class ProjetDetailComponent implements OnInit {
   private ideesProjetService = inject(IdeesProjetService);
   private aeService = inject(AutorisationEngagementService);
   private cpService = inject(CreditPaiementService);
+  private decaissementService = inject(DecaissementService);
+  private indicateursService = inject(IndicateursService);
   private sourcesFinancementService = inject(SourcesFinancementService);
   private natureDepenseService = inject(NatureDepenseService);
+  private suiviExecutionService = inject(SuiviExecutionService);
 
   // ── État principal ──────────────────────────────────────────────────────
   projet = signal<Projet | null>(null);
@@ -94,6 +101,8 @@ export class ProjetDetailComponent implements OnInit {
   loadingCps = signal(false);
   showCpForm = signal(false);
   savingCp = signal(false);
+  selectedCp = signal<CreditPaiement | null>(null);
+  selectedCpProjet = signal<Projet | null>(null);
   cpForm = {
     annee: null as number | null,
     montantCp: null as number | null,
@@ -103,6 +112,28 @@ export class ProjetDetailComponent implements OnInit {
     statut: '',
     actif: true,
   };
+
+  // ── Décaissement ───────────────────────────────────────────────────────────────
+  decaissements = signal<Decaissement[]>([]);
+  loadingDecaissements = signal(false);
+  showDecaissementForm = signal(false);
+  savingDecaissement = signal(false);
+  switchingToExecution = signal(false);
+  activatingDecaissement = signal(false);
+  decaissementForm = {
+    dateDecaissement: '',
+    montant: null as number | null,
+    referencePiece: '',
+    commentaire: '',
+  };
+
+  allIndicateurs = signal<Indicateur[]>([]);
+  projetIndicateurs = signal<Indicateur[]>([]);
+  loadingIndicateurs = signal(false);
+  associatingIndicateur = signal(false);
+  savingValeurIndicateurId = signal<string | null>(null);
+  showAllIndicateurs = signal(false);
+  indicateurValeursActuelles: Record<string, number | null> = {};
 
   // ── Toast ───────────────────────────────────────────────────────────────
   toastVisible = signal(false);
@@ -180,6 +211,7 @@ export class ProjetDetailComponent implements OnInit {
         this.loading.set(false);
         this.initPtForm(p);
         this.loadAes(p.id);
+        this.loadIndicateurs(p.id);
       },
       error: () => {
         this.error.set('Erreur lors du chargement du projet.');
@@ -199,8 +231,55 @@ export class ProjetDetailComponent implements OnInit {
   private loadCps(aeId: string): void {
     this.loadingCps.set(true);
     this.cpService.getByAutorisationEngagement(aeId).subscribe({
-      next: (data) => { this.cps.set(data); this.loadingCps.set(false); },
+      next: (data) => {
+        const projetId = this.projet()?.id;
+        const cps = projetId
+          ? data.filter((cp) => !cp.projetId || cp.projetId === projetId)
+          : data;
+        this.cps.set(cps);
+        this.loadingCps.set(false);
+      },
       error: ()    => { this.loadingCps.set(false); }
+    });
+  }
+
+  private loadIndicateurs(projetId: string): void {
+    this.loadingIndicateurs.set(true);
+    forkJoin({
+      allIndicateurs: this.indicateursService.getAll(),
+      projetIndicateurs: this.projetsService.getIndicateurs(projetId)
+    }).subscribe({
+      next: ({ allIndicateurs, projetIndicateurs }) => {
+        this.allIndicateurs.set(allIndicateurs);
+        this.projetIndicateurs.set(projetIndicateurs);
+        this.indicateurValeursActuelles = Object.fromEntries(
+          projetIndicateurs.map((indicateur) => [indicateur.id, indicateur.valeurActuelle ?? null])
+        );
+        this.loadingIndicateurs.set(false);
+      },
+      error: () => {
+        this.loadingIndicateurs.set(false);
+      }
+    });
+  }
+
+  private loadDecaissements(creditPaiementId: string): void {
+    this.loadingDecaissements.set(true);
+    this.decaissementService.getByCreditPaiement(creditPaiementId).subscribe({
+      next: (data) => {
+        const projetId = this.selectedCpProjet()?.id ?? this.selectedCp()?.projetId ?? this.projet()?.id;
+        const decaissements = data.filter((decaissement) => {
+          const sameCp = decaissement.creditPaiementId === creditPaiementId;
+          const sameProjet = !projetId || !decaissement.projetId || decaissement.projetId === projetId;
+          return sameCp && sameProjet;
+        });
+        this.decaissements.set(decaissements);
+        this.loadingDecaissements.set(false);
+      },
+      error: () => {
+        this.decaissements.set([]);
+        this.loadingDecaissements.set(false);
+      }
     });
   }
 
@@ -290,6 +369,10 @@ export class ProjetDetailComponent implements OnInit {
   selectAe(ae: AutorisationEngagement): void {
     this.selectedAe.set(ae);
     this.showCpForm.set(false);
+    this.selectedCp.set(null);
+    this.selectedCpProjet.set(null);
+    this.showDecaissementForm.set(false);
+    this.decaissements.set([]);
     this.cps.set([]);
     this.loadCps(ae.id);
   }
@@ -331,6 +414,252 @@ export class ProjetDetailComponent implements OnInit {
   }
 
   // ── Helpers date ─────────────────────────────────────────────────────────
+  selectCp(cp: CreditPaiement): void {
+    this.selectedCp.set(cp);
+    this.selectedCpProjet.set(null);
+    this.showDecaissementForm.set(false);
+    this.decaissements.set([]);
+    this.loadDecaissements(cp.id);
+    if (cp.projetId) {
+      this.projetsService.getById(cp.projetId).subscribe({
+        next: (projet) => this.selectedCpProjet.set(this.adaptProjetDates(projet)),
+        error: () => this.selectedCpProjet.set(null)
+      });
+    }
+  }
+
+  getVisibleIndicateurs(): Indicateur[] {
+    const indicateurs = this.allIndicateurs();
+    return this.showAllIndicateurs() ? indicateurs : indicateurs.slice(0, 10);
+  }
+
+  hasMoreIndicateurs(): boolean {
+    return this.allIndicateurs().length > 10;
+  }
+
+  isIndicateurLinked(indicateur: Indicateur): boolean {
+    return this.projetIndicateurs().some((item) => item.id === indicateur.id);
+  }
+
+  toggleShowAllIndicateurs(): void {
+    this.showAllIndicateurs.set(!this.showAllIndicateurs());
+  }
+
+  toggleIndicateurAssociation(indicateur: Indicateur, checked: boolean): void {
+    const projet = this.projet();
+    if (!projet) return;
+    if (!this.canManageIndicateurs()) {
+      this.showToast('Les indicateurs ne peuvent etre saisis que pour un projet en execution.', 'error');
+      return;
+    }
+
+    this.associatingIndicateur.set(true);
+    const request = checked
+      ? this.projetsService.addIndicateurs(projet.id, [indicateur.id])
+      : this.projetsService.removeIndicateurs(projet.id, [indicateur.id]);
+
+    request.subscribe({
+      next: () => {
+        this.associatingIndicateur.set(false);
+        this.showToast(checked ? 'Indicateur lie au projet' : 'Indicateur retire du projet', 'success');
+        this.loadIndicateurs(projet.id);
+      },
+      error: (err) => {
+        this.associatingIndicateur.set(false);
+        this.showToast(err?.error?.message || err?.message || 'Erreur lors de la mise a jour de l\'indicateur', 'error');
+      }
+    });
+  }
+
+  saveIndicateurValeurActuelle(indicateur: Indicateur): void {
+    const projet = this.projet();
+    if (!projet) return;
+    if (!this.canManageIndicateurs()) {
+      this.showToast('Les indicateurs ne peuvent etre saisis que pour un projet en execution.', 'error');
+      return;
+    }
+
+    this.savingValeurIndicateurId.set(indicateur.id);
+    this.indicateursService.update(indicateur.id, {
+      code: indicateur.code,
+      nom: indicateur.nom,
+      description: indicateur.description,
+      typeIndicateur: indicateur.typeIndicateur,
+      unite: indicateur.unite,
+      valeurReference: indicateur.valeurReference,
+      valeurCible: indicateur.valeurCible,
+      valeurActuelle: this.indicateurValeursActuelles[indicateur.id] ?? undefined,
+      frequenceMesure: indicateur.frequenceMesure,
+      sourceVerification: indicateur.sourceVerification,
+      periodicite: indicateur.periodicite,
+      actif: indicateur.actif
+    }).subscribe({
+      next: () => {
+        this.savingValeurIndicateurId.set(null);
+        this.showToast('Valeur actuelle de l\'indicateur enregistree', 'success');
+        this.loadIndicateurs(projet.id);
+      },
+      error: (err) => {
+        this.savingValeurIndicateurId.set(null);
+        this.showToast(err?.error?.message || err?.message || 'Erreur lors de l\'enregistrement de la valeur actuelle', 'error');
+      }
+    });
+  }
+
+  openDecaissementForm(): void {
+    this.decaissementForm = {
+      dateDecaissement: '',
+      montant: null,
+      referencePiece: '',
+      commentaire: '',
+    };
+    this.showDecaissementForm.set(true);
+  }
+
+  cancelDecaissementForm(): void {
+    this.showDecaissementForm.set(false);
+  }
+
+  saveDecaissement(): void {
+    const projet = this.projet();
+    const cp = this.selectedCp();
+    if (!projet || !cp || !this.canCreateDecaissement()) return;
+
+    this.savingDecaissement.set(true);
+    const payload: Partial<Decaissement> = {
+      creditPaiementId: cp.id,
+      dateDecaissement: this.decaissementForm.dateDecaissement ? new Date(this.toIso(this.decaissementForm.dateDecaissement)) : undefined,
+      montant: this.decaissementForm.montant ?? 0,
+      referencePiece: this.decaissementForm.referencePiece || undefined,
+      commentaire: this.decaissementForm.commentaire || undefined,
+    };
+
+    this.decaissementService.create(payload).subscribe({
+      next: () => {
+        this.savingDecaissement.set(false);
+        this.showDecaissementForm.set(false);
+        this.showToast('Décaissement créé', 'success');
+        this.refreshAfterDecaissement(projet.id, cp.id);
+      },
+      error: (err) => {
+        this.savingDecaissement.set(false);
+        this.showToast(
+          err?.error?.message || err?.message || 'Erreur lors de la création du décaissement',
+          'error'
+        );
+      }
+    });
+  }
+
+  activateDecaissement(): void {
+    const projet = this.projet();
+    if (!projet) return;
+
+    this.projetsService.update(projet.id, { decaissementActif: true }).subscribe({
+      next: (updated) => {
+        this.projet.set(this.adaptProjetDates(updated));
+        this.showToast('Décaissement activé', 'success');
+      },
+      error: (err) => {
+        this.showToast(err?.message || 'Erreur lors de l\'activation du décaissement', 'error');
+      }
+    });
+  }
+
+  passerEnExecution(): void {
+    const projet = this.projet();
+    if (!projet || this.isProjetEnExecution()) return;
+
+    this.switchingToExecution.set(true);
+    this.projetsService.update(projet.id, { statut: 'EN_EXECUTION' }).subscribe({
+      next: (updated) => {
+        const adapted = this.adaptProjetDates(updated);
+        this.projet.set(adapted);
+        this.switchingToExecution.set(false);
+        this.showToast('Projet passe en execution', 'success');
+      },
+      error: (err) => {
+        this.switchingToExecution.set(false);
+        this.showToast(err?.message || 'Erreur lors du passage en execution', 'error');
+      }
+    });
+  }
+
+  private refreshAfterDecaissement(projetId: string, creditPaiementId: string): void {
+    const ae = this.selectedAe();
+    if (ae) {
+      this.loadCps(ae.id);
+    } else {
+      this.cpService.getByProjet(projetId).subscribe();
+    }
+    this.loadDecaissements(creditPaiementId);
+    this.suiviExecutionService.getAll({ projetId }).subscribe();
+  }
+
+  isProjetEnExecution(): boolean {
+    const projet = this.selectedCpProjet() ?? this.projet();
+    if (!projet) return false;
+    return projet.statut === 'EN_EXECUTION';
+  }
+
+  canCreateDecaissement(): boolean {
+    const projet = this.selectedCpProjet() ?? this.projet();
+    return !!projet && this.isProjetEnExecution() && projet.decaissementActif === true;
+  }
+
+  canActivateDecaissement(): boolean {
+    const projet = this.selectedCpProjet() ?? this.projet();
+    return !!projet && this.isProjetEnExecution() && projet.decaissementActif !== true;
+  }
+
+  canManageIndicateurs(): boolean {
+    const projet = this.projet();
+    return !!projet && projet.statut === 'EN_EXECUTION';
+  }
+
+  getIndicateursMessage(): string {
+    if (this.canManageIndicateurs()) {
+      return 'Vous pouvez associer des indicateurs et saisir leur valeur actuelle.';
+    }
+    return 'Les indicateurs ne peuvent etre saisis que pour un projet en execution.';
+  }
+
+  getIndicateurProgress(indicateur: Indicateur): number {
+    if (!indicateur.valeurCible || !this.indicateurValeursActuelles[indicateur.id]) {
+      return 0;
+    }
+    return Math.max(0, Math.min(100, Math.round(((this.indicateurValeursActuelles[indicateur.id] ?? 0) / indicateur.valeurCible) * 100)));
+  }
+
+  getIndicateurEvolution(indicateur: Indicateur): string {
+    const valeurActuelle = this.indicateurValeursActuelles[indicateur.id];
+    const unite = indicateur.unite ? ` ${indicateur.unite}` : '';
+    if (valeurActuelle == null || indicateur.valeurCible == null) {
+      return `-`;
+    }
+    const ecart = valeurActuelle - indicateur.valeurCible;
+    const signe = ecart > 0 ? '+' : '';
+    const pourcentage = indicateur.valeurCible === 0 ? 0 : Math.round((valeurActuelle / indicateur.valeurCible) * 100);
+    return `${signe}${ecart}${unite} (${pourcentage}%)`;
+  }
+
+  formatIndicateurValeur(valeur: number | null | undefined, unite?: string): string {
+    if (valeur == null) return '-';
+    return `${valeur}${unite ? ` ${unite}` : ''}`;
+  }
+
+  getDecaissementMessage(): string {
+    const projet = this.selectedCpProjet() ?? this.projet();
+    if (!projet) return '';
+    if (!this.isProjetEnExecution()) {
+      return 'Décaissement non autorisé : le projet n’est pas en exécution.';
+    }
+    if (projet.decaissementActif !== true) {
+      return 'Décaissement désactivé. Activez-le d’abord.';
+    }
+    return '';
+  }
+
   private toIso(datetimeLocal: string): string {
     // datetime-local gives YYYY-MM-DDTHH:mm → backend wants YYYY-MM-DDTHH:mm:ss
     return datetimeLocal.length === 16 ? datetimeLocal + ':00' : datetimeLocal;

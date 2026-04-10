@@ -15,6 +15,10 @@ export class IdeesProjetService {
     return this.api.get<IdeeProjet[]>(this.endpoint, params);
   }
 
+  getMesIdees(userId: string): Observable<IdeeProjet[]> {
+    return this.api.get<IdeeProjet[]>(`${this.endpoint}/mes-idees`, { userId, role: 'AGENT' });
+  }
+
   getPaginated(params?: FilterParams): Observable<PaginatedResponse<IdeeProjet>> {
     return this.api.getPaginated<IdeeProjet>(this.endpoint, params);
   }

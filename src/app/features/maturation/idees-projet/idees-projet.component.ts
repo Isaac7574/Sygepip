@@ -1,12 +1,13 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+Ôªøimport { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
 import { CiblesService } from '@core/services/cibles.service';
+import { AuthService } from '@core/services/auth.service';
 import {
   Cible,
   IdeeProjet,
@@ -33,6 +34,7 @@ export class IdeesdeProjetComponent implements OnInit {
   private ministeresService = inject(MinisteresService);
   private secteursService = inject(SecteursService);
   private ciblesService = inject(CiblesService);
+  private authService = inject(AuthService);
 
   items = signal<IdeeProjet[]>([]);
   filteredItems = signal<IdeeProjet[]>([]);
@@ -40,6 +42,7 @@ export class IdeesdeProjetComponent implements OnInit {
   secteurs = signal<Secteur[]>([]);
   cibles = signal<Cible[]>([]);
   searchTerm = '';
+  isMesIdeesMode = false;
 
   // Modal principal
   modalOpen = signal(false);
@@ -97,6 +100,7 @@ export class IdeesdeProjetComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.isMesIdeesMode = this.route.snapshot.data['mode'] === 'mes-idees';
     this.route.queryParamMap.subscribe(params => {
       const editId = params.get('editId');
       const noteId = params.get('noteId');
@@ -110,7 +114,6 @@ export class IdeesdeProjetComponent implements OnInit {
       }
     });
     this.load();
-    this.loadMinisteres();
     this.loadSecteurs();
     this.loadCibles();
   }
@@ -120,9 +123,14 @@ export class IdeesdeProjetComponent implements OnInit {
       code: '',
       titre: '',
       description: '',
-      ministereId: undefined,
+      problematique: '',
+      objectifGeneral: '',
+      objectifsSpecifiques: '',
+      beneficiairesEstimes: undefined,
       secteurId: undefined,
       portee: 'NATIONALE',
+      statut: 'IDEE_BROUILLON',
+      actif: true,
       regionsIntervention: '',
       pointFocalNom: '',
       pointFocalEmail: '',
@@ -151,7 +159,9 @@ export class IdeesdeProjetComponent implements OnInit {
   }
 
   load(): void {
-    this.ideesService.getAll().subscribe({
+    const request$ = this.isMesIdeesMode ? this.getMesIdeesRequest() : this.ideesService.getAll();
+
+    request$.subscribe({
       next: (data) => {
         this.items.set(data);
         this.filteredItems.set(data);
@@ -164,6 +174,26 @@ export class IdeesdeProjetComponent implements OnInit {
       },
       error: () => this.showToast('Erreur lors du chargement des donn√©es', 'error')
     });
+  }
+
+  private getMesIdeesRequest(): Observable<IdeeProjet[]> {
+    const userId = this.authService.getTokenSubject();
+    if (!userId) {
+      this.showToast("Impossible d'identifier l'utilisateur courant", 'error');
+      return of([]);
+    }
+
+    return this.ideesService.getMesIdees(userId);
+  }
+
+  getPageTitle(): string {
+    return this.isMesIdeesMode ? 'Mes id√©es' : 'Id√©es de Projet';
+  }
+
+  getPageDescription(): string {
+    return this.isMesIdeesMode
+      ? 'Liste de vos id√©es de projet'
+      : 'Gestion des id√©es de projet et maturation';
   }
 
   loadMinisteres(): void {
@@ -262,7 +292,12 @@ export class IdeesdeProjetComponent implements OnInit {
       code: item.code,
       titre: item.titre,
       description: item.description,
+      problematique: item.problematique,
+      objectifGeneral: item.objectifGeneral,
+      objectifsSpecifiques: item.objectifsSpecifiques,
+      beneficiairesEstimes: item.beneficiairesEstimes,
       ministereId: item.ministereId,
+      ministereNom: item.ministereNom,
       secteurId: item.secteurId,
       portee: item.portee,
       regionsIntervention: item.regionsIntervention,
@@ -275,14 +310,39 @@ export class IdeesdeProjetComponent implements OnInit {
   }
 
   save(): void {
-    if (!this.formData.code || !this.formData.titre || !this.formData.ministereId) {
-      this.showToast('Veuillez remplir tous les champs obligatoires (code, titre, minist√®re)', 'error');
+    if (!this.formData.code || !this.formData.titre || !this.formData.secteurId) {
+      this.showToast('Veuillez remplir tous les champs obligatoires (code, titre, secteur)', 'error');
       return;
     }
+
     this.saving.set(true);
+    const payload: Partial<IdeeProjet> = {
+      code: this.formData.code,
+      titre: this.formData.titre,
+      description: this.formData.description,
+      ministereTutelleFinanciereId: this.formData.ministereTutelleFinanciereId,
+      secteurId: this.formData.secteurId,
+      portee: this.formData.portee,
+      statut: this.formData.statut || 'IDEE_BROUILLON',
+      actif: this.formData.actif ?? true,
+      problematique: this.formData.problematique,
+      objectifGeneral: this.formData.objectifGeneral,
+      objectifsSpecifiques: this.formData.objectifsSpecifiques,
+      beneficiairesCibles: this.formData.beneficiairesCibles,
+      beneficiairesEstimes: this.formData.beneficiairesEstimes,
+      zoneIntervention: this.formData.zoneIntervention,
+      coutEstime: this.formData.coutEstime,
+      dureeEstimeeMois: this.formData.dureeEstimeeMois,
+      porteurProjet: this.formData.porteurProjet,
+      pointFocalNom: this.formData.pointFocalNom,
+      pointFocalEmail: this.formData.pointFocalEmail,
+      pointFocalTelephone: this.formData.pointFocalTelephone,
+      dateSoumission: this.formData.dateSoumission
+    };
+
     const obs = this.editingItem()
-      ? this.ideesService.update(this.editingItem()!.id, this.formData)
-      : this.ideesService.create(this.formData);
+      ? this.ideesService.update(this.editingItem()!.id, payload)
+      : this.ideesService.create(payload);
 
     obs.subscribe({
       next: () => {
@@ -373,26 +433,26 @@ export class IdeesdeProjetComponent implements OnInit {
   private normalizeDisplayText(value: string): string {
     return value
       .replaceAll('??', '')
-      .replaceAll('??', '®¶')
-      .replaceAll('?°ß', '®®')
-      .replaceAll('?a', '®∫')
+      .replaceAll('??', '√©')
+      .replaceAll('?¬®', '√®')
+      .replaceAll('?a', '√™')
       .replaceAll('??', '?')
-      .replaceAll('? ', '®§')
-      .replaceAll('?°È', 'a')
+      .replaceAll('? ', '√†')
+      .replaceAll('?Ôø†', 'a')
       .replaceAll('??', '?')
-      .replaceAll('?°‰', '?')
-      .replaceAll('?1', '®¥')
+      .replaceAll('?‚Ä≤', '?')
+      .replaceAll('?1', '√π')
       .replaceAll('??', '?')
-      .replaceAll('?°Ï', '?')
-      .replaceAll('?°Î', '®¶')
-      .replaceAll('?Ä', '®§')
-      .replaceAll('aÄ?', "'")
-      .replaceAll('aÄ?', '"')
-      .replaceAll('aÄ?', '"')
-      .replaceAll('aÄ"', '-')
-      .replaceAll('aÄ°∞', '-')
-      .replaceAll('aÄ°±', '-')
-      .replaceAll('B??n??ficiaires', 'B®¶n®¶ficiaires')
+      .replaceAll('?¬ß', '?')
+      .replaceAll('?‚Ä∞', '√©')
+      .replaceAll('?‚Ç¨', '√†')
+      .replaceAll('a‚Ç¨?', "'")
+      .replaceAll('a‚Ç¨?', '"')
+      .replaceAll('a‚Ç¨?', '"')
+      .replaceAll('a‚Ç¨"', '-')
+      .replaceAll('a‚Ç¨‚Äú', '-')
+      .replaceAll('a‚Ç¨‚Äù', '-')
+      .replaceAll('B??n??ficiaires', 'B√©n√©ficiaires')
       .replace(/\s{2,}/g, ' ')
       .trim();
   }
@@ -475,6 +535,14 @@ export class IdeesdeProjetComponent implements OnInit {
     return m ? (m.sigle || m.nom) : '-';
   }
 
+  getIdeeMinistereLabel(item: Partial<IdeeProjet> | null | undefined): string {
+    if (!item) return '-';
+    if (item.ministereNom) {
+      return item.ministereNom;
+    }
+    return this.getMinistereNom(item.ministereId);
+  }
+
   getSecteurNom(id: string | number | undefined): string {
     if (!id) return '-';
     const s = this.secteurs().find(s => String(s.id) === String(id));
@@ -507,4 +575,5 @@ export class IdeesdeProjetComponent implements OnInit {
     return classes[statut] || 'badge-gray';
   }
 }
+
 

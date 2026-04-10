@@ -200,7 +200,9 @@ export interface IdeeProjet {
   code: string;
   titre: string;
   description?: string;
-  ministereId: string;
+  ministereId?: string;
+  ministereNom?: string;
+  ministereTutelleFinanciereId?: string;
   secteurId?: string;
   portee?: 'NATIONALE' | 'REGIONALE' | 'PROVINCIALE' | 'COMMUNALE' | 'LOCALE' | string;
   regionsIntervention?: string;
@@ -213,6 +215,15 @@ export interface IdeeProjet {
   etapeId?: string;
   scoreSelection?: number;
   createdBy?: string;
+  problematique?: string;
+  objectifGeneral?: string;
+  objectifsSpecifiques?: string;
+  beneficiairesCibles?: string;
+  beneficiairesEstimes?: number;
+  zoneIntervention?: string;
+  coutEstime?: number;
+  dureeEstimeeMois?: number;
+  porteurProjet?: string;
   actif?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -424,6 +435,7 @@ export interface Projet {
   typeProjetPip?: TypeProjetPip | string;
   statutInscriptionPip?: StatutInscriptionPip | string;
   financementBoucle?: boolean;
+  decaissementActif?: boolean;
   createdBy?: string;
   actif: boolean;
   createdAt?: Date;
@@ -480,6 +492,8 @@ export interface CreditPaiement {
   natureDepenseNom?: string;
   natureDepense?: string; // Legacy display
   montantPaye?: number;
+  tauxConsommationCp?: number;
+  resteCp?: number;
   dateEcheance?: Date;
   statut?: string;
   actif: boolean;
@@ -513,6 +527,10 @@ export interface SuiviExecution {
   tauxAvancementFinancier?: number; // For compatibility with existing components
   tauxDecaissement?: number;
   montantDecaisse?: number;
+  totalMontantsCp?: number;
+  totalDecaissementsProjet?: number;
+  tauxExecutionFinanciere?: number;
+  tauxCouvertureBudgetaire?: number;
   activitesRealisees?: string;
   difficultes?: string;
   mesuresCorrectives?: string;
@@ -525,7 +543,8 @@ export interface SuiviExecution {
 
 export interface Indicateur {
   id: string;
-  projetId: string;
+  projetId?: string;
+  projetIds?: string[];
   code: string;
   nom: string;
   description?: string;
@@ -933,6 +952,7 @@ export interface Decaissement {
   creditPaiementId: string;
   sourceFinancementId?: string;
   natureDepense?: string;
+  projetId?: string;
   dateDecaissement?: Date;
   montant: number;
   referencePiece?: string;

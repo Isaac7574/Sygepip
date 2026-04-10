@@ -38,6 +38,7 @@ export class GestionAccesComponent implements OnInit {
   private adminService = inject(AdminService);
   private ministeresService = inject(MinisteresService);
   private directionService = inject(DirectionService);
+  private readonly extraEndpoints = ['/ideeprojet/mes-idees'];
 
   // State
   endpoints = signal<string[]>([]);
@@ -99,10 +100,12 @@ export class GestionAccesComponent implements OnInit {
     this.loading.set(true);
     this.adminService.getAbacEndpoints(this.currentPage(), this.pageSize()).subscribe({
       next: (data) => {
-        this.endpoints.set(data.items);
-        this.filteredEndpoints.set(data.items);
-        this.totalItems.set(data.total);
-        this.totalPages.set(Math.ceil(data.total / this.pageSize()));
+        const mergedEndpoints = this.mergeExtraEndpoints(data.items);
+        const total = data.total + this.countMissingExtraEndpoints(data.items);
+        this.endpoints.set(mergedEndpoints);
+        this.filteredEndpoints.set(mergedEndpoints);
+        this.totalItems.set(total);
+        this.totalPages.set(Math.ceil(total / this.pageSize()));
         this.loading.set(false);
       },
       error: () => {
@@ -110,6 +113,22 @@ export class GestionAccesComponent implements OnInit {
         this.showToast('Erreur lors du chargement des endpoints', 'error');
       }
     });
+  }
+
+  private mergeExtraEndpoints(endpoints: string[]): string[] {
+    const merged = [...endpoints];
+
+    for (const endpoint of this.extraEndpoints) {
+      if (!merged.includes(endpoint)) {
+        merged.unshift(endpoint);
+      }
+    }
+
+    return merged;
+  }
+
+  private countMissingExtraEndpoints(endpoints: string[]): number {
+    return this.extraEndpoints.filter(endpoint => !endpoints.includes(endpoint)).length;
   }
 
   nextPage(): void {

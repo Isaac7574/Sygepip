@@ -2,7 +2,8 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SuiviExecutionService } from '@core/services/suivi-execution.service';
-import { SuiviExecution } from '@core/models';
+import { ProjetsService } from '@core/services/projets.service';
+import { Projet, SuiviExecution } from '@core/models';
 
 @Component({
   selector: 'app-suivi-execution',
@@ -13,14 +14,16 @@ import { SuiviExecution } from '@core/models';
 })
 export class SuiviExecutionComponent implements OnInit {
   private suiviService = inject(SuiviExecutionService);
+  private projetsService = inject(ProjetsService);
 
   items = signal<SuiviExecution[]>([]);
   filteredItems = signal<SuiviExecution[]>([]);
+  projets = signal<Projet[]>([]);
   searchTerm = '';
   modalOpen = signal(false);
   editingItem = signal<SuiviExecution | null>(null);
   saving = signal(false);
-  formData: Partial<SuiviExecution> = { code: '', periode: '', typePeriode: 'TRIMESTRIEL', annee: new Date().getFullYear(), tauxAvancementPhysique: 0, tauxAvancementFinancier: 0, observations: '', actif: true };
+  formData: Partial<SuiviExecution> = this.resetForm();
 
   typesPeriode = [
     { value: 'MENSUEL', label: 'Mensuel' },
@@ -29,7 +32,18 @@ export class SuiviExecutionComponent implements OnInit {
     { value: 'ANNUEL', label: 'Annuel' }
   ];
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+    this.loadProjets();
+  }
+
+  private resetForm(): Partial<SuiviExecution> {
+    return {
+      projetId: '',
+      tauxAvancementPhysique: 0,
+      actif: true
+    };
+  }
 
   load(): void {
     this.suiviService.getAll().subscribe({
@@ -38,15 +52,24 @@ export class SuiviExecutionComponent implements OnInit {
     });
   }
 
+  loadProjets(): void {
+    this.projetsService.getAll().subscribe({
+      next: (data) => this.projets.set(data),
+      error: () => {}
+    });
+  }
+
   search(): void {
     const term = this.searchTerm.toLowerCase();
     this.filteredItems.set(this.items().filter(i =>
-      i.code?.toLowerCase().includes(term) || i.periode?.toLowerCase().includes(term)
+      i.code?.toLowerCase().includes(term) ||
+      i.periode?.toLowerCase().includes(term) ||
+      this.getProjetNom(i.projetId).toLowerCase().includes(term)
     ));
   }
 
   openModal(): void {
-    this.formData = { code: '', periode: '', typePeriode: 'TRIMESTRIEL', annee: new Date().getFullYear(), tauxAvancementPhysique: 0, tauxAvancementFinancier: 0, observations: '', actif: true };
+    this.formData = this.resetForm();
     this.editingItem.set(null);
     this.modalOpen.set(true);
   }
@@ -60,10 +83,19 @@ export class SuiviExecutionComponent implements OnInit {
   }
 
   save(): void {
+    if (!this.formData.projetId) {
+      return;
+    }
+
     this.saving.set(true);
+    const payload: Partial<SuiviExecution> = {
+      projetId: this.formData.projetId,
+      tauxAvancementPhysique: this.formData.tauxAvancementPhysique ?? 0,
+      actif: this.formData.actif ?? true
+    };
     const obs = this.editingItem()
-      ? this.suiviService.update(this.editingItem()!.id, this.formData)
-      : this.suiviService.create(this.formData);
+      ? this.suiviService.update(this.editingItem()!.id, payload)
+      : this.suiviService.create(payload);
     obs.subscribe({
       next: () => { this.saving.set(false); this.closeModal(); this.load(); },
       error: () => this.saving.set(false)
@@ -74,5 +106,10 @@ export class SuiviExecutionComponent implements OnInit {
     if (confirm('\u00cates-vous s\u00fbr de vouloir supprimer ce suivi ?')) {
       this.suiviService.delete(item.id).subscribe(() => this.load());
     }
+  }
+
+  getProjetNom(projetId: string | undefined): string {
+    if (!projetId) return '-';
+    return this.projets().find((projet) => projet.id === projetId)?.titre || '-';
   }
 }

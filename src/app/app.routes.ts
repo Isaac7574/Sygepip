@@ -76,6 +76,12 @@ export const routes: Routes = [
             loadComponent: () => import('./features/maturation/idees-projet/idees-projet.component').then(m => m.IdeesdeProjetComponent)
           },
           {
+            path: 'mes-idees',
+            loadComponent: () => import('./features/maturation/idees-projet/idees-projet.component').then(m => m.IdeesdeProjetComponent),
+            data: { mode: 'mes-idees' }
+          },
+          
+          {
             path: 'workflow',
             loadComponent: () => import('./features/maturation/workflow/workflow.component').then(m => m.WorkflowComponent)
           },

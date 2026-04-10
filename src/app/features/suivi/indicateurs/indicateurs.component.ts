@@ -20,9 +20,25 @@ export class IndicateursComponent implements OnInit {
   modalOpen = signal(false);
   editingItem = signal<Indicateur | null>(null);
   saving = signal(false);
-  formData: Partial<Indicateur> = { code: '', nom: '', description: '', unite: '', valeurCible: undefined, valeurActuelle: undefined, frequenceMesure: '' };
+  formData: Partial<Indicateur> = this.resetForm();
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+  }
+
+  private resetForm(): Partial<Indicateur> {
+    return {
+      code: '',
+      nom: '',
+      description: '',
+      typeIndicateur: '',
+      unite: '',
+      valeurReference: undefined,
+      sourceVerification: '',
+      periodicite: '',
+      actif: true
+    };
+  }
 
   load(): void {
     this.indicateursService.getAll().subscribe({
@@ -34,12 +50,15 @@ export class IndicateursComponent implements OnInit {
   search(): void {
     const term = this.searchTerm.toLowerCase();
     this.filteredItems.set(this.items().filter(i =>
-      i.nom?.toLowerCase().includes(term) || i.code?.toLowerCase().includes(term)
+      i.nom?.toLowerCase().includes(term) ||
+      i.code?.toLowerCase().includes(term) ||
+      i.typeIndicateur?.toLowerCase().includes(term) ||
+      i.unite?.toLowerCase().includes(term)
     ));
   }
 
   openModal(): void {
-    this.formData = { code: '', nom: '', description: '', unite: '', valeurCible: undefined, valeurActuelle: undefined, frequenceMesure: '' };
+    this.formData = this.resetForm();
     this.editingItem.set(null);
     this.modalOpen.set(true);
   }
@@ -53,10 +72,25 @@ export class IndicateursComponent implements OnInit {
   }
 
   save(): void {
+    if (!this.formData.code || !this.formData.nom) {
+      return;
+    }
+
     this.saving.set(true);
+    const payload: Partial<Indicateur> = {
+      code: this.formData.code?.trim(),
+      nom: this.formData.nom?.trim(),
+      description: this.formData.description?.trim() || undefined,
+      typeIndicateur: this.formData.typeIndicateur?.trim() || undefined,
+      unite: this.formData.unite?.trim() || undefined,
+      valeurReference: this.formData.valeurReference,
+      sourceVerification: this.formData.sourceVerification?.trim() || undefined,
+      periodicite: this.formData.periodicite?.trim() || undefined,
+      actif: this.formData.actif ?? true
+    };
     const obs = this.editingItem()
-      ? this.indicateursService.update(this.editingItem()!.id, this.formData)
-      : this.indicateursService.create(this.formData);
+      ? this.indicateursService.update(this.editingItem()!.id, payload)
+      : this.indicateursService.create(payload);
     obs.subscribe({
       next: () => { this.saving.set(false); this.closeModal(); this.load(); },
       error: () => this.saving.set(false)
@@ -69,8 +103,4 @@ export class IndicateursComponent implements OnInit {
     }
   }
 
-  getProgress(item: Indicateur): number {
-    if (!item.valeurCible || !item.valeurActuelle) return 0;
-    return Math.min(100, Math.round((item.valeurActuelle / item.valeurCible) * 100));
-  }
 }

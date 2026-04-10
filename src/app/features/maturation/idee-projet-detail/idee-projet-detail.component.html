@@ -1,6 +1,6 @@
-<div class="space-y-6">
+﻿<div class="space-y-6">
 
-  <!-- ══ PAGE HEADER ══ -->
+  <!--  PAGE HEADER  -->
   <div class="page-header-section flex items-center justify-between">
     <div class="page-header-left">
       <div class="page-header-icon">
@@ -10,14 +10,14 @@
       </div>
       <div class="page-header-text">
         <h1>
-          Détail de l'idée
+          Detail de l'idee
           <span class="page-header-badge">Maturation</span>
         </h1>
-        <p>Fiche complète de l'idée de projet</p>
+        <p>Fiche complete de l'idee de projet</p>
       </div>
     </div>
     <div class="page-header-right flex items-center gap-2">
-      <a routerLink="/app/maturation/idees-projet" class="btn-outline">
+      <a [routerLink]="getIdeesListRoute()" class="btn-outline">
         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
         </svg>
@@ -26,7 +26,7 @@
     </div>
   </div>
 
-  <!-- ══ ÉTATS ══ -->
+  <!--  ETATS  -->
   @if (loading()) {
     <div class="card p-10 flex items-center justify-center gap-3 text-gray-400">
       <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -43,13 +43,13 @@
         </svg>
         <div>
           <p class="font-semibold text-red-700">{{ error() }}</p>
-          <p class="text-sm text-gray-500 mt-0.5">Veuillez réessayer ou revenir à la liste.</p>
+          <p class="text-sm text-gray-500 mt-0.5">Veuillez reessayer ou revenir a la liste.</p>
         </div>
       </div>
     </div>
   } @else if (idee()) {
 
-    <!-- ══ HERO CARD ══ -->
+    <!--  HERO CARD  -->
     <div class="card overflow-hidden">
       <!-- Bandeau de couleur selon le statut -->
       <div class="h-1.5 w-full"
@@ -86,7 +86,7 @@
               <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
               </svg>
-              <p class="text-xs text-green-600 font-medium">Ministère</p>
+              <p class="text-xs text-green-600 font-medium">Ministere</p>
             </div>
             <p class="text-sm font-bold text-green-800 truncate">{{ getMinistereNom(idee()!.ministereId) }}</p>
           </div>
@@ -114,13 +114,13 @@
       </div>
     </div>
 
-    <!-- ══ GRILLE PRINCIPALE ══ -->
+    <!--  GRILLE PRINCIPALE  -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
       <!-- Colonne gauche (2/3) -->
       <div class="lg:col-span-2 space-y-6">
 
-        <!-- Informations générales -->
+        <!-- Informations generales -->
         <div class="card p-6">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
@@ -129,16 +129,16 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
               </div>
-              <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Informations générales</h3>
+              <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Informations generales</h3>
             </div>
             <div class="flex items-center gap-2">
-              <a [routerLink]="['/app/maturation/idees-projet']" [queryParams]="{ noteId: idee()!.id }" class="btn-outline" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">
+              <a [routerLink]="[getIdeesListRoute()]" [queryParams]="{ noteId: idee()!.id }" class="btn-outline" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">
                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
                 Note conceptuelle
               </a>
-              <a [routerLink]="['/app/maturation/idees-projet']" [queryParams]="{ editId: idee()!.id }" class="btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">
+              <a [routerLink]="[getIdeesListRoute()]" [queryParams]="{ editId: idee()!.id }" class="btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">
                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
@@ -148,7 +148,7 @@
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="bg-gray-50 rounded-xl p-3">
-              <p class="text-xs text-gray-400 mb-1">Ministère</p>
+              <p class="text-xs text-gray-400 mb-1">Ministere</p>
               <p class="text-sm font-medium text-gray-800">{{ getMinistereNom(idee()!.ministereId) }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
@@ -156,12 +156,12 @@
               <p class="text-sm font-medium text-gray-800">{{ getSecteurNom(idee()!.secteurId) }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
-              <p class="text-xs text-gray-400 mb-1">Portée</p>
+              <p class="text-xs text-gray-400 mb-1">Portee</p>
               <p class="text-sm font-medium text-gray-800">{{ getPorteeLabel(idee()!.portee) }}</p>
             </div>
             @if (idee()!.regionsIntervention) {
               <div class="bg-gray-50 rounded-xl p-3">
-                <p class="text-xs text-gray-400 mb-1">Régions d'intervention</p>
+                <p class="text-xs text-gray-400 mb-1">Regions d'intervention</p>
                 <p class="text-sm text-gray-700">{{ idee()!.regionsIntervention }}</p>
               </div>
             }
@@ -185,7 +185,7 @@
               </div>
               <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Note conceptuelle</h3>
             </div>
-            <a [routerLink]="['/app/maturation/idees-projet']" [queryParams]="{ noteId: idee()!.id }"
+            <a [routerLink]="[getIdeesListRoute()]" [queryParams]="{ noteId: idee()!.id }"
                class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
               Modifier
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,37 +211,37 @@
                 <svg class="w-10 h-10 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                <p class="text-sm">Note conceptuelle non encore renseignée</p>
-                <a [routerLink]="['/app/maturation/idees-projet']" [queryParams]="{ noteId: idee()!.id }"
+                <p class="text-sm">Note conceptuelle non encore renseignee</p>
+                <a [routerLink]="[getIdeesListRoute()]" [queryParams]="{ noteId: idee()!.id }"
                    class="mt-3 text-xs text-indigo-600 font-semibold hover:underline">
-                  Renseigner la note �?
+                  Renseigner la note ->
                 </a>
               </div>
             } @else {
               <div class="space-y-3">
                 @for (field of [
-                  {key: 'problematique', label: 'Problématique', color: 'bg-blue-50 border-blue-100'},
+                  {key: 'problematique', label: 'Problematique', color: 'bg-blue-50 border-blue-100'},
                   {key: 'contexte', label: 'Contexte', color: 'bg-indigo-50 border-indigo-100'},
-                  {key: 'alignementStrategique', label: 'Alignement stratégique', color: 'bg-violet-50 border-violet-100'},
-                  {key: 'cibleIds', label: 'B��n��ficiaires', color: 'bg-sky-50 border-sky-100'},
-                  {key: 'objectifGeneral', label: 'Objectif général', color: 'bg-green-50 border-green-100'},
-                  {key: 'objectifsSpecifiques', label: 'Objectifs spécifiques', color: 'bg-teal-50 border-teal-100'},
-                  {key: 'resultatsAttendus', label: 'Résultats attendus', color: 'bg-cyan-50 border-cyan-100'},
-                  {key: 'indicateursPreliminaires', label: 'Indicateurs préliminaires', color: 'bg-emerald-50 border-emerald-100'},
+                  {key: 'alignementStrategique', label: 'Alignement strategique', color: 'bg-violet-50 border-violet-100'},
+                  {key: 'cibleIds', label: 'Bénéficiaires', color: 'bg-sky-50 border-sky-100'},
+                  {key: 'objectifGeneral', label: 'Objectif general', color: 'bg-green-50 border-green-100'},
+                  {key: 'objectifsSpecifiques', label: 'Objectifs specifiques', color: 'bg-teal-50 border-teal-100'},
+                  {key: 'resultatsAttendus', label: 'Resultats attendus', color: 'bg-cyan-50 border-cyan-100'},
+                  {key: 'indicateursPreliminaires', label: 'Indicateurs preliminaires', color: 'bg-emerald-50 border-emerald-100'},
                   {key: 'descriptionSolution', label: 'Description de la solution', color: 'bg-lime-50 border-lime-100'},
                   {key: 'composantesProjet', label: 'Composantes du projet', color: 'bg-purple-50 border-purple-100'},
-                  {key: 'approcheMiseEnOeuvre', label: 'Approche de mise en œuvre', color: 'bg-orange-50 border-orange-100'},
+                  {key: 'approcheMiseEnOeuvre', label: 'Approche de mise en oeuvre', color: 'bg-orange-50 border-orange-100'},
                   {key: 'contraintesRisques', label: 'Contraintes et risques', color: 'bg-red-50 border-red-100'},
-                  {key: 'hypotheses', label: 'Hypothèses', color: 'bg-yellow-50 border-yellow-100'},
-                  {key: 'prerequis', label: 'Prérequis', color: 'bg-amber-50 border-amber-100'},
-                  {key: 'beneficiairesEstimes', label: 'Bénéficiaires estimés', color: 'bg-indigo-50 border-indigo-100'},
-                  {key: 'coutEstime', label: 'Coût estimé', color: 'bg-blue-50 border-blue-100'},
+                  {key: 'hypotheses', label: 'Hypotheses', color: 'bg-yellow-50 border-yellow-100'},
+                  {key: 'prerequis', label: 'Prerequis', color: 'bg-amber-50 border-amber-100'},
+                  {key: 'beneficiairesEstimes', label: 'Beneficiaires estimes', color: 'bg-indigo-50 border-indigo-100'},
+                  {key: 'coutEstime', label: 'Cout estime', color: 'bg-blue-50 border-blue-100'},
                   {key: 'sourcesFinancementEnvisagees', label: 'Sources de financement', color: 'bg-emerald-50 border-emerald-100'},
-                  {key: 'dureeEstimeeMois', label: 'Durée estimée (mois)', color: 'bg-slate-50 border-slate-100'},
-                  {key: 'chronogrammeSynthese', label: 'Chronogramme synthèse', color: 'bg-cyan-50 border-cyan-100'},
-                  {key: 'impactSocioEconomique', label: 'Impact socio-économique', color: 'bg-lime-50 border-lime-100'},
+                  {key: 'dureeEstimeeMois', label: 'Duree estimee (mois)', color: 'bg-slate-50 border-slate-100'},
+                  {key: 'chronogrammeSynthese', label: 'Chronogramme synthese', color: 'bg-cyan-50 border-cyan-100'},
+                  {key: 'impactSocioEconomique', label: 'Impact socio-economique', color: 'bg-lime-50 border-lime-100'},
                   {key: 'impactEnvironnementalSocial', label: 'Impact environnemental et social', color: 'bg-green-50 border-green-100'},
-                  {key: 'durabilite', label: 'Durabilité', color: 'bg-teal-50 border-teal-100'},
+                  {key: 'durabilite', label: 'Durabilite', color: 'bg-teal-50 border-teal-100'},
                   {key: 'zoneIntervention', label: 'Zone d\'intervention', color: 'bg-sky-50 border-sky-100'},
                   {key: 'porteurProjet', label: 'Porteur du projet', color: 'bg-violet-50 border-violet-100'}
                 ]; track field.key) {
@@ -274,7 +274,7 @@
               }
             </div>
             <a routerLink="/app/maturation/documents" class="text-xs text-gray-500 hover:text-gray-700 font-semibold flex items-center gap-1">
-              Gérer
+              Gerer
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
@@ -307,7 +307,7 @@
                     <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                     <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Ver.</th>
                     <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
-                    <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Décision</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Decision</th>
                     <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                     <th class="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase">Action</th>
                   </tr>
@@ -328,7 +328,7 @@
                       <td class="px-4 py-3 text-right">
                         <button (click)="downloadDocument(doc)"
                                 class="text-green-600 hover:text-green-800 transition-colors p-1 rounded hover:bg-green-50"
-                                title="Télécharger">
+                                title="Telecharger">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                           </svg>
@@ -368,7 +368,7 @@
                    [class.border-amber-300]="!hasRequiredDocuments()"
                    [class.bg-amber-50]="!hasRequiredDocuments()">
 
-                <!-- En-tête étape 1 -->
+                <!-- En-tete etape 1 -->
                 <div class="flex items-center gap-2 mb-3">
                   <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold"
                         [class.bg-green-500]="hasRequiredDocuments()"
@@ -445,7 +445,7 @@
                 </div>
               </div>
 
-              <!-- Séparateur étape -->
+              <!-- Separateur etape -->
               <div class="flex items-center gap-2 px-1">
                 <div class="flex-1 border-t border-dashed border-gray-300"></div>
                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -455,14 +455,14 @@
               </div>
             }
 
-            <!-- Commentaire (toujours visible pour les actions qui le nécessitent) -->
+            <!-- Commentaire (toujours visible pour les actions qui le necessitent) -->
             <div class="form-group">
               <label class="form-label">Commentaire</label>
               <textarea [(ngModel)]="actionComment" class="form-input" rows="2"
                         placeholder="Commentaire (obligatoire pour rejet / retour)"></textarea>
             </div>
 
-            <!-- Boutons selon le statut (Étape 2 si document requis) -->
+            <!-- Boutons selon le statut (Etape 2 si document requis) -->
             @if (requiredDocumentTypes().length > 0) {
               <div class="flex items-center gap-2 px-1 mb-1">
                 <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold"
@@ -484,7 +484,7 @@
               @case ('IDEE_BROUILLON') {
                 <div class="flex flex-wrap gap-2">
                   <button (click)="onSoumettre()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
-                    Soumettre l'idée
+                    Soumettre l'idee
                   </button>
                 </div>
               }
@@ -503,7 +503,7 @@
               @case ('IDEE_SOMMAIRE_SELECTIONNEE') {
                 <div class="flex flex-wrap gap-2">
                   <button (click)="onDemarrerNoteConceptuelle()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
-                    Démarrer la note conceptuelle
+                    Demarrer la note conceptuelle
                   </button>
                 </div>
               }
@@ -519,7 +519,7 @@
               @case ('CONCEPTION_SOUMISE') {
                 <div class="flex flex-wrap gap-2">
                   <button (click)="onValiderFaisabilite()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
-                    Valider la faisabilité
+                    Valider la faisabilite
                   </button>
                 </div>
               }
@@ -604,17 +604,17 @@
             </div>
             @if (idee()!.etapeId) {
               <div class="bg-gray-50 rounded-xl p-3">
-                <p class="text-xs text-gray-400 mb-2">Étape workflow</p>
+                <p class="text-xs text-gray-400 mb-2">Etape workflow</p>
                 <p class="text-sm font-mono text-gray-700 truncate">{{ idee()!.etapeId }}</p>
               </div>
             }
             <div class="bg-gray-50 rounded-xl p-3">
-              <p class="text-xs text-gray-400 mb-1">Portée</p>
+              <p class="text-xs text-gray-400 mb-1">Portee</p>
               <p class="text-sm font-medium text-gray-800">{{ getPorteeLabel(idee()!.portee) }}</p>
             </div>
             @if (idee()!.scoreSelection) {
               <div class="bg-gray-50 rounded-xl p-3">
-                <p class="text-xs text-gray-400 mb-2">Score de sélection</p>
+                <p class="text-xs text-gray-400 mb-2">Score de selection</p>
                 <div class="flex items-center gap-2">
                   <div class="flex-1 bg-gray-200 rounded-full h-2">
                     <div class="bg-blue-500 h-2 rounded-full" [style.width.%]="idee()!.scoreSelection"></div>
@@ -625,7 +625,7 @@
             }
             @if (idee()!.actif !== undefined) {
               <div class="bg-gray-50 rounded-xl p-3 flex items-center justify-between">
-                <p class="text-xs text-gray-400">Statut activité</p>
+                <p class="text-xs text-gray-400">Statut activite</p>
                 @if (idee()!.actif) {
                   <span class="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
                     <span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>Actif
@@ -688,7 +688,7 @@
                     </svg>
                   </div>
                   <div>
-                    <p class="text-xs text-gray-400">Téléphone</p>
+                    <p class="text-xs text-gray-400">Telephone</p>
                     <p class="text-sm font-medium text-gray-800">{{ idee()!.pointFocalTelephone }}</p>
                   </div>
                 </div>
@@ -697,7 +697,7 @@
           </div>
         }
 
-        <!-- Métadonnées -->
+        <!-- Metadonnees -->
         @if (idee()!.createdAt || idee()!.createdBy) {
           <div class="card p-5">
             <div class="flex items-center gap-2 mb-3">
@@ -711,13 +711,13 @@
             <div class="space-y-2">
               @if (idee()!.createdAt) {
                 <div class="flex justify-between items-center py-1 border-b border-gray-50">
-                  <span class="text-xs text-gray-400">Créé le</span>
+                  <span class="text-xs text-gray-400">Cree le</span>
                   <span class="text-xs font-medium text-gray-600">{{ formatDate(idee()!.createdAt) }}</span>
                 </div>
               }
               @if (idee()!.createdBy) {
                 <div class="flex justify-between items-center py-1">
-                  <span class="text-xs text-gray-400">Créé par</span>
+                  <span class="text-xs text-gray-400">Cree par</span>
                   <span class="text-xs font-medium text-gray-600">{{ idee()!.createdBy }}</span>
                 </div>
               }
@@ -737,6 +737,8 @@
   [type]="toastType"
   (close)="toastVisible.set(false)">
 </app-toast>
+
+
 
 
 

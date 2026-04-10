@@ -34,7 +34,7 @@ export class IndicateursService {
     return this.api.delete<void>(this.endpoint, id);
   }
 
-  getByProjet(projetId: number): Observable<Indicateur[]> {
+  getByProjet(projetId: string | number): Observable<Indicateur[]> {
     return this.api.get<Indicateur[]>(this.endpoint, { projetId });
   }
 }

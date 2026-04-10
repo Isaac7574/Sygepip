@@ -53,5 +53,17 @@ export class ProjetsService {
   updateProgrammationTechnique(id: string | number, data: Partial<Projet>): Observable<Projet> {
     return this.api.post<Projet>(`${this.endpoint}/${id}/programmation-technique`, data);
   }
+
+  getIndicateurs(id: string | number): Observable<any[]> {
+    return this.api.get<any[]>(`${this.endpoint}/${id}/indicateurs`);
+  }
+
+  addIndicateurs(id: string | number, indicateurIds: string[]): Observable<void> {
+    return this.api.post<void>(`${this.endpoint}/${id}/indicateurs`, { indicateurIds });
+  }
+
+  removeIndicateurs(id: string | number, indicateurIds: string[]): Observable<void> {
+    return this.api.post<void>(`${this.endpoint}/${id}/indicateurs/supprimer`, { indicateurIds });
+  }
 }
 

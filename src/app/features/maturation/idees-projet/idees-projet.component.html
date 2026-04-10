@@ -1,4 +1,4 @@
-<div class="space-y-6">
+﻿<div class="space-y-6">
 
   <!-- En-tête -->
   <div class="page-header-section">
@@ -10,10 +10,10 @@
       </div>
       <div class="page-header-text">
         <h1>
-          Idées de Projet
+          {{ getPageTitle() }}
           <span class="page-header-badge">Maturation</span>
         </h1>
-        <p>Gestion des idées de projet et maturation</p>
+        <p>{{ getPageDescription() }}</p>
       </div>
     </div>
   </div>
@@ -55,7 +55,7 @@
                 <p class="text-xs text-gray-400 mt-0.5">{{ item.pointFocalNom }}</p>
               }
             </td>
-            <td class="px-6 py-4 text-sm text-gray-500">{{ getMinistereNom(item.ministereId) }}</td>
+            <td class="px-6 py-4 text-sm text-gray-500">{{ getIdeeMinistereLabel(item) }}</td>
             <td class="px-6 py-4 text-sm text-gray-500">{{ getSecteurNom(item.secteurId) }}</td>
             <td class="px-6 py-4">
               @if (item.portee) {
@@ -149,7 +149,7 @@
           <div class="grid grid-cols-3 gap-3">
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">Ministère</p>
-              <p class="text-sm font-medium text-gray-800">{{ getMinistereNom(viewingItem()?.ministereId) }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ getIdeeMinistereLabel(viewingItem()) }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">Secteur</p>
@@ -157,7 +157,7 @@
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">Portée</p>
-              <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.portee || '�? }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.portee || '-' }}</p>
             </div>
             @if (viewingItem()?.regionsIntervention) {
               <div class="bg-gray-50 rounded-xl p-3 col-span-3">
@@ -181,15 +181,15 @@
             <div class="grid grid-cols-3 gap-3">
               <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs text-gray-400 mb-1">Nom</p>
-                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalNom || '�? }}</p>
+                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalNom || '-' }}</p>
               </div>
               <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs text-gray-400 mb-1">Email</p>
-                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalEmail || '�? }}</p>
+                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalEmail || '-' }}</p>
               </div>
               <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs text-gray-400 mb-1">Téléphone</p>
-                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalTelephone || '�? }}</p>
+                <p class="text-sm font-medium text-gray-800">{{ viewingItem()?.pointFocalTelephone || '-' }}</p>
               </div>
             </div>
           </div>
@@ -201,7 +201,7 @@
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Note conceptuelle</p>
             <button (click)="closeView(); openNoteConceptuelle(viewingItem()!)"
                     class="text-xs text-blue-500 hover:text-blue-700 font-medium">
-              Modifier la note �?
+              Modifier la note →
             </button>
           </div>
           @if (loadingNote()) {
@@ -215,7 +215,7 @@
                 {key: 'problematique', label: 'Problématique'},
                 {key: 'contexte', label: 'Contexte'},
                 {key: 'alignementStrategique', label: 'Alignement stratégique'},
-                {key: 'cibleIds', label: 'B��n��ficiaires'},
+                {key: 'cibleIds', label: 'Bénéficiaires'},
                 {key: 'objectifGeneral', label: 'Objectif général'},
                 {key: 'objectifsSpecifiques', label: 'Objectifs spécifiques'},
                 {key: 'resultatsAttendus', label: 'Résultats attendus'},
@@ -315,24 +315,21 @@
             <div class="flex-1 h-px bg-gray-200"></div>
           </div>
           <div class="grid grid-cols-2 gap-4">
-            <div class="form-group">
-              <label class="form-label">Ministère <span class="text-red-500">*</span></label>
-              <select [(ngModel)]="formData.ministereId" class="form-input">
-                <option [ngValue]="undefined">�?Sélectionner �?/option>
-                @for (m of ministeres(); track m.id) {
-                  <option [ngValue]="m.id">{{ m.sigle || m.nom }}</option>
-                }
-              </select>
-            </div>
-            <div class="form-group">
+            <div class="form-group" [class.col-span-2]="!editingItem()">
               <label class="form-label">Secteur</label>
               <select [(ngModel)]="formData.secteurId" class="form-input">
-                <option [ngValue]="undefined">�?Sélectionner �?/option>
+                <option [ngValue]="undefined">-- Sélectionner --</option>
                 @for (s of secteurs(); track s.id) {
                   <option [ngValue]="s.id">{{ s.nom }}</option>
                 }
               </select>
             </div>
+            @if (editingItem()) {
+              <div class="form-group">
+                <label class="form-label">Ministère</label>
+                <input type="text" [value]="getIdeeMinistereLabel(formData)" class="form-input" disabled>
+              </div>
+            }
             <div class="form-group">
               <label class="form-label">Portée</label>
               <select [(ngModel)]="formData.portee" class="form-input">
@@ -342,9 +339,39 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Régions d'intervention</label>
-              <input type="text" [(ngModel)]="formData.regionsIntervention" class="form-input"
-                     placeholder="Ex: Centre, Nord, Est">
+              <label class="form-label">Nombre de bénéficiaires estimés</label>
+              <input type="number" [(ngModel)]="formData.beneficiairesEstimes" class="form-input" min="0"
+                     placeholder="Nombre estimé de bénéficiaires">
+            </div>
+          </div>
+        </div>
+
+        <!-- Cadrage -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h6m0 0V3m0 6l-8 8-4-4"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Cadrage</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+          <div class="grid grid-cols-1 gap-4">
+            <div class="form-group">
+              <label class="form-label">Problématique</label>
+              <textarea [(ngModel)]="formData.problematique" class="form-input" rows="3"
+                        placeholder="Problématique à résoudre"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Objectif général</label>
+              <textarea [(ngModel)]="formData.objectifGeneral" class="form-input" rows="2"
+                        placeholder="Objectif général du projet"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Objectifs spécifiques</label>
+              <textarea [(ngModel)]="formData.objectifsSpecifiques" class="form-input" rows="3"
+                        placeholder="Objectifs spécifiques du projet"></textarea>
             </div>
           </div>
         </div>
@@ -621,6 +648,7 @@
   [type]="toastType"
   (close)="toastVisible.set(false)">
 </app-toast>
+
 
 
 
