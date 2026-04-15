@@ -527,39 +527,43 @@
 
   // Elevated Cards & Components (used across all pages)
   .elevated-card {
-    @apply relative rounded-xl border border-gray-300 p-5 transition-all duration-200;
-    background-color: #fffffc;
-    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.12), 0 8px 25px -5px rgba(0, 0, 0, 0.08);
+    @apply relative rounded-2xl p-5 transition-all duration-200;
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 2px 0 0 rgba(0, 0, 0, 0.04);
     z-index: 10;
 
     &:hover {
-      box-shadow: 0 10px 40px -8px rgba(0, 0, 0, 0.18), 0 15px 45px -10px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 0 0 rgba(0, 0, 0, 0.04);
       transform: translateY(-1px);
     }
   }
 
   .elevated-stat-card {
-    @apply relative rounded-xl border border-gray-300 p-5 transition-all duration-300;
-    background-color: #fffffc;
-    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.12), 0 8px 25px -5px rgba(0, 0, 0, 0.08);
+    @apply relative rounded-2xl p-5 transition-all duration-300;
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 2px 0 0 rgba(0, 0, 0, 0.04);
     z-index: 10;
 
     &:hover {
-      box-shadow: 0 10px 40px -8px rgba(0, 0, 0, 0.18), 0 15px 45px -10px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 0 0 rgba(0, 0, 0, 0.04);
       transform: translateY(-2px);
     }
   }
 
   .elevated-table-container {
-    @apply relative rounded-xl border border-gray-300 overflow-hidden;
-    background-color: #fffffc;
-    box-shadow: 0 8px 30px -6px rgba(0, 0, 0, 0.15), 0 12px 35px -8px rgba(0, 0, 0, 0.1);
+    @apply relative rounded-2xl overflow-hidden;
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 2px 0 0 rgba(0, 0, 0, 0.04);
     z-index: 15;
   }
 
   .elevated-modal {
-    @apply relative bg-white rounded-xl border border-gray-300;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 20px 40px -15px rgba(0, 0, 0, 0.15);
+    @apply relative bg-white rounded-2xl;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.08);
     z-index: 100;
   }
 
