@@ -4,7 +4,8 @@
 
 // Layout Container
 .layout-container {
-  @apply min-h-screen bg-gray-50 flex;
+  @apply min-h-screen flex;
+  background-color: #eef2f7;
 }
 
 // Sidebar
