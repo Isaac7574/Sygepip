@@ -181,6 +181,12 @@
               <p class="text-xs text-gray-400 mb-1">Portee</p>
               <p class="text-sm font-medium text-gray-800">{{ getPorteeLabel(idee()!.portee) }}</p>
             </div>
+            @if (idee()!.modeFinancement) {
+              <div class="bg-gray-50 rounded-xl p-3">
+                <p class="text-xs text-gray-400 mb-1">Mode de financement</p>
+                <p class="text-sm font-medium text-gray-800">{{ getModeFinancementLabel(idee()!.modeFinancement) }}</p>
+              </div>
+            }
             @if (idee()!.regionsIntervention) {
               <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs text-gray-400 mb-1">Regions d'intervention</p>
@@ -270,7 +276,7 @@
                   {key: 'prerequis', label: 'Prerequis', color: 'bg-amber-50 border-amber-100'},
                   {key: 'beneficiairesEstimes', label: 'Beneficiaires estimes', color: 'bg-indigo-50 border-indigo-100'},
                   {key: 'coutEstime', label: 'Cout estime', color: 'bg-blue-50 border-blue-100'},
-                  {key: 'sourcesFinancementEnvisagees', label: 'Sources de financement', color: 'bg-emerald-50 border-emerald-100'},
+                  {key: 'modeFinancement', label: 'Mode de financement', color: 'bg-emerald-50 border-emerald-100'},
                   {key: 'dureeEstimeeMois', label: 'Duree estimee (mois)', color: 'bg-slate-50 border-slate-100'},
                   {key: 'chronogrammeSynthese', label: 'Chronogramme synthese', color: 'bg-cyan-50 border-cyan-100'},
                   {key: 'impactSocioEconomique', label: 'Impact socio-economique', color: 'bg-lime-50 border-lime-100'},

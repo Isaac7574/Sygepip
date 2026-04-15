@@ -14,6 +14,7 @@ import {
   IdeeProjetNoteConceptuelleRequest,
   IdeeProjetNoteConceptuelleResponse,
   Ministere,
+  ModeFinancement,
   Secteur,
   StatutIdeeProjet
 } from '@core/models';
@@ -88,6 +89,12 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
     { value: 'REGIONALE', label: 'Régionale' },
   ];
 
+  modesFinancement: { value: ModeFinancement; label: string }[] = [
+    { value: 'CONTREPARTIE', label: 'Contrepartie' },
+    { value: 'SUBVENTION', label: 'Subvention' },
+    { value: 'PRET', label: 'Prêt' }
+  ];
+
   statuts: { value: StatutIdeeProjet; label: string }[] = [
     { value: 'IDEE_BROUILLON', label: 'Brouillon' },
     { value: 'IDEE_SOUMISE', label: 'Soumise' },
@@ -152,6 +159,7 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
       objectifGeneral: '',
       objectifsSpecifiques: '',
       beneficiairesEstimes: undefined,
+      modeFinancement: undefined,
       secteurId: undefined,
       portee: 'NATIONALE',
       statut: 'IDEE_BROUILLON',
@@ -175,7 +183,7 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
       contraintesRisques: '',
       hypotheses: '',
       prerequis: '',
-      sourcesFinancementEnvisagees: '',
+      modeFinancement: undefined,
       chronogrammeSynthese: '',
       impactSocioEconomique: '',
       impactEnvironnementalSocial: '',
@@ -509,6 +517,10 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
   getNoteField(key: string): string | number | undefined {
     const value = (this.viewNote() as Record<string, unknown>)[key];
 
+    if (key === 'modeFinancement') {
+      return this.getModeFinancementLabel(value as ModeFinancement | null | undefined);
+    }
+
     if (key === 'cibleIds' && Array.isArray(value)) {
       const labels = value
         .map(id => this.cibles().find(cible => cible.id === id))
@@ -553,6 +565,7 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
       objectifGeneral: item.objectifGeneral,
       objectifsSpecifiques: item.objectifsSpecifiques,
       beneficiairesEstimes: item.beneficiairesEstimes,
+      modeFinancement: item.modeFinancement,
       ministereId: item.ministereId,
       ministereNom: item.ministereNom,
       secteurId: item.secteurId,
@@ -587,6 +600,7 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
       objectifsSpecifiques: this.formData.objectifsSpecifiques,
       beneficiairesCibles: this.formData.beneficiairesCibles,
       beneficiairesEstimes: this.formData.beneficiairesEstimes,
+      modeFinancement: this.formData.modeFinancement,
       zoneIntervention: this.formData.zoneIntervention,
       coutEstime: this.formData.coutEstime,
       dureeEstimeeMois: this.formData.dureeEstimeeMois,
@@ -740,7 +754,7 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
       prerequis: this.noteData.prerequis,
       beneficiairesEstimes: this.noteData.beneficiairesEstimes,
       coutEstime: this.noteData.coutEstime,
-      sourcesFinancementEnvisagees: this.noteData.sourcesFinancementEnvisagees,
+      modeFinancement: this.noteData.modeFinancement,
       dureeEstimeeMois: this.noteData.dureeEstimeeMois,
       chronogrammeSynthese: this.noteData.chronogrammeSynthese,
       impactSocioEconomique: this.noteData.impactSocioEconomique,
@@ -816,6 +830,19 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
     if (!id) return '-';
     const s = this.secteurs().find(s => String(s.id) === String(id));
     return s ? s.nom : '-';
+  }
+
+  getModeFinancementLabel(value: ModeFinancement | null | undefined): string {
+    switch (value) {
+      case 'CONTREPARTIE':
+        return 'Contrepartie';
+      case 'SUBVENTION':
+        return 'Subvention';
+      case 'PRET':
+        return 'Prêt';
+      default:
+        return '';
+    }
   }
 
   getStatutLabel(statut: string | undefined): string {

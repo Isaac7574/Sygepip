@@ -15,6 +15,7 @@ import {
   IdeeProjet,
   IdeeProjetNoteConceptuelleResponse,
   Ministere,
+  ModeFinancement,
   Secteur,
   DocumentIdeeProjetResponseDTO,
   TypeDocumentProjet,
@@ -716,6 +717,10 @@ export class IdeeProjetDetailComponent implements OnInit {
   getNoteField(key: string): string | number | undefined {
     const value = (this.note() as Record<string, unknown>)[key];
 
+    if (key === 'modeFinancement') {
+      return this.getModeFinancementLabel(value as ModeFinancement | null | undefined);
+    }
+
     if (key === 'cibleIds' && Array.isArray(value)) {
       const labels = value
         .map(id => this.cibles().find(cible => cible.id === id))
@@ -737,6 +742,19 @@ export class IdeeProjetDetailComponent implements OnInit {
   getTypeDocumentLabel(type: TypeDocumentProjet): string {
     const found = this.typesDocument.find(t => t.value === type);
     return found ? found.label : type;
+  }
+
+  getModeFinancementLabel(value: ModeFinancement | null | undefined): string {
+    switch (value) {
+      case 'CONTREPARTIE':
+        return 'Contrepartie';
+      case 'SUBVENTION':
+        return 'Subvention';
+      case 'PRET':
+        return 'Prêt';
+      default:
+        return '';
+    }
   }
 
   getDocumentStatutBadgeClass(statut: string): string {

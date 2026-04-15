@@ -330,7 +330,7 @@
                 {key: 'prerequis', label: 'Prérequis'},
                 {key: 'beneficiairesEstimes', label: 'Bénéficiaires estimés'},
                 {key: 'coutEstime', label: 'Coût estimé'},
-                {key: 'sourcesFinancementEnvisagees', label: 'Sources de financement'},
+                {key: 'modeFinancement', label: 'Mode de financement'},
                 {key: 'dureeEstimeeMois', label: 'Durée estimée (mois)'},
                 {key: 'chronogrammeSynthese', label: 'Chronogramme synthèse'},
                 {key: 'impactSocioEconomique', label: 'Impact socio-économique'},
@@ -444,6 +444,15 @@
               <label class="form-label">Nombre de bénéficiaires estimés</label>
               <input type="number" [(ngModel)]="formData.beneficiairesEstimes" class="form-input" min="0"
                      placeholder="Nombre estimé de bénéficiaires">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mode de financement</label>
+              <select [(ngModel)]="formData.modeFinancement" class="form-input">
+                <option [ngValue]="undefined">-- Sélectionner --</option>
+                @for (mode of modesFinancement; track mode.value) {
+                  <option [ngValue]="mode.value">{{ mode.label }}</option>
+                }
+              </select>
             </div>
           </div>
         </div>
@@ -699,9 +708,13 @@
                      placeholder="Coût estimé">
             </div>
             <div class="form-group">
-              <label class="form-label">Sources de financement</label>
-              <textarea [(ngModel)]="noteData.sourcesFinancementEnvisagees" class="form-input" rows="2"
-                        placeholder="Budget national, PTF, PPP..."></textarea>
+              <label class="form-label">Mode de financement</label>
+              <select [(ngModel)]="noteData.modeFinancement" class="form-input">
+                <option [ngValue]="undefined">-- Sélectionner --</option>
+                @for (mode of modesFinancement; track mode.value) {
+                  <option [ngValue]="mode.value">{{ mode.label }}</option>
+                }
+              </select>
             </div>
             <div class="form-group">
               <label class="form-label">Durée estimée (mois)</label>

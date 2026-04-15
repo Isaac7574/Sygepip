@@ -201,6 +201,7 @@ export interface IdeeProjet {
   code: string;
   titre: string;
   description?: string;
+  modeFinancement?: ModeFinancement | null;
   ministereId?: string;
   ministereNom?: string;
   ministereTutelleFinanciereId?: string;
@@ -978,7 +979,7 @@ export interface IdeeProjetNoteConceptuelleRequest {
   contraintesRisques?: string;
   hypotheses?: string;
   prerequis?: string;
-  sourcesFinancementEnvisagees?: string;
+  modeFinancement?: ModeFinancement | null;
   dureeEstimeeMois?: number;
   chronogrammeSynthese?: string;
   impactSocioEconomique?: string;
@@ -1019,7 +1020,7 @@ export interface IdeeProjetNoteConceptuelleResponse {
   prerequis?: string;
   beneficiairesEstimes?: number;
   coutEstime?: number;
-  sourcesFinancementEnvisagees?: string;
+  modeFinancement?: ModeFinancement | null;
   dureeEstimeeMois?: number;
   chronogrammeSynthese?: string;
   impactSocioEconomique?: string;
