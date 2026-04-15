@@ -10,7 +10,9 @@ import { SecteursService } from '@core/services/secteurs.service';
 import { CiblesService } from '@core/services/cibles.service';
 import { AuthService } from '@core/services/auth.service';
 import { WorkflowService } from '@core/services/workflow.service';
+import { AvisCndpService } from '@core/services/avis-cndp.service';
 import {
+  AvisConformiteCNDP,
   Cible,
   IdeeProjet,
   IdeeProjetNoteConceptuelleResponse,
@@ -48,6 +50,7 @@ export class IdeeProjetDetailComponent implements OnInit {
   private ciblesService = inject(CiblesService);
   private authService = inject(AuthService);
   private workflowService = inject(WorkflowService);
+  private avisCndpService = inject(AvisCndpService);
 
   idee = signal<IdeeProjet | null>(null);
   note = signal<Partial<IdeeProjetNoteConceptuelleResponse>>({});
@@ -61,8 +64,12 @@ export class IdeeProjetDetailComponent implements OnInit {
   actionInProgress = signal(false);
   availableActions = signal<WorkflowNextAction[]>([]);
   requiredDocumentTypes = signal<TypeDocumentProjet[]>([]);
+  cndpAvis = signal<AvisConformiteCNDP | null>(null);
+  loadingCndpAvis = signal(false);
   selectedFiles: Partial<Record<TypeDocumentProjet, File>> = {};
   uploadingDocumentType = signal<TypeDocumentProjet | null>(null);
+  cndpDecision: 'FAVORABLE' | 'DEFAVORABLE' | '' = '';
+  cndpObservations = '';
 
   ministeres = signal<Ministere[]>([]);
   secteurs = signal<Secteur[]>([]);
@@ -126,6 +133,10 @@ export class IdeeProjetDetailComponent implements OnInit {
     return this.authService.hasRole(['INSTRUCTEUR', 'INSTRUCTEUR_DGESS', 'DGESS']);
   }
 
+  isCndpRole(): boolean {
+    return this.authService.hasRole('CNDP');
+  }
+
   private isAgentRole(): boolean {
     return this.authService.hasRole('AGENT');
   }
@@ -161,6 +172,10 @@ export class IdeeProjetDetailComponent implements OnInit {
 
   canManageProdoc(): boolean {
     return this.isInstructionRole() && this.isSameMinistere();
+  }
+
+  canGiveCndpAvis(): boolean {
+    return this.isCndpRole() && this.idee()?.statut === 'PRODOC_SOUMIS';
   }
 
   private hasValidationNoteConceptuelleAction(): boolean {
@@ -224,12 +239,19 @@ export class IdeeProjetDetailComponent implements OnInit {
     this.error.set(null);
     this.ideesService.getById(id).subscribe({
       next: (data) => {
+        if (this.isCndpRole() && data.statut !== 'PRODOC_SOUMIS' && data.statut !== 'PRODOC_VALIDE') {
+          this.showToast("Vous n'avez pas accès à cette idée de projet.", 'error');
+          this.router.navigate(['/app/maturation/idees-projet'], { replaceUrl: true });
+          this.loading.set(false);
+          return;
+        }
         this.idee.set(data);
         this.loading.set(false);
         this.requiredDocumentTypes.set(this.getRequiredDocumentTypes(data.statut));
         this.loadNoteConceptuelle(data.id);
         this.loadDocuments(data.id);
         this.loadAvailableActions(data.statut);
+        this.loadCndpAvis(data.id);
       },
       error: () => {
         this.error.set('Erreur lors du chargement de l’idée de projet.');
@@ -276,6 +298,31 @@ export class IdeeProjetDetailComponent implements OnInit {
     this.workflowService.getMyActions('IDEE_PROJET', statut).subscribe({
       next: (actions) => this.availableActions.set(actions),
       error: () => this.availableActions.set([])
+    });
+  }
+
+  private loadCndpAvis(id: string | number): void {
+    this.loadingCndpAvis.set(true);
+    this.avisCndpService.getAll({ ideeProjetId: String(id) }).subscribe({
+      next: (avis) => {
+        const latestAvis = [...avis].sort((a, b) => {
+          const dateA = new Date(a.updatedAt ?? a.dateAvis ?? a.createdAt ?? 0).getTime();
+          const dateB = new Date(b.updatedAt ?? b.dateAvis ?? b.createdAt ?? 0).getTime();
+          return dateB - dateA;
+        })[0] ?? null;
+        this.cndpAvis.set(latestAvis);
+        this.cndpDecision = latestAvis?.decision === 'DEFAVORABLE'
+          ? 'DEFAVORABLE'
+          : latestAvis?.decision === 'FAVORABLE'
+            ? 'FAVORABLE'
+            : '';
+        this.cndpObservations = latestAvis?.observations ?? '';
+        this.loadingCndpAvis.set(false);
+      },
+      error: () => {
+        this.cndpAvis.set(null);
+        this.loadingCndpAvis.set(false);
+      }
     });
   }
 
@@ -593,6 +640,44 @@ export class IdeeProjetDetailComponent implements OnInit {
     );
   }
 
+  onSaveCndpAvis(): void {
+    const item = this.idee();
+    if (!item || !this.canGiveCndpAvis()) return;
+
+    if (!this.cndpDecision) {
+      this.showToast('La décision de conformité est obligatoire', 'error');
+      return;
+    }
+
+    this.actionInProgress.set(true);
+    const payload: Partial<AvisConformiteCNDP> = {
+      ideeProjetId: String(item.id),
+      typeAvis: 'CONFORMITE',
+      decision: this.cndpDecision,
+      observations: this.cndpObservations.trim() || undefined,
+      dateAvis: new Date(),
+      actif: true
+    };
+
+    const existingAvis = this.cndpAvis();
+    const request$ = existingAvis
+      ? this.avisCndpService.update(existingAvis.id, payload)
+      : this.avisCndpService.create(payload);
+
+    request$.subscribe({
+      next: (avis) => {
+        this.actionInProgress.set(false);
+        this.cndpAvis.set(avis);
+        this.showToast('Avis de conformité enregistré avec succès', 'success');
+        this.loadCndpAvis(item.id);
+      },
+      error: () => {
+        this.actionInProgress.set(false);
+        this.showToast("Erreur lors de l'enregistrement de l'avis CNDP", 'error');
+      }
+    });
+  }
+
   onIdentifierFinancement(): void {
     if (!this.hasRequiredDocuments()) {
       this.showToast('Acte juridique requis avant cette action', 'error');
@@ -644,6 +729,7 @@ export class IdeeProjetDetailComponent implements OnInit {
         this.loadNoteConceptuelle(updated.id);
         this.loadDocuments(updated.id);
         this.loadAvailableActions(updated.statut);
+        this.loadCndpAvis(updated.id);
         afterRefresh?.();
       },
       error: () => {}
@@ -768,6 +854,8 @@ export class IdeeProjetDetailComponent implements OnInit {
 
   getDecisionBadgeClass(decision: string): string {
     switch (decision) {
+      case 'FAVORABLE': return 'badge-success';
+      case 'DEFAVORABLE': return 'badge-danger';
       case 'ACCEPTE': return 'badge-success';
       case 'REFUSE': return 'badge-danger';
       case 'EN_ATTENTE': return 'badge-warning';

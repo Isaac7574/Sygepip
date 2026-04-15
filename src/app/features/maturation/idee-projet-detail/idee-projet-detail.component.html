@@ -183,7 +183,7 @@
             </div>
             @if (idee()!.modeFinancement) {
               <div class="bg-gray-50 rounded-xl p-3">
-                <p class="text-xs text-gray-400 mb-1">Mode de financement</p>
+                <p class="text-xs text-gray-400 mb-1">Mode de financement souhaité</p>
                 <p class="text-sm font-medium text-gray-800">{{ getModeFinancementLabel(idee()!.modeFinancement) }}</p>
               </div>
             }
@@ -276,7 +276,7 @@
                   {key: 'prerequis', label: 'Prerequis', color: 'bg-amber-50 border-amber-100'},
                   {key: 'beneficiairesEstimes', label: 'Beneficiaires estimes', color: 'bg-indigo-50 border-indigo-100'},
                   {key: 'coutEstime', label: 'Cout estime', color: 'bg-blue-50 border-blue-100'},
-                  {key: 'modeFinancement', label: 'Mode de financement', color: 'bg-emerald-50 border-emerald-100'},
+                  {key: 'modeFinancement', label: 'Mode de financement souhaité', color: 'bg-emerald-50 border-emerald-100'},
                   {key: 'dureeEstimeeMois', label: 'Duree estimee (mois)', color: 'bg-slate-50 border-slate-100'},
                   {key: 'chronogrammeSynthese', label: 'Chronogramme synthese', color: 'bg-cyan-50 border-cyan-100'},
                   {key: 'impactSocioEconomique', label: 'Impact socio-economique', color: 'bg-lime-50 border-lime-100'},
@@ -504,6 +504,50 @@
                         placeholder="Commentaire (obligatoire pour rejet / retour)"></textarea>
             </div>
 
+            @if (isCndpRole() || cndpAvis()) {
+              <div class="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <h4 class="text-sm font-semibold text-emerald-900">Avis de conformité CNDP</h4>
+                    <p class="text-xs text-emerald-700">Analyse du ProDoc soumis</p>
+                  </div>
+                  @if (cndpAvis()) {
+                    <span class="badge" [ngClass]="getDecisionBadgeClass(cndpAvis()!.decision || '')">
+                      {{ cndpAvis()!.decision === 'FAVORABLE' ? 'Favorable' : cndpAvis()!.decision === 'DEFAVORABLE' ? 'Défavorable' : (cndpAvis()!.decision || 'Avis enregistré') }}
+                    </span>
+                  }
+                </div>
+
+                @if (loadingCndpAvis()) {
+                  <p class="text-sm text-gray-500">Chargement de l'avis CNDP...</p>
+                } @else if (isCndpRole()) {
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label class="form-label">Décision</label>
+                      <select [(ngModel)]="cndpDecision" class="form-input">
+                        <option value="">Sélectionner une décision</option>
+                        <option value="FAVORABLE">Avis favorable</option>
+                        <option value="DEFAVORABLE">Avis défavorable</option>
+                      </select>
+                    </div>
+                    <div class="md:col-span-2">
+                      <label class="form-label">Observations</label>
+                      <textarea
+                        [(ngModel)]="cndpObservations"
+                        class="form-input"
+                        rows="3"
+                        placeholder="Observations ou réserves du CNDP"></textarea>
+                    </div>
+                  </div>
+                } @else if (cndpAvis()) {
+                  <div class="space-y-2 text-sm text-gray-700">
+                    <p><span class="font-medium text-gray-900">Observations :</span> {{ cndpAvis()!.observations || '-' }}</p>
+                    <p><span class="font-medium text-gray-900">Date :</span> {{ formatDate(cndpAvis()!.dateAvis || cndpAvis()!.updatedAt) }}</p>
+                  </div>
+                }
+              </div>
+            }
+
             <!-- Boutons selon le statut (Etape 2 si document requis) -->
             @if (requiredDocumentTypes().length > 0) {
               <div class="flex items-center gap-2 px-1 mb-1">
@@ -607,12 +651,19 @@
               }
 
               @case ('PRODOC_SOUMIS') {
-                @if (canManageProdoc()) {
-                <div class="flex flex-wrap gap-2">
-                  <button (click)="onValiderProdoc()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
-                    Valider le ProDoc
-                  </button>
-                </div>
+                @if (canManageProdoc() || canGiveCndpAvis()) {
+                  <div class="flex flex-wrap gap-2">
+                    @if (canManageProdoc()) {
+                      <button (click)="onValiderProdoc()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
+                        Valider le ProDoc
+                      </button>
+                    }
+                    @if (canGiveCndpAvis()) {
+                      <button (click)="onSaveCndpAvis()" [disabled]="actionInProgress()" class="btn-sm btn-outline">
+                        Enregistrer l'avis CNDP
+                      </button>
+                    }
+                  </div>
                 } @else {
                   <p class="text-sm text-gray-400">Aucune action disponible pour ce profil.</p>
                 }

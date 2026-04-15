@@ -70,7 +70,18 @@ export class GestionAccesComponent implements OnInit {
   };
 
   // Available roles (static)
-  availableRoles = ['ADMIN', 'INSTRUCTEUR', 'AGENT', 'PORTEUR_PROJET', 'CHEF_PROJET', 'CONSULTANT'];
+  availableRoles = [
+    'ADMIN',
+    'INSTRUCTEUR',
+    'AGENT',
+    'CNDP',
+    'DGEP',
+    'MINISTERE',
+    'RESPONSABLE_PROGRAMME',
+    'PORTEUR_PROJET',
+    'CHEF_PROJET',
+    'CONSULTANT'
+  ];
 
   // Actions available
   actions: ('CREATE' | 'READ' | 'UPDATE' | 'DELETE')[] = ['CREATE', 'READ', 'UPDATE', 'DELETE'];

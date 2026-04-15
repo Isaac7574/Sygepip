@@ -554,20 +554,58 @@
     @apply relative rounded-xl border border-gray-300 overflow-hidden;
     background-color: #fffffc;
     box-shadow: 0 8px 30px -6px rgba(0, 0, 0, 0.15), 0 12px 35px -8px rgba(0, 0, 0, 0.1);
-    z-index: 15;
+    z-index: 5;
   }
 
   .elevated-modal {
     @apply relative bg-white rounded-xl border border-gray-300;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 20px 40px -15px rgba(0, 0, 0, 0.15);
-    z-index: 100;
+    z-index: 50;
   }
 
-  // Aliases for backward compatibility
-  .admin-card { @extend .elevated-card; }
-  .admin-stat-card { @extend .elevated-stat-card; }
-  .admin-table-container { @extend .elevated-table-container; }
-  .admin-modal { @extend .elevated-modal; }
+  // Lighter administration surfaces to match the flatter dashboard look
+  .admin-card {
+    @apply relative rounded-xl border border-slate-200 p-5 transition-all duration-200;
+    background-color: #fffffc;
+    box-shadow: none !important;
+    filter: none !important;
+    transform: translateY(-1px);
+
+    &:hover {
+      box-shadow: none !important;
+      filter: none !important;
+      transform: translateY(-1px);
+    }
+  }
+
+  .admin-stat-card {
+    @apply relative rounded-xl border border-slate-200 p-5 transition-all duration-200;
+    background-color: #fffffc;
+    box-shadow: none !important;
+    filter: none !important;
+    transform: translateY(-1px);
+
+    &:hover {
+      box-shadow: none !important;
+      filter: none !important;
+      transform: translateY(-1px);
+    }
+  }
+
+  .admin-table-container {
+    @apply relative rounded-xl border border-slate-200 overflow-hidden;
+    background-color: #fffffc;
+    box-shadow: none !important;
+    filter: none !important;
+    transform: translateY(-1px);
+  }
+
+  .admin-modal {
+    @apply relative bg-white rounded-xl border border-slate-200;
+    box-shadow: none !important;
+    filter: none !important;
+    transform: translateY(-1px);
+  }
 }
 
 // Utility classes

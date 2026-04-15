@@ -214,6 +214,10 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
       return this.getMesIdeesRequest();
     }
 
+    if (this.isCndpRole()) {
+      return this.ideesService.getByStatut('PRODOC_SOUMIS');
+    }
+
     if (this.isInstructionRole()) {
       const ministereId = this.authService.currentUser()?.ministereId;
       if (!ministereId) {
@@ -240,6 +244,9 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
     if (this.isMesIdeesMode) {
       return 'Mes idées';
     }
+    if (this.isCndpRole()) {
+      return 'Avis CNDP';
+    }
     if (this.isInstructionRole()) {
       return 'Files d’instruction';
     }
@@ -249,6 +256,9 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
   getPageDescription(): string {
     if (this.isMesIdeesMode) {
       return 'Liste de vos idées de projet';
+    }
+    if (this.isCndpRole()) {
+      return 'Idées de projet avec ProDoc soumis pour avis de conformité';
     }
     if (this.isInstructionRole()) {
       return 'Sommaires, validations de notes et faisabilité de votre ministère';
@@ -263,6 +273,10 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
 
   isInstructionRole(): boolean {
     return this.authService.hasRole(['INSTRUCTEUR', 'INSTRUCTEUR_DGESS', 'DGESS']);
+  }
+
+  isCndpRole(): boolean {
+    return this.authService.hasRole('CNDP');
   }
 
   private isAdminRole(): boolean {
@@ -309,6 +323,10 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
   }
 
   private getInstructionStatusFilter(): string | null {
+    if (this.isCndpRole()) {
+      return 'PRODOC_SOUMIS';
+    }
+
     if (!this.isInstructionRole()) {
       return null;
     }
@@ -326,6 +344,10 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
   }
 
   canManageIdea(item: IdeeProjet): boolean {
+    void item;
+    if (this.isCndpRole()) {
+      return false;
+    }
     return !this.isInstructionRole() && !this.isMesIdeesMode ? true : !this.isInstructionRole();
   }
 
@@ -335,12 +357,12 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
 
   canEditIdea(item: IdeeProjet): boolean {
     void item;
-    return !this.isInstructionRole();
+    return !this.isInstructionRole() && !this.isCndpRole();
   }
 
   canDeleteIdea(item: IdeeProjet): boolean {
     void item;
-    return !this.isInstructionRole();
+    return !this.isInstructionRole() && !this.isCndpRole();
   }
 
   loadMinisteres(): void {
