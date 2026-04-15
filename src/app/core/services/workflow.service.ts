@@ -55,6 +55,10 @@ export class WorkflowService {
     return this.api.get<WorkflowNextAction[]>(`${this.workflowEndpoint}/next`, { entiteType, statut });
   }
 
+  getMyActions(entiteType: string, statut: string): Observable<WorkflowNextAction[]> {
+    return this.api.get<WorkflowNextAction[]>(`${this.workflowEndpoint}/me/actions`, { entiteType, statut });
+  }
+
   getEtapesDisponibles(module: string, etatActuel: string): Observable<WorkflowEtape[]> {
     return this.api
       .get<WorkflowEtape[]>(`${this.workflowEndpoint}/etapes-disponibles`, { module, etatActuel })

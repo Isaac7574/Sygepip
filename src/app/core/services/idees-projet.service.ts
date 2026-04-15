@@ -43,7 +43,7 @@ export class IdeesProjetService {
     return this.api.get<IdeeProjet[]>(this.endpoint, { statut });
   }
 
-  getByMinistere(ministereId: number): Observable<IdeeProjet[]> {
+  getByMinistere(ministereId: string | number): Observable<IdeeProjet[]> {
     return this.api.get<IdeeProjet[]>(this.endpoint, { ministereId });
   }
 
@@ -65,6 +65,10 @@ export class IdeesProjetService {
 
   soumettreNoteConceptuelle(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
     return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/soumettre-note-conceptuelle`, payload);
+  }
+
+  validerNoteConceptuelle(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/valider-note-conceptuelle`, payload);
   }
 
   validerFaisabilite(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
@@ -112,6 +116,42 @@ export class IdeesProjetService {
 
   updateNoteConceptuelle(id: string | number, data: IdeeProjetNoteConceptuelleRequest): Observable<IdeeProjetNoteConceptuelleResponse> {
     return this.api.putUrl<IdeeProjetNoteConceptuelleResponse>(`${this.endpoint}/${id}/note-conceptuelle`, data);
+  }
+
+  downloadFicheIdentificationPdf(id: string | number): Observable<Blob> {
+    return this.api.download(`${this.endpoint}/${id}/fiche-identification/pdf`);
+  }
+
+  downloadNoteConceptuellePdf(id: string | number): Observable<Blob> {
+    return this.api.download(`${this.endpoint}/${id}/note-conceptuelle/pdf`);
+  }
+
+  downloadFicheIdentificationPdfAndSave(id: string | number): void {
+    this.downloadFicheIdentificationPdf(id).subscribe({
+      next: (blob) => {
+        const file = new Blob([blob], { type: 'application/pdf' });
+        const link = document.createElement('a');
+        const url = window.URL.createObjectURL(file);
+        link.href = url;
+        link.download = `fiche-identification-${id}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      }
+    });
+  }
+
+  downloadNoteConceptuellePdfAndSave(id: string | number): void {
+    this.downloadNoteConceptuellePdf(id).subscribe({
+      next: (blob) => {
+        const file = new Blob([blob], { type: 'application/pdf' });
+        const link = document.createElement('a');
+        const url = window.URL.createObjectURL(file);
+        link.href = url;
+        link.download = `note-conceptuelle-${id}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      }
+    });
   }
 }
 

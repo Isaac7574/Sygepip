@@ -1,8 +1,8 @@
-﻿import { Component, OnInit, inject, signal } from '@angular/core';
+﻿import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { forkJoin, Observable, of } from 'rxjs';
+import { Subscription, forkJoin, Observable, of } from 'rxjs';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
@@ -27,7 +27,9 @@ import { ToastComponent } from '@shared/components/toast/toast.component';
   templateUrl: './idees-projet.component.html',
   styleUrl: './idees-projet.component.scss'
 })
-export class IdeesdeProjetComponent implements OnInit {
+export class IdeesdeProjetComponent implements OnInit, OnDestroy {
+  private readonly exportHeaderColor = '059669';
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private ideesService = inject(IdeesProjetService);
@@ -42,7 +44,11 @@ export class IdeesdeProjetComponent implements OnInit {
   secteurs = signal<Secteur[]>([]);
   cibles = signal<Cible[]>([]);
   searchTerm = '';
+  selectedStatut = '';
   isMesIdeesMode = false;
+  instructionTab = signal<'sommaire' | 'validation-note' | 'faisabilite' | 'prodoc'>('sommaire');
+  exporting = signal(false);
+  private currentUserSub?: Subscription;
 
   // Modal principal
   modalOpen = signal(false);
@@ -90,6 +96,7 @@ export class IdeesdeProjetComponent implements OnInit {
     { value: 'IDEE_ARCHIVEE', label: 'Archivée' },
     { value: 'IDEE_CONCEPTION_BROUILLON', label: 'Conception brouillon' },
     { value: 'CONCEPTION_SOUMISE', label: 'Conception soumise' },
+    { value: 'CONCEPTION_VALIDEE', label: 'Conception validée' },
     { value: 'RAPPORT_FAISABILITE_VALIDE', label: 'Faisabilité validée' },
     { value: 'PRODOC_SOUMIS', label: 'ProDoc soumis' },
     { value: 'PRODOC_VALIDE', label: 'ProDoc validé' },
@@ -101,6 +108,12 @@ export class IdeesdeProjetComponent implements OnInit {
 
   ngOnInit(): void {
     this.isMesIdeesMode = this.route.snapshot.data['mode'] === 'mes-idees';
+
+    if (this.isAgentRole() && !this.isMesIdeesMode) {
+      this.router.navigate(['/app/maturation/mes-idees'], { replaceUrl: true });
+      return;
+    }
+
     this.route.queryParamMap.subscribe(params => {
       const editId = params.get('editId');
       const noteId = params.get('noteId');
@@ -113,9 +126,21 @@ export class IdeesdeProjetComponent implements OnInit {
         this.openNoteById(noteId);
       }
     });
-    this.load();
+    if (this.isInstructionRole()) {
+      this.currentUserSub = this.authService.currentUser$.subscribe(user => {
+        if (user?.ministereId) {
+          this.load();
+        }
+      });
+    } else {
+      this.load();
+    }
     this.loadSecteurs();
     this.loadCibles();
+  }
+
+  ngOnDestroy(): void {
+    this.currentUserSub?.unsubscribe();
   }
 
   private resetForm(): Partial<IdeeProjet> {
@@ -159,12 +184,12 @@ export class IdeesdeProjetComponent implements OnInit {
   }
 
   load(): void {
-    const request$ = this.isMesIdeesMode ? this.getMesIdeesRequest() : this.ideesService.getAll();
+    const request$ = this.getIdeasRequest();
 
     request$.subscribe({
       next: (data) => {
         this.items.set(data);
-        this.filteredItems.set(data);
+        this.applyFilters();
         if (this.pendingEditId) {
           this.openEditById(this.pendingEditId);
         }
@@ -174,6 +199,23 @@ export class IdeesdeProjetComponent implements OnInit {
       },
       error: () => this.showToast('Erreur lors du chargement des données', 'error')
     });
+  }
+
+  private getIdeasRequest(): Observable<IdeeProjet[]> {
+    if (this.isMesIdeesMode) {
+      return this.getMesIdeesRequest();
+    }
+
+    if (this.isInstructionRole()) {
+      const ministereId = this.authService.currentUser()?.ministereId;
+      if (!ministereId) {
+        this.showToast("Impossible d'identifier le ministere de l'utilisateur courant", 'error');
+        return of([]);
+      }
+      return this.ideesService.getByMinistere(ministereId);
+    }
+
+    return this.ideesService.getAll();
   }
 
   private getMesIdeesRequest(): Observable<IdeeProjet[]> {
@@ -187,13 +229,110 @@ export class IdeesdeProjetComponent implements OnInit {
   }
 
   getPageTitle(): string {
-    return this.isMesIdeesMode ? 'Mes idées' : 'Idées de Projet';
+    if (this.isMesIdeesMode) {
+      return 'Mes idées';
+    }
+    if (this.isInstructionRole()) {
+      return 'Files d’instruction';
+    }
+    return 'Idées de Projet';
   }
 
   getPageDescription(): string {
-    return this.isMesIdeesMode
-      ? 'Liste de vos idées de projet'
-      : 'Gestion des idées de projet et maturation';
+    if (this.isMesIdeesMode) {
+      return 'Liste de vos idées de projet';
+    }
+    if (this.isInstructionRole()) {
+      return 'Sommaires, validations de notes et faisabilité de votre ministère';
+    }
+    return 'Gestion des idées de projet et maturation';
+  }
+
+  setInstructionTab(tab: 'sommaire' | 'validation-note' | 'faisabilite' | 'prodoc'): void {
+    this.instructionTab.set(tab);
+    this.applyFilters();
+  }
+
+  isInstructionRole(): boolean {
+    return this.authService.hasRole(['INSTRUCTEUR', 'INSTRUCTEUR_DGESS', 'DGESS']);
+  }
+
+  private isAdminRole(): boolean {
+    return this.authService.hasRole('ADMIN');
+  }
+
+  private isAgentRole(): boolean {
+    return this.authService.hasRole('AGENT');
+  }
+
+  canFilterAndExportIdeas(): boolean {
+    return this.isMesIdeesMode || this.isAdminRole();
+  }
+
+  getCurrentInstructionTabLabel(): string {
+    switch (this.instructionTab()) {
+      case 'sommaire':
+        return 'identifications sommaires soumises';
+      case 'validation-note':
+        return 'validation note conceptuelle';
+      case 'faisabilite':
+        return 'faisabilité';
+      case 'prodoc':
+        return 'ProDoc';
+    }
+  }
+
+  private applyFilters(): void {
+    const term = this.searchTerm.trim().toLowerCase();
+    const instructionStatusFilter = this.getInstructionStatusFilter();
+    const selectedStatus = this.selectedStatut;
+
+    const filtered = this.items().filter(item => {
+      const matchesSearch = !term
+        || item.titre?.toLowerCase().includes(term)
+        || item.code?.toLowerCase().includes(term);
+
+      const matchesInstructionStatus = !instructionStatusFilter || String(item.statut ?? '') === instructionStatusFilter;
+      const matchesSelectedStatus = !selectedStatus || String(item.statut ?? '') === selectedStatus;
+      return matchesSearch && matchesInstructionStatus && matchesSelectedStatus;
+    });
+
+    this.filteredItems.set(filtered);
+  }
+
+  private getInstructionStatusFilter(): string | null {
+    if (!this.isInstructionRole()) {
+      return null;
+    }
+
+    switch (this.instructionTab()) {
+      case 'sommaire':
+        return 'IDEE_SOUMISE';
+      case 'validation-note':
+        return 'CONCEPTION_SOUMISE';
+      case 'faisabilite':
+        return 'CONCEPTION_VALIDEE';
+      case 'prodoc':
+        return 'RAPPORT_FAISABILITE_VALIDE';
+    }
+  }
+
+  canManageIdea(item: IdeeProjet): boolean {
+    return !this.isInstructionRole() && !this.isMesIdeesMode ? true : !this.isInstructionRole();
+  }
+
+  canEditNoteConceptuelle(item: IdeeProjet): boolean {
+    return !this.isInstructionRole() && item.statut === 'IDEE_CONCEPTION_BROUILLON';
+  }
+
+  canEditIdea(item: IdeeProjet): boolean {
+    void item;
+    return !this.isInstructionRole();
+  }
+
+  canDeleteIdea(item: IdeeProjet): boolean {
+    void item;
+    return !this.isInstructionRole();
   }
 
   loadMinisteres(): void {
@@ -218,10 +357,128 @@ export class IdeesdeProjetComponent implements OnInit {
   }
 
   search(): void {
-    const term = this.searchTerm.toLowerCase();
-    this.filteredItems.set(this.items().filter(i =>
-      i.titre?.toLowerCase().includes(term) || i.code?.toLowerCase().includes(term)
-    ));
+    this.applyFilters();
+  }
+
+  onStatusFilterChange(): void {
+    this.applyFilters();
+  }
+
+  async exportMesIdeesToExcel(): Promise<void> {
+    if (!this.filteredItems().length) {
+      this.showToast('Aucune idée à exporter', 'error');
+      return;
+    }
+
+    this.exporting.set(true);
+    try {
+      const { utils, writeFile } = await import('xlsx');
+      const headers = this.getExportHeaders();
+      const rows = this.buildExportRows();
+      const worksheet = utils.aoa_to_sheet([
+        headers,
+        ...rows.map(row => headers.map(header => row[header] ?? ''))
+      ]);
+      worksheet['!cols'] = [
+        { wch: 18 },
+        { wch: 42 },
+        { wch: 32 },
+        { wch: 22 },
+        { wch: 14 },
+        { wch: 24 },
+        { wch: 22 },
+        { wch: 18 }
+      ];
+
+      headers.forEach((_, index) => {
+        const cellRef = utils.encode_cell({ r: 0, c: index });
+        const cell = worksheet[cellRef];
+        if (!cell) return;
+
+        cell.s = {
+          fill: {
+            fgColor: { rgb: this.exportHeaderColor }
+          },
+          font: {
+            bold: true,
+            color: { rgb: 'FFFFFF' }
+          },
+          alignment: {
+            horizontal: 'center',
+            vertical: 'center'
+          }
+        };
+      });
+
+      const workbook = utils.book_new();
+      utils.book_append_sheet(workbook, worksheet, 'Mes idées');
+      writeFile(workbook, this.buildExportFileName('xlsx'), { cellStyles: true });
+      this.showToast('Export Excel généré avec succès', 'success');
+    } catch {
+      this.showToast("Erreur lors de l'export Excel", 'error');
+    } finally {
+      this.exporting.set(false);
+    }
+  }
+
+  async exportMesIdeesToPdf(): Promise<void> {
+    if (!this.filteredItems().length) {
+      this.showToast('Aucune idée à exporter', 'error');
+      return;
+    }
+
+    this.exporting.set(true);
+    try {
+      const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+        import('jspdf'),
+        import('jspdf-autotable')
+      ]);
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const now = new Date();
+      const title = 'Mes idées de projet';
+
+      doc.setFontSize(14);
+      doc.text(title, 14, 15);
+      doc.setFontSize(9);
+      doc.text(`Export du ${now.toLocaleDateString('fr-FR')} ${now.toLocaleTimeString('fr-FR')}`, 14, 21);
+
+      autoTable(doc, {
+        startY: 27,
+        head: [[
+          'Code',
+          'Titre',
+          'Ministère',
+          'Secteur',
+          'Portée',
+          'Statut'
+        ]],
+        body: this.filteredItems().map(item => [
+          item.code || '-',
+          item.titre || '-',
+          this.getIdeeMinistereLabel(item),
+          this.getSecteurNom(item.secteurId),
+          item.portee || '-',
+          this.getStatutLabel(item.statut)
+        ]),
+        styles: {
+          fontSize: 8,
+          cellPadding: 2
+        },
+        headStyles: {
+          fillColor: [5, 150, 105]
+        },
+        columnStyles: {
+          1: { cellWidth: 75 }
+        }
+      });
+
+      doc.save(this.buildExportFileName('pdf'));
+      this.showToast('Export PDF généré avec succès', 'success');
+    } catch {
+      this.showToast("Erreur lors de l'export PDF", 'error');
+    } finally {
+      this.exporting.set(false);
+    }
   }
 
   openModal(): void {
@@ -383,6 +640,10 @@ export class IdeesdeProjetComponent implements OnInit {
     });
   }
 
+  isSelectedNoteEditable(): boolean {
+    return !!this.selectedItemForNote && this.canEditNoteConceptuelle(this.selectedItemForNote);
+  }
+
   closeNoteModal(): void {
     this.noteModalOpen.set(false);
     this.selectedItemForNote = null;
@@ -459,6 +720,10 @@ export class IdeesdeProjetComponent implements OnInit {
 
   saveNoteConceptuelle(): void {
     if (!this.selectedItemForNote) return;
+    if (!this.isSelectedNoteEditable()) {
+      this.showToast('La note conceptuelle est en lecture seule pour ce statut', 'error');
+      return;
+    }
     this.savingNote.set(true);
     const noteWithId: IdeeProjetNoteConceptuelleRequest = {
       ideeProjetId: this.selectedItemForNote.id,
@@ -535,6 +800,10 @@ export class IdeesdeProjetComponent implements OnInit {
     return m ? (m.sigle || m.nom) : '-';
   }
 
+  downloadFiche(item: IdeeProjet): void {
+    this.ideesService.downloadFicheIdentificationPdfAndSave(item.id);
+  }
+
   getIdeeMinistereLabel(item: Partial<IdeeProjet> | null | undefined): string {
     if (!item) return '-';
     if (item.ministereNom) {
@@ -564,6 +833,7 @@ export class IdeesdeProjetComponent implements OnInit {
       'IDEE_ARCHIVEE': 'badge-gray',
       'IDEE_CONCEPTION_BROUILLON': 'badge-warning',
       'CONCEPTION_SOUMISE': 'badge-info',
+      'CONCEPTION_VALIDEE': 'badge-primary',
       'RAPPORT_FAISABILITE_VALIDE': 'badge-success',
       'PRODOC_SOUMIS': 'badge-info',
       'PRODOC_VALIDE': 'badge-success',
@@ -574,6 +844,42 @@ export class IdeesdeProjetComponent implements OnInit {
     };
     return classes[statut] || 'badge-gray';
   }
+
+  private getExportHeaders(): string[] {
+    return [
+      'Code',
+      'Titre',
+      'Ministere',
+      'Secteur',
+      'Portee',
+      'Statut',
+      'Point focal',
+      'Date soumission'
+    ];
+  }
+
+  private buildExportRows(): Array<Record<string, string | number>> {
+    return this.filteredItems().map(item => ({
+      Code: item.code || '-',
+      Titre: item.titre || '-',
+      Ministere: this.getIdeeMinistereLabel(item),
+      Secteur: this.getSecteurNom(item.secteurId),
+      Portee: item.portee || '-',
+      Statut: this.getStatutLabel(item.statut),
+      'Point focal': item.pointFocalNom || '-',
+      'Date soumission': item.dateSoumission ? this.formatDateOnly(item.dateSoumission) : '-'
+    }));
+  }
+
+  private buildExportFileName(extension: 'xlsx' | 'pdf'): string {
+    const date = new Date().toISOString().slice(0, 10);
+    return `mes-idees-projet-${date}.${extension}`;
+  }
+
+  private formatDateOnly(date: Date | string): string {
+    return new Date(date).toLocaleDateString('fr-FR');
+  }
 }
+
 
 

@@ -48,7 +48,11 @@ export class GestionUtilisateursComponent implements OnInit {
 
   roles = [
     { value: 'ADMIN', label: 'Administrateur' },
+    { value: 'CNDP', label: 'CNDP' },
+    { value: 'DGEP', label: 'DGEP' },
     { value: 'INSTRUCTEUR', label: 'Instructeur' },
+    { value: 'MINISTERE', label: 'Ministère' },
+    { value: 'RESPONSABLE_PROGRAMME', label: 'Responsable programme' },
     { value: 'AGENT', label: 'Agent' },
     { value: 'PORTEUR_PROJET', label: 'Porteur de projet' },
     { value: 'CHEF_PROJET', label: 'Chef de projet' },
@@ -313,7 +317,11 @@ export class GestionUtilisateursComponent implements OnInit {
   getRoleBadgeClass(role: string | undefined): string {
     const classes: Record<string, string> = {
       'ADMIN': 'badge-danger',
+      'CNDP': 'badge-primary',
+      'DGEP': 'badge-primary',
       'INSTRUCTEUR': 'badge-info',
+      'MINISTERE': 'badge-info',
+      'RESPONSABLE_PROGRAMME': 'badge-success',
       'AGENT': 'badge-warning',
       'PORTEUR_PROJET': 'badge-success',
       'CHEF_PROJET': 'badge-primary',

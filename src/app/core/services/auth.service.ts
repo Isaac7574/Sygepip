@@ -1,6 +1,17 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap, catchError, map, throwError, from, of, switchMap } from 'rxjs';
+import {
+  Observable,
+  BehaviorSubject,
+  tap,
+  catchError,
+  map,
+  throwError,
+  from,
+  of,
+  switchMap,
+  firstValueFrom
+} from 'rxjs';
 import { KeycloakService } from 'keycloak-angular';
 import { environment } from '@env/environment';
 import { User, LoginRequest, LoginResponse, RegisterRequest } from '@core/models';
@@ -18,12 +29,10 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(this.getStoredUser());
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  // Signals for reactive state
   private _isAuthenticated = signal(false);
   private _currentUser = signal<User | null>(this.getStoredUser());
   private _isLoading = signal(false);
 
-  // Computed signals
   isAuthenticated = computed(() => this._isAuthenticated());
   currentUser = computed(() => this._currentUser());
   isLoading = computed(() => this._isLoading());
@@ -31,7 +40,6 @@ export class AuthService {
   isManager = computed(() => this.hasAnyRole(['ADMIN', 'MANAGER']));
 
   constructor() {
-    // Initialize auth state from Keycloak
     this.initializeAuthState();
   }
 
@@ -49,39 +57,52 @@ export class AuthService {
     }
   }
 
-  // Load user profile from Keycloak and backend
   private async loadUserProfile(): Promise<void> {
     try {
       const token = await this.keycloak.getToken();
       if (token) {
         localStorage.setItem(TOKEN_KEY, token);
       }
-      console.log('🔑 Token JWT:', token);
 
       const keycloakProfile = await this.keycloak.loadUserProfile();
       const roles = this.keycloak.getUserRoles();
+      const backendUser = await this.loadCurrentUserByKeycloak();
 
       const user: User = {
-        id: keycloakProfile.id || '',
-        username: keycloakProfile.username || '',
-        email: keycloakProfile.email || '',
-        nom: keycloakProfile.lastName || '',
-        prenom: keycloakProfile.firstName || '',
-        roles: roles,
-        role: roles.length > 0 ? roles[0] : undefined,
-        actif: true
+        id: backendUser?.id || keycloakProfile.id || '',
+        username: backendUser?.username || keycloakProfile.username || '',
+        email: backendUser?.email || keycloakProfile.email || '',
+        nom: backendUser?.nom || keycloakProfile.lastName || '',
+        prenom: backendUser?.prenom || keycloakProfile.firstName || '',
+        telephone: backendUser?.telephone,
+        role: backendUser?.role || (roles.length > 0 ? roles[0] : undefined),
+        roles: roles.length > 0 ? roles : (backendUser?.role ? [backendUser.role] : []),
+        ministereId: backendUser?.ministereId,
+        directionId: backendUser?.directionId,
+        typeAffiliation: backendUser?.typeAffiliation,
+        organisationExterne: backendUser?.organisationExterne,
+        actif: backendUser?.actif ?? true,
+        createdAt: backendUser?.createdAt,
+        updatedAt: backendUser?.updatedAt
       };
 
       this.storeUser(user);
       this._currentUser.set(user);
       this.currentUserSubject.next(user);
-
     } catch (error) {
       console.error('Error loading user profile:', error);
     }
   }
 
-  // Login via Keycloak
+  private async loadCurrentUserByKeycloak(): Promise<User | null> {
+    try {
+      return await firstValueFrom(this.http.get<User>(`${environment.apiUrl}/me/keycloak`));
+    } catch (error) {
+      console.warn('Unable to load current user via /me/keycloak:', error);
+      return null;
+    }
+  }
+
   login(_credentials?: LoginRequest): Observable<LoginResponse> {
     this._isLoading.set(true);
 
@@ -98,7 +119,6 @@ export class AuthService {
     );
   }
 
-  // Register (redirect to Keycloak registration)
   register(_data?: RegisterRequest): Observable<any> {
     this._isLoading.set(true);
 
@@ -113,7 +133,6 @@ export class AuthService {
     );
   }
 
-  // Logout via Keycloak
   logout(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
@@ -124,25 +143,20 @@ export class AuthService {
     this.keycloak.logout(window.location.origin + '/');
   }
 
-  // Forgot password (redirect to Keycloak)
   forgotPassword(_email?: string): Observable<any> {
-    // Keycloak handles this via its own UI
     window.location.href = `${environment.keycloakUrl || 'http://192.168.11.106:8180'}/realms/sygepip/login-actions/reset-credentials`;
     return of({ success: true });
   }
 
-  // Reset password
   resetPassword(token: string, newPassword: string): Observable<any> {
     return this.http.post(`${environment.apiUrl}/auth/reset-password`, { token, newPassword });
   }
 
-  // Change password (redirect to Keycloak account page)
   changePassword(_currentPassword?: string, _newPassword?: string): Observable<any> {
     window.location.href = `${environment.keycloakUrl || 'http://192.168.11.106:8180'}/realms/sygepip/account/password`;
     return of({ success: true });
   }
 
-  // Update profile
   updateProfile(data: Partial<User>): Observable<User> {
     return this.http.put<User>(`${environment.apiUrl}/auth/profile`, data)
       .pipe(
@@ -154,7 +168,6 @@ export class AuthService {
       );
   }
 
-  // Refresh token via Keycloak
   refreshToken(): Observable<string> {
     return from(this.keycloak.updateToken(30)).pipe(
       switchMap(() => from(this.keycloak.getToken())),
@@ -173,7 +186,6 @@ export class AuthService {
     );
   }
 
-  // Get current user from API
   getCurrentUser(): Observable<User> {
     const user = this._currentUser();
     if (user) {
@@ -182,21 +194,17 @@ export class AuthService {
     return throwError(() => new Error('Utilisateur non disponible'));
   }
 
-  // Check if user has role
   hasRole(roles: string | string[]): boolean {
     const expected = Array.isArray(roles) ? roles : [roles];
     return this.hasAnyRole(expected);
   }
 
-  // Get Keycloak roles
   getKeycloakRoles(): string[] {
     return this.keycloak.getUserRoles();
   }
 
-  // Get token from Keycloak (synchronous - returns cached token)
   getToken(): string | null {
     try {
-      // KeycloakService stores the token after authentication
       const keycloakInstance = (this.keycloak as any)._keycloak;
       if (keycloakInstance && keycloakInstance.token) {
         return keycloakInstance.token;
@@ -228,14 +236,12 @@ export class AuthService {
     }
   }
 
-  // Get token as Observable
   getTokenAsync(): Observable<string> {
     return from(this.keycloak.getToken()).pipe(
       map(token => token || '')
     );
   }
 
-  // Check if logged in
   async isLoggedIn(): Promise<boolean> {
     try {
       return await this.keycloak.isLoggedIn();
@@ -244,7 +250,6 @@ export class AuthService {
     }
   }
 
-  // Private methods
   private storeUser(user: User): void {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
@@ -262,13 +267,11 @@ export class AuthService {
   }
 
   private hasAnyRole(expectedRoles: string[]): boolean {
-    // First check Keycloak roles
     const keycloakRoles = this.keycloak.getUserRoles();
     if (keycloakRoles.length > 0) {
       return expectedRoles.some(role => keycloakRoles.includes(role));
     }
 
-    // Fallback to stored user roles
     const user = this._currentUser();
     if (!user) {
       return false;

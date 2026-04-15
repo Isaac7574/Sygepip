@@ -2,13 +2,14 @@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, switchMap } from 'rxjs';
+import { Observable } from 'rxjs';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
 import { DocumentIdeeService } from '@core/services/document-idee.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
 import { CiblesService } from '@core/services/cibles.service';
 import { AuthService } from '@core/services/auth.service';
+import { WorkflowService } from '@core/services/workflow.service';
 import {
   Cible,
   IdeeProjet,
@@ -17,7 +18,8 @@ import {
   Secteur,
   DocumentIdeeProjetResponseDTO,
   TypeDocumentProjet,
-  StatutIdeeProjet
+  StatutIdeeProjet,
+  WorkflowNextAction
 } from '@core/models';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 
@@ -44,6 +46,7 @@ export class IdeeProjetDetailComponent implements OnInit {
   private secteursService = inject(SecteursService);
   private ciblesService = inject(CiblesService);
   private authService = inject(AuthService);
+  private workflowService = inject(WorkflowService);
 
   idee = signal<IdeeProjet | null>(null);
   note = signal<Partial<IdeeProjetNoteConceptuelleResponse>>({});
@@ -55,6 +58,7 @@ export class IdeeProjetDetailComponent implements OnInit {
   documentsError = signal<string | null>(null);
   actionComment = '';
   actionInProgress = signal(false);
+  availableActions = signal<WorkflowNextAction[]>([]);
   requiredDocumentTypes = signal<TypeDocumentProjet[]>([]);
   selectedFiles: Partial<Record<TypeDocumentProjet, File>> = {};
   uploadingDocumentType = signal<TypeDocumentProjet | null>(null);
@@ -79,6 +83,7 @@ export class IdeeProjetDetailComponent implements OnInit {
     { value: 'IDEE_ARCHIVEE', label: 'Archivée' },
     { value: 'IDEE_CONCEPTION_BROUILLON', label: 'Conception brouillon' },
     { value: 'CONCEPTION_SOUMISE', label: 'Conception soumise' },
+    { value: 'CONCEPTION_VALIDEE', label: 'Conception validée' },
     { value: 'RAPPORT_FAISABILITE_VALIDE', label: 'Faisabilité validée' },
     { value: 'PRODOC_SOUMIS', label: 'ProDoc soumis' },
     { value: 'PRODOC_VALIDE', label: 'ProDoc validé' },
@@ -116,6 +121,55 @@ export class IdeeProjetDetailComponent implements OnInit {
       : '/app/maturation/idees-projet';
   }
 
+  isInstructionRole(): boolean {
+    return this.authService.hasRole(['INSTRUCTEUR', 'INSTRUCTEUR_DGESS', 'DGESS']);
+  }
+
+  private isAgentRole(): boolean {
+    return this.authService.hasRole('AGENT');
+  }
+
+  private isSameMinistere(): boolean {
+    const currentMinistereId = this.authService.currentUser()?.ministereId;
+    const itemMinistereId = this.idee()?.ministereId;
+    return !!currentMinistereId && !!itemMinistereId && String(currentMinistereId) === String(itemMinistereId);
+  }
+
+  canValidateSommaire(): boolean {
+    return this.isInstructionRole() && this.isSameMinistere() && this.idee()?.statut === 'IDEE_SOUMISE';
+  }
+
+  canValidateNoteConceptuelle(): boolean {
+    return this.isInstructionRole()
+      && this.isSameMinistere()
+      && this.idee()?.statut === 'CONCEPTION_SOUMISE'
+      && this.hasValidationNoteConceptuelleAction();
+  }
+
+  canEditNoteConceptuelle(): boolean {
+    return !this.isInstructionRole() && this.idee()?.statut === 'IDEE_CONCEPTION_BROUILLON';
+  }
+
+  canDownloadNoteConceptuellePdf(): boolean {
+    return this.idee()?.statut === 'CONCEPTION_VALIDEE';
+  }
+
+  canValidateFaisabilite(): boolean {
+    return this.isInstructionRole() && this.isSameMinistere() && this.idee()?.statut === 'CONCEPTION_VALIDEE';
+  }
+
+  canManageProdoc(): boolean {
+    return this.isInstructionRole() && this.isSameMinistere();
+  }
+
+  private hasValidationNoteConceptuelleAction(): boolean {
+    return this.availableActions().some(action =>
+      action.etatCible === 'CONCEPTION_VALIDEE'
+      || action.codeEtape === 'VALIDER_NOTE_CONCEPTUELLE'
+      || action.nomEtape?.toLowerCase().includes('note conceptuelle')
+    );
+  }
+
   ngOnInit(): void {
     this.loadMinisteres();
     this.loadSecteurs();
@@ -133,6 +187,38 @@ export class IdeeProjetDetailComponent implements OnInit {
   }
 
   private loadIdee(id: string): void {
+    if (this.isAgentRole()) {
+      const userId = this.authService.getTokenSubject();
+      if (!userId) {
+        this.error.set("Impossible d'identifier l'utilisateur courant.");
+        this.loading.set(false);
+        return;
+      }
+
+      this.ideesService.getMesIdees(userId).subscribe({
+        next: (mesIdees) => {
+          const hasAccess = mesIdees.some(item => String(item.id) === String(id));
+          if (!hasAccess) {
+            this.showToast("Vous n'avez pas accès à cette idée de projet.", 'error');
+            this.router.navigate(['/app/maturation/mes-idees'], { replaceUrl: true });
+            this.loading.set(false);
+            return;
+          }
+
+          this.fetchIdee(id);
+        },
+        error: () => {
+          this.error.set("Erreur lors de la vérification des droits d'accès.");
+          this.loading.set(false);
+        }
+      });
+      return;
+    }
+
+    this.fetchIdee(id);
+  }
+
+  private fetchIdee(id: string): void {
     this.loading.set(true);
     this.error.set(null);
     this.ideesService.getById(id).subscribe({
@@ -142,6 +228,7 @@ export class IdeeProjetDetailComponent implements OnInit {
         this.requiredDocumentTypes.set(this.getRequiredDocumentTypes(data.statut));
         this.loadNoteConceptuelle(data.id);
         this.loadDocuments(data.id);
+        this.loadAvailableActions(data.statut);
       },
       error: () => {
         this.error.set('Erreur lors du chargement de l’idée de projet.');
@@ -179,9 +266,21 @@ export class IdeeProjetDetailComponent implements OnInit {
     });
   }
 
+  private loadAvailableActions(statut?: string): void {
+    if (!statut) {
+      this.availableActions.set([]);
+      return;
+    }
+
+    this.workflowService.getMyActions('IDEE_PROJET', statut).subscribe({
+      next: (actions) => this.availableActions.set(actions),
+      error: () => this.availableActions.set([])
+    });
+  }
+
   getRequiredDocumentTypes(statut?: string): TypeDocumentProjet[] {
     switch (statut) {
-      case 'CONCEPTION_SOUMISE':
+      case 'CONCEPTION_VALIDEE':
         return ['RAPPORT_FAISABILITE'];
       case 'RAPPORT_FAISABILITE_VALIDE':
         return ['PRODOC'];
@@ -269,7 +368,7 @@ export class IdeeProjetDetailComponent implements OnInit {
   uploadRequiredDocument(type: TypeDocumentProjet): void {
     const item = this.idee();
     const selectedFile = this.getSelectedFile(type);
-    if (!item || !selectedFile) return;
+    if (!item || !selectedFile || !this.canUploadDocumentType(type)) return;
 
     this.actionInProgress.set(true);
     this.uploadingDocumentType.set(type);
@@ -290,6 +389,10 @@ export class IdeeProjetDetailComponent implements OnInit {
   }
 
   canUploadDocumentType(type: TypeDocumentProjet): boolean {
+    if ((type === 'RAPPORT_FAISABILITE' || type === 'PRODOC') && !this.canManageProdoc()) {
+      return false;
+    }
+
     return !this.hasDocumentType(type);
   }
 
@@ -367,20 +470,16 @@ export class IdeeProjetDetailComponent implements OnInit {
   onSoumettre(): void {
     const item = this.idee();
     if (!item) return;
-    this.actionInProgress.set(true);
-    this.ideesService.update(item.id, { dateSoumission: new Date() })
-      .pipe(switchMap(() => this.ideesService.soumettre(item.id, this.buildActionPayload())))
-      .subscribe({
-        next: () => {
-          this.actionInProgress.set(false);
-          this.showToast('Idée soumise avec succès', 'success');
-          this.refreshIdee(item.id);
-        },
-        error: (err: any) => {
-          this.actionInProgress.set(false);
-          this.showToast(err?.message || 'Erreur lors de l\'exécution de l\'action', 'error');
-        }
-      });
+    this.runAction(
+      this.ideesService.soumettre(item.id, {}),
+      'Idée soumise avec succès'
+    );
+  }
+
+  downloadFicheIdentification(): void {
+    const item = this.idee();
+    if (!item) return;
+    this.ideesService.downloadFicheIdentificationPdfAndSave(item.id);
   }
 
   onValiderSommaire(): void {
@@ -439,6 +538,15 @@ export class IdeeProjetDetailComponent implements OnInit {
     );
   }
 
+  onValiderNoteConceptuelle(): void {
+    const item = this.idee();
+    if (!item) return;
+    this.runAction(
+      this.ideesService.validerNoteConceptuelle(item.id, { userId: this.getUserId() }),
+      'Note conceptuelle validée avec succès'
+    );
+  }
+
   onValiderFaisabilite(): void {
     const item = this.idee();
     if (!item) return;
@@ -448,7 +556,17 @@ export class IdeeProjetDetailComponent implements OnInit {
     );
   }
 
+  downloadNoteConceptuellePdf(): void {
+    const item = this.idee();
+    if (!item || !this.canDownloadNoteConceptuellePdf()) return;
+    this.ideesService.downloadNoteConceptuellePdfAndSave(item.id);
+  }
+
   onSoumettreProdoc(): void {
+    if (!this.canManageProdoc()) {
+      this.showToast('Seul l’instructeur peut televerser et soumettre le ProDoc', 'error');
+      return;
+    }
     if (!this.hasRequiredDocuments()) {
       this.showToast('Document ProDoc requis avant la soumission', 'error');
       return;
@@ -464,6 +582,10 @@ export class IdeeProjetDetailComponent implements OnInit {
   onValiderProdoc(): void {
     const item = this.idee();
     if (!item) return;
+    if (!this.canManageProdoc()) {
+      this.showToast('Seul l’instructeur peut valider le ProDoc', 'error');
+      return;
+    }
     this.runAction(
       this.ideesService.validerProdoc(item.id, this.buildActionPayload()),
       'Document de projet validé'
@@ -518,7 +640,9 @@ export class IdeeProjetDetailComponent implements OnInit {
       next: (updated) => {
         this.idee.set(updated);
         this.requiredDocumentTypes.set(this.getRequiredDocumentTypes(updated.statut));
+        this.loadNoteConceptuelle(updated.id);
         this.loadDocuments(updated.id);
+        this.loadAvailableActions(updated.statut);
         afterRefresh?.();
       },
       error: () => {}
@@ -577,6 +701,7 @@ export class IdeeProjetDetailComponent implements OnInit {
       'IDEE_ARCHIVEE': 'badge-gray',
       'IDEE_CONCEPTION_BROUILLON': 'badge-warning',
       'CONCEPTION_SOUMISE': 'badge-info',
+      'CONCEPTION_VALIDEE': 'badge-primary',
       'RAPPORT_FAISABILITE_VALIDE': 'badge-success',
       'PRODOC_SOUMIS': 'badge-info',
       'PRODOC_VALIDE': 'badge-success',

@@ -1,4 +1,4 @@
-<div class="space-y-6">
+﻿<div class="space-y-6">
 
   <!-- En-tête de page -->
   <div class="page-header-section flex items-center justify-between">
@@ -16,13 +16,21 @@
         <p>Vue d'ensemble du Programme d'Investissement Public</p>
       </div>
     </div>
-    <div class="page-header-right">
-      <button class="btn-outline btn-sm">
-        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-        </svg>
-        Exporter
-      </button>
+    <div class="page-header-right flex items-center gap-2">
+      @if (canExportStats()) {
+        <button (click)="exportStatsToExcel()" [disabled]="exporting()" class="btn-outline btn-sm">
+          <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          {{ exporting() ? 'Export...' : 'Exporter Excel' }}
+        </button>
+        <button (click)="exportStatsToPdf()" [disabled]="exporting()" class="btn-outline btn-sm">
+          <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          {{ exporting() ? 'Export...' : 'Exporter PDF' }}
+        </button>
+      }
       <a routerLink="/app/maturation/idees-projet" class="btn-primary btn-sm">
         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -157,7 +165,7 @@
           </svg>
         </div>
         <div>
-          <h3 class="text-base font-semibold text-gray-900">Transformation Idées �?Projets</h3>
+          <h3 class="text-base font-semibold text-gray-900">Transformation Idées vers Projets</h3>
           <p class="text-xs text-gray-500">Part des idées devenues projets</p>
         </div>
       </div>

@@ -18,20 +18,107 @@
     </div>
   </div>
 
-  <div class="card overflow-hidden">
-    <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50/50">
-      <div class="relative w-full max-w-sm">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher par code ou titre..." class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+  @if (isInstructionRole()) {
+    <div class="card p-2">
+      <div class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          (click)="setInstructionTab('sommaire')"
+          class="px-4 py-2 text-sm font-semibold rounded-xl border transition-colors"
+          [class.bg-primary-600]="instructionTab() === 'sommaire'"
+          [class.text-white]="instructionTab() === 'sommaire'"
+          [class.border-primary-600]="instructionTab() === 'sommaire'"
+          [class.bg-white]="instructionTab() !== 'sommaire'"
+          [class.text-gray-700]="instructionTab() !== 'sommaire'"
+          [class.border-gray-200]="instructionTab() !== 'sommaire'">
+          Identifications sommaires soumises
+        </button>
+        <button
+          type="button"
+          (click)="setInstructionTab('validation-note')"
+          class="px-4 py-2 text-sm font-semibold rounded-xl border transition-colors"
+          [class.bg-primary-600]="instructionTab() === 'validation-note'"
+          [class.text-white]="instructionTab() === 'validation-note'"
+          [class.border-primary-600]="instructionTab() === 'validation-note'"
+          [class.bg-white]="instructionTab() !== 'validation-note'"
+          [class.text-gray-700]="instructionTab() !== 'validation-note'"
+          [class.border-gray-200]="instructionTab() !== 'validation-note'">
+          Validation note conceptuelle
+        </button>
+        <button
+          type="button"
+          (click)="setInstructionTab('faisabilite')"
+          class="px-4 py-2 text-sm font-semibold rounded-xl border transition-colors"
+          [class.bg-primary-600]="instructionTab() === 'faisabilite'"
+          [class.text-white]="instructionTab() === 'faisabilite'"
+          [class.border-primary-600]="instructionTab() === 'faisabilite'"
+          [class.bg-white]="instructionTab() !== 'faisabilite'"
+          [class.text-gray-700]="instructionTab() !== 'faisabilite'"
+          [class.border-gray-200]="instructionTab() !== 'faisabilite'">
+          Faisabilité
+        </button>
+        <button
+          type="button"
+          (click)="setInstructionTab('prodoc')"
+          class="px-4 py-2 text-sm font-semibold rounded-xl border transition-colors"
+          [class.bg-primary-600]="instructionTab() === 'prodoc'"
+          [class.text-white]="instructionTab() === 'prodoc'"
+          [class.border-primary-600]="instructionTab() === 'prodoc'"
+          [class.bg-white]="instructionTab() !== 'prodoc'"
+          [class.text-gray-700]="instructionTab() !== 'prodoc'"
+          [class.border-gray-200]="instructionTab() !== 'prodoc'">
+          ProDoc
+        </button>
       </div>
-      <button (click)="openModal()" class="btn-primary">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        Nouvelle idée
-      </button>
+    </div>
+  }
+
+  <div class="card overflow-hidden">
+    <div class="flex flex-wrap justify-between items-center gap-3 p-4 border-b border-gray-200 bg-gray-50/50">
+      <div class="flex flex-1 flex-wrap items-center gap-3 min-w-0">
+        <div class="relative w-full max-w-sm">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher par code ou titre..." class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+        </div>
+
+        @if (canFilterAndExportIdeas()) {
+          <select
+            [(ngModel)]="selectedStatut"
+            (ngModelChange)="onStatusFilterChange()"
+            class="px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+            <option value="">Tous les statuts</option>
+            @for (statut of statuts; track statut.value) {
+              <option [value]="statut.value">{{ statut.label }}</option>
+            }
+          </select>
+
+          <button
+            type="button"
+            (click)="exportMesIdeesToExcel()"
+            [disabled]="exporting()"
+            class="btn-outline">
+            {{ exporting() ? 'Export...' : 'Exporter Excel' }}
+          </button>
+
+          <button
+            type="button"
+            (click)="exportMesIdeesToPdf()"
+            [disabled]="exporting()"
+            class="btn-outline">
+            {{ exporting() ? 'Export...' : 'Exporter PDF' }}
+          </button>
+        }
+      </div>
+      @if (!isInstructionRole()) {
+        <button (click)="openModal()" class="btn-primary flex-shrink-0 whitespace-nowrap">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Nouvelle idée
+        </button>
+      }
     </div>
     <table class="w-full">
       <thead class="bg-gray-50">
@@ -78,24 +165,38 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                   </svg>
                 </a>
-                <button (click)="openNoteConceptuelle(item)" title="Note conceptuelle"
-                        class="text-blue-500 hover:text-blue-700">
+                @if (canManageIdea(item)) {
+                  <button (click)="openNoteConceptuelle(item)" title="Note conceptuelle"
+                          class="text-blue-500 hover:text-blue-700"
+                          [disabled]="!canEditNoteConceptuelle(item)"
+                          [class.opacity-40]="!canEditNoteConceptuelle(item)">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                  </button>
+                }
+                <button (click)="downloadFiche(item)" title="Télécharger la fiche"
+                        class="text-green-600 hover:text-green-800">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v10m0 0l-4-4m4 4l4-4M4 20h16"/>
                   </svg>
                 </button>
-                <button (click)="edit(item)" title="Modifier"
-                        class="text-primary-600 hover:text-primary-800">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                  </svg>
-                </button>
-                <button (click)="confirmDelete(item)" title="Supprimer"
-                        class="text-bf-red-600 hover:text-bf-red-800">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                  </svg>
-                </button>
+                @if (canEditIdea(item)) {
+                  <button (click)="edit(item)" title="Modifier"
+                          class="text-primary-600 hover:text-primary-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </button>
+                }
+                @if (canDeleteIdea(item)) {
+                  <button (click)="confirmDelete(item)" title="Supprimer"
+                          class="text-bf-red-600 hover:text-bf-red-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                }
               </div>
             </td>
           </tr>
@@ -103,6 +204,7 @@
           <tr>
             <td colspan="7" class="px-6 py-12 text-center text-gray-500">
               @if (searchTerm) { Aucun résultat pour "{{ searchTerm }}" }
+              @else if (isInstructionRole()) { Aucune idée de projet trouvée pour {{ getCurrentInstructionTabLabel() }} }
               @else { Aucune idée de projet trouvée }
             </td>
           </tr>
@@ -430,6 +532,14 @@
         </button>
       </div>
       <div class="modal-body space-y-6">
+        <div class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+          @if (isSelectedNoteEditable()) {
+            Formulaire éditable. Vous pouvez enregistrer la note conceptuelle.
+          } @else {
+            Formulaire en lecture seule. La note conceptuelle n'est plus modifiable à ce statut.
+          }
+        </div>
+        <fieldset [disabled]="!isSelectedNoteEditable() || savingNote()" class="space-y-6">
 
         <!-- Contexte & Stratégie -->
         <div>
@@ -621,12 +731,15 @@
           </div>
         </div>
 
+        </fieldset>
       </div>
       <div class="modal-footer">
         <button (click)="closeNoteModal()" class="btn-outline">Annuler</button>
+        @if (isSelectedNoteEditable()) {
         <button (click)="saveNoteConceptuelle()" [disabled]="savingNote()" class="btn-primary">
           {{ savingNote() ? 'Enregistrement...' : 'Mettre à jour la note' }}
         </button>
+        }
       </div>
     </div>
   </div>
