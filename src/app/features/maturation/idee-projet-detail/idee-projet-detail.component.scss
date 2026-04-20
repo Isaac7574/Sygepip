@@ -3,3 +3,88 @@
   align-items: center;
   gap: 0.75rem;
 }
+
+.note-notebook {
+  position: relative;
+  padding: 1.25rem 1.25rem 1.25rem 2.5rem;
+  border: 1px solid #d9e0ea;
+  border-radius: 1.5rem;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      #fffefb 0,
+      #fffefb 25px,
+      #dbe6f3 25px,
+      #dbe6f3 26px
+    );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+}
+
+.note-notebook::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1rem;
+  width: 2px;
+  background: rgba(220, 38, 38, 0.25);
+}
+
+.note-notebook::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), transparent 18%, transparent 82%, rgba(255, 255, 255, 0.3));
+  pointer-events: none;
+}
+
+.note-notebook-entry {
+  position: relative;
+  padding: 0.2rem 0 0.95rem;
+}
+
+.note-notebook-entry + .note-notebook-entry {
+  margin-top: 0.3rem;
+}
+
+.note-notebook-label {
+  margin: 0 0 0.4rem;
+  color: #006837;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.note-notebook-value {
+  margin: 0;
+  color: #1f2937;
+  font-size: 0.95rem;
+  line-height: 1.72;
+  white-space: pre-wrap;
+}
+
+:host-context(.admin-dark-mode) .note-notebook {
+  border-color: #4b5563;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      #232323 0,
+      #232323 25px,
+      rgba(148, 163, 184, 0.22) 25px,
+      rgba(148, 163, 184, 0.22) 26px
+    );
+}
+
+:host-context(.admin-dark-mode) .note-notebook::before {
+  background: rgba(248, 113, 113, 0.32);
+}
+
+:host-context(.admin-dark-mode) .note-notebook-label {
+  color: #7dd3a7;
+}
+
+:host-context(.admin-dark-mode) .note-notebook-value {
+  color: #e5e7eb;
+}
