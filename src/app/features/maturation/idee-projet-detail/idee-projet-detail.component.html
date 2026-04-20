@@ -71,8 +71,8 @@
            [class.bg-blue-500]="idee()!.statut === 'IDEE_SOUMISE' || idee()!.statut === 'CONCEPTION_SOUMISE' || idee()!.statut === 'PRODOC_SOUMIS' || idee()!.statut === 'SOUMISSION_DOSSIER_PROJET'"
            [class.bg-yellow-500]="idee()!.statut === 'IDEE_CONCEPTION_BROUILLON' || idee()!.statut === 'IDENTIFICATION_FINANCEMENT'"
            [class.bg-emerald-500]="idee()!.statut === 'CONCEPTION_VALIDEE'"
-           [class.bg-green-500]="idee()!.statut === 'RAPPORT_FAISABILITE_VALIDE' || idee()!.statut === 'PRODOC_VALIDE' || idee()!.statut === 'DOSSIER_PROJET_VALIDE'"
-           [class.bg-red-500]="idee()!.statut === 'IDEE_SOMMAIRE_REJETEE' || idee()!.statut === 'DOSSIER_PROJET_RETOURNE'">
+           [class.bg-green-500]="idee()!.statut === 'RAPPORT_FAISABILITE_VALIDE' || idee()!.statut === 'PRODOC_VALIDE' || idee()!.statut === 'AVIS_CNDP_FAVORABLE' || idee()!.statut === 'DOSSIER_PROJET_VALIDE'"
+           [class.bg-red-500]="idee()!.statut === 'IDEE_SOMMAIRE_REJETEE' || idee()!.statut === 'AVIS_CNDP_REJETE' || idee()!.statut === 'DOSSIER_PROJET_RETOURNE'">
       </div>
 
       <div class="p-6 md:p-8">
@@ -297,6 +297,134 @@
           }
         </div>
 
+        <!-- Plan de financement de l'idée -->
+        @if (canManagePlanFinancement()) {
+        <div class="card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Plan de financement de l'idée</h3>
+                <p class="text-xs text-gray-500 mt-1">Mode prévisionnel souhaité : <span class="font-medium text-gray-700">{{ getModeFinancementLabel(idee()!.modeFinancement) || '-' }}</span></p>
+              </div>
+            </div>
+            <button type="button" (click)="startCreatePlanFinancement()" class="btn-outline" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">
+              Ajouter une source
+            </button>
+          </div>
+
+          <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-4 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              <div>
+                <label class="form-label">Source de financement</label>
+                <select [(ngModel)]="planFinancementForm.sourceFinancementId" class="form-input">
+                  <option value="">Sélectionner une source</option>
+                  @for (source of sourcesFinancement(); track source.id) {
+                    <option [value]="source.id">{{ source.nom }}</option>
+                  }
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Mode de financement</label>
+                <select [(ngModel)]="planFinancementForm.modeFinancement" class="form-input">
+                  <option value="">Sélectionner un mode</option>
+                  @for (mode of modesFinancement; track mode.value) {
+                    <option [value]="mode.value">{{ mode.label }}</option>
+                  }
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Montant</label>
+                <input type="number" [(ngModel)]="planFinancementForm.montant" class="form-input" min="0">
+              </div>
+              <div>
+                <label class="form-label">Pourcentage</label>
+                <input type="number" [(ngModel)]="planFinancementForm.pourcentage" class="form-input" min="0" max="100">
+              </div>
+              <div>
+                <label class="form-label">Statut</label>
+                <input type="text" [(ngModel)]="planFinancementForm.statut" class="form-input" placeholder="Ex: PREVISIONNEL">
+              </div>
+              <div>
+                <label class="form-label">Date d'engagement</label>
+                <input type="date" [(ngModel)]="planFinancementForm.dateEngagement" class="form-input">
+              </div>
+            </div>
+            @if (currentPlanFinancementHasDuplicate()) {
+              <p class="text-sm text-red-600 mt-3">Cette source a déjà une ligne avec ce mode de financement.</p>
+            }
+            <div class="flex items-center gap-2 mt-4">
+              <button type="button" (click)="savePlanFinancement()" [disabled]="savingPlanFinancement()" class="btn-primary">
+                {{ editingPlanFinancementId() ? 'Mettre à jour' : 'Ajouter' }}
+              </button>
+              @if (editingPlanFinancementId()) {
+                <button type="button" (click)="cancelPlanFinancementEdit()" class="btn-outline">
+                  Annuler
+                </button>
+              }
+            </div>
+          </div>
+
+          @if (loadingPlanFinancement()) {
+            <div class="flex items-center justify-center gap-2 py-6 text-gray-400">
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+              </svg>
+              <span class="text-sm">Chargement du plan de financement...</span>
+            </div>
+          } @else if (planFinancementError()) {
+            <p class="text-sm text-red-600">{{ planFinancementError() }}</p>
+          } @else if (planFinancement().length === 0) {
+            <p class="text-sm text-gray-500">Aucune ligne de financement enregistrée.</p>
+          } @else {
+            <div class="overflow-x-auto border border-gray-100 rounded-xl">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Type source</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Mode</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Montant</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">%</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th class="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  @for (line of planFinancement(); track line.id) {
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ line.sourceFinancementNom || getSourceFinancementLabel(line.sourceFinancementId) }}</td>
+                      <td class="px-4 py-3 text-xs text-gray-600">{{ line.sourceFinancementType || '-' }}</td>
+                      <td class="px-4 py-3 text-xs text-gray-600">{{ getModeFinancementLabel(line.modeFinancement) }}</td>
+                      <td class="px-4 py-3 text-xs text-gray-600">{{ line.montant | number:'1.0-0' }}</td>
+                      <td class="px-4 py-3 text-xs text-gray-600">{{ line.pourcentage ?? '-' }}</td>
+                      <td class="px-4 py-3 text-xs text-gray-600">{{ line.statut || '-' }}</td>
+                      <td class="px-4 py-3 text-xs text-gray-600">{{ line.dateEngagement || '-' }}</td>
+                      <td class="px-4 py-3">
+                        <div class="flex items-center justify-end gap-2">
+                          <button type="button" (click)="editPlanFinancement(line)" class="text-primary-600 hover:text-primary-800 text-xs font-semibold">
+                            Modifier
+                          </button>
+                          <button type="button" (click)="deletePlanFinancement(line)" class="text-red-600 hover:text-red-800 text-xs font-semibold">
+                            Supprimer
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+        }
+
         <!-- Documents -->
         <div class="card p-6">
           <div class="flex items-center justify-between mb-4">
@@ -504,47 +632,24 @@
                         placeholder="Commentaire (obligatoire pour rejet / retour)"></textarea>
             </div>
 
-            @if (isCndpRole() || cndpAvis()) {
-              <div class="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-4">
-                <div class="flex items-center justify-between gap-3">
-                  <div>
-                    <h4 class="text-sm font-semibold text-emerald-900">Avis de conformité CNDP</h4>
-                    <p class="text-xs text-emerald-700">Analyse du ProDoc soumis</p>
-                  </div>
-                  @if (cndpAvis()) {
-                    <span class="badge" [ngClass]="getDecisionBadgeClass(cndpAvis()!.decision || '')">
-                      {{ cndpAvis()!.decision === 'FAVORABLE' ? 'Favorable' : cndpAvis()!.decision === 'DEFAVORABLE' ? 'Défavorable' : (cndpAvis()!.decision || 'Avis enregistré') }}
-                    </span>
+            @if (idee()!.statut === 'PRODOC_VALIDE' || idee()!.statut === 'AVIS_CNDP_FAVORABLE' || idee()!.statut === 'AVIS_CNDP_REJETE') {
+              <div class="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-3">
+                <div>
+                  <h4 class="text-sm font-semibold text-emerald-900">Avis de conformité CNDP</h4>
+                  <p class="text-xs text-emerald-700">Le document <span class="font-semibold">AVIS_CNDP</span> doit être présent avant émission de l'avis.</p>
+                </div>
+                <div class="text-sm text-gray-700 space-y-1">
+                  <p>
+                    <span class="font-medium text-gray-900">Document AVIS_CNDP :</span>
+                    {{ hasDocumentType('AVIS_CNDP') ? 'déposé' : 'absent' }}
+                  </p>
+                  @if (idee()!.statut === 'AVIS_CNDP_REJETE') {
+                    <p class="text-red-700">Le dossier a reçu un avis CNDP non favorable.</p>
+                  }
+                  @if (idee()!.statut === 'AVIS_CNDP_FAVORABLE') {
+                    <p class="text-emerald-700">Le dossier a reçu un avis CNDP favorable.</p>
                   }
                 </div>
-
-                @if (loadingCndpAvis()) {
-                  <p class="text-sm text-gray-500">Chargement de l'avis CNDP...</p>
-                } @else if (isCndpRole()) {
-                  <div class="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <label class="form-label">Décision</label>
-                      <select [(ngModel)]="cndpDecision" class="form-input">
-                        <option value="">Sélectionner une décision</option>
-                        <option value="FAVORABLE">Avis favorable</option>
-                        <option value="DEFAVORABLE">Avis défavorable</option>
-                      </select>
-                    </div>
-                    <div class="md:col-span-2">
-                      <label class="form-label">Observations</label>
-                      <textarea
-                        [(ngModel)]="cndpObservations"
-                        class="form-input"
-                        rows="3"
-                        placeholder="Observations ou réserves du CNDP"></textarea>
-                    </div>
-                  </div>
-                } @else if (cndpAvis()) {
-                  <div class="space-y-2 text-sm text-gray-700">
-                    <p><span class="font-medium text-gray-900">Observations :</span> {{ cndpAvis()!.observations || '-' }}</p>
-                    <p><span class="font-medium text-gray-900">Date :</span> {{ formatDate(cndpAvis()!.dateAvis || cndpAvis()!.updatedAt) }}</p>
-                  </div>
-                }
               </div>
             }
 
@@ -651,16 +756,28 @@
               }
 
               @case ('PRODOC_SOUMIS') {
-                @if (canManageProdoc() || canGiveCndpAvis()) {
+                @if (canManageProdoc()) {
                   <div class="flex flex-wrap gap-2">
-                    @if (canManageProdoc()) {
-                      <button (click)="onValiderProdoc()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
-                        Valider le ProDoc
+                    <button (click)="onValiderProdoc()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
+                      Valider le ProDoc
+                    </button>
+                  </div>
+                } @else {
+                  <p class="text-sm text-gray-400">Aucune action disponible pour ce profil.</p>
+                }
+              }
+
+              @case ('PRODOC_VALIDE') {
+                @if (canEmitCndpAvisFavorable() || canEmitCndpAvisRejete()) {
+                  <div class="flex flex-wrap gap-2">
+                    @if (canEmitCndpAvisFavorable()) {
+                      <button (click)="onEmettreAvisCndpFavorable()" [disabled]="actionInProgress() || !hasRequiredDocuments()" class="btn-sm btn-primary">
+                        Émettre un avis favorable
                       </button>
                     }
-                    @if (canGiveCndpAvis()) {
-                      <button (click)="onSaveCndpAvis()" [disabled]="actionInProgress()" class="btn-sm btn-outline">
-                        Enregistrer l'avis CNDP
+                    @if (canEmitCndpAvisRejete()) {
+                      <button (click)="onEmettreAvisCndpRejete()" [disabled]="actionInProgress() || !hasRequiredDocuments()" class="btn-sm btn-outline text-red-600 border-red-400">
+                        Émettre un avis non favorable
                       </button>
                     }
                   </div>
@@ -669,23 +786,36 @@
                 }
               }
 
-              @case ('PRODOC_VALIDE') {
+              @case ('AVIS_CNDP_FAVORABLE') {
+                @if (canIdentifierFinancement()) {
                 <div class="flex flex-wrap gap-2">
                   <button (click)="onIdentifierFinancement()" [disabled]="actionInProgress() || !hasRequiredDocuments()" class="btn-sm btn-primary">
                     Identifier le financement
                   </button>
                 </div>
+                } @else {
+                  <p class="text-sm text-gray-400">Aucune action disponible pour ce profil.</p>
+                }
+              }
+
+              @case ('AVIS_CNDP_REJETE') {
+                <p class="text-sm text-gray-400">Aucune action financement disponible après un avis CNDP non favorable.</p>
               }
 
               @case ('IDENTIFICATION_FINANCEMENT') {
+                @if (canSoumettreDossierProjet()) {
                 <div class="flex flex-wrap gap-2">
                   <button (click)="onSoumettreDossierProjet()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
                     Soumettre le dossier de projet
                   </button>
                 </div>
+                } @else {
+                  <p class="text-sm text-gray-400">Aucune action disponible pour ce profil.</p>
+                }
               }
 
               @case ('SOUMISSION_DOSSIER_PROJET') {
+                @if (canValiderDossierProjet()) {
                 <div class="flex flex-wrap gap-2">
                   <button (click)="onValiderDossierProjet()"
                           [disabled]="actionInProgress()"
@@ -698,14 +828,21 @@
                     Retourner le dossier
                   </button>
                 </div>
+                } @else {
+                  <p class="text-sm text-gray-400">Aucune action disponible pour ce profil.</p>
+                }
               }
 
               @case ('DOSSIER_PROJET_RETOURNE') {
+                @if (canSoumettreDossierProjet()) {
                 <div class="flex flex-wrap gap-2">
                   <button (click)="onSoumettreDossierProjet()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
                     Resoumettre le dossier de projet
                   </button>
                 </div>
+                } @else {
+                  <p class="text-sm text-gray-400">Aucune action disponible pour ce profil.</p>
+                }
               }
 
               @default {

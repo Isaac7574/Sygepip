@@ -5,7 +5,7 @@
 // Layout Container
 .layout-container {
   @apply min-h-screen flex;
-  background-color: #eef2f7;
+  background-color: #e9f5ee;
 }
 
 // Sidebar
@@ -14,15 +14,42 @@ aside {
   @apply transform transition-transform duration-300;
 }
 
-// Green sidebar with white dashed border
+// White sidebar with dark green accents
 .sidebar-glass {
-  background: #00843B;
-  border-right: 2px dashed rgba(255, 255, 255, 0.7);
+  background: #ffffff;
+  border-right: 1px solid rgba(0, 104, 55, 0.12);
+  box-shadow: 8px 0 24px -18px rgba(0, 104, 55, 0.18);
 
   // Ensure content is above overlays
   > * {
     position: relative;
     z-index: 2;
+  }
+
+  .h-16 {
+    border-bottom-color: rgba(0, 104, 55, 0.12) !important;
+  }
+
+  h1 {
+    color: #006837 !important;
+  }
+
+  p {
+    color: #5b7d68 !important;
+  }
+
+  a,
+  button {
+    color: #335c43;
+  }
+
+  a:hover,
+  button:hover {
+    color: #006837;
+  }
+
+  .border-white\/25 {
+    border-color: rgba(0, 104, 55, 0.16) !important;
   }
 }
 
@@ -116,6 +143,46 @@ aside {
   @apply absolute top-1 right-1 w-2 h-2 bg-bf-red-500 rounded-full;
 }
 
+.theme-toggle-btn {
+  @apply inline-flex items-center gap-2 px-3 py-2 rounded-full border transition-colors text-sm font-medium;
+  color: #335c43;
+  border-color: rgba(0, 104, 55, 0.14);
+  background: #ffffff;
+  box-shadow: 0 8px 18px -14px rgba(0, 104, 55, 0.35);
+
+  &:hover {
+    background: rgba(0, 104, 55, 0.08);
+    color: #006837;
+  }
+}
+
+.theme-toggle-btn-dark {
+  background: #1e1e1e;
+  color: #e8f1eb;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.theme-lamp {
+  @apply inline-flex items-center justify-center rounded-full;
+  width: 2rem;
+  height: 2rem;
+  background: rgba(0, 104, 55, 0.08);
+  color: #006837;
+  transition: all 0.2s ease;
+}
+
+.theme-lamp-on {
+  background: rgba(255, 191, 71, 0.2);
+  color: #f5b301;
+  box-shadow: 0 0 0 4px rgba(245, 179, 1, 0.08), 0 0 18px rgba(245, 179, 1, 0.18);
+}
+
+.theme-toggle-text {
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
 // User Menu
 .user-menu-btn {
   @apply flex items-center gap-3 p-2 rounded-xl;
@@ -126,7 +193,8 @@ aside {
 }
 
 .user-avatar {
-  @apply bg-bf-green-500 text-white;
+  background: #006837;
+  color: #ffffff;
 }
 
 .user-name {

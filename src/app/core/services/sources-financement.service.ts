@@ -14,6 +14,10 @@ export class SourcesFinancementService {
     return this.api.get<SourceFinancement[]>(this.endpoint, params);
   }
 
+  getActifs(): Observable<SourceFinancement[]> {
+    return this.api.get<SourceFinancement[]>(`${this.endpoint}/actifs`);
+  }
+
   getPaginated(params?: FilterParams): Observable<PaginatedResponse<SourceFinancement>> {
     return this.api.getPaginated<SourceFinancement>(this.endpoint, params);
   }

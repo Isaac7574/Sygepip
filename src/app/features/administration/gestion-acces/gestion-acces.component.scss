@@ -1,4 +1,90 @@
-// Gestion des accès - Styles
+// Gestion des acc猫s - Styles
+
+.page-header-section.admin-hero-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 148px;
+  padding: 1.75rem 2rem !important;
+  border-radius: 24px !important;
+  background: #006837 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+  border: 0 !important;
+  overflow: hidden;
+}
+
+.page-header-section.admin-hero-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.42) 0 1.2px, transparent 1.3px),
+    linear-gradient(270deg, rgba(16, 126, 72, 0.58) 0%, rgba(12, 112, 64, 0.34) 24%, rgba(8, 95, 53, 0.16) 46%, rgba(6, 82, 45, 0.06) 66%, rgba(6, 82, 45, 0) 100%);
+  background-size: 26px 26px, 100% 100%;
+  background-position: 0 0, 0 0;
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+.page-header-section.admin-hero-header .page-header-left {
+  position: relative;
+  z-index: 1;
+  display: block !important;
+  max-width: 920px;
+}
+
+.page-header-section.admin-hero-header .page-header-icon {
+  display: none !important;
+}
+
+.page-header-section.admin-hero-header .page-header-text h1 {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0 !important;
+  color: #ffffff !important;
+  font-size: 34px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.05 !important;
+}
+
+.page-header-section.admin-hero-header .page-header-badge {
+  display: inline-flex !important;
+  align-items: center;
+  padding: 0.45rem 0.9rem !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase;
+}
+
+.page-header-section.admin-hero-header .page-header-text p {
+  margin: 0.35rem 0 0 !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+}
+
+@media (max-width: 768px) {
+  .page-header-section.admin-hero-header {
+    min-height: 128px;
+    padding: 1.25rem !important;
+  }
+
+  .page-header-section.admin-hero-header .page-header-text h1 {
+    font-size: 26px !important;
+  }
+
+  .page-header-section.admin-hero-header .page-header-text p {
+    font-size: 14px !important;
+  }
+}
 
 // Role chips
 .role-chip {

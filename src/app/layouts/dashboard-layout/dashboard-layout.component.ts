@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 
 @Component({
@@ -12,9 +12,11 @@ import { AuthService } from '@core/services/auth.service';
 })
 export class DashboardLayoutComponent {
   authService = inject(AuthService);
+  router = inject(Router);
 
   sidebarOpen = signal(true);
   userMenuOpen = signal(false);
+  adminTheme = signal<'dark' | 'light'>(this.getStoredAdminTheme());
 
   // Collapsible sections — fermés par défaut
   referentielsOpen = signal(false);
@@ -49,5 +51,30 @@ export class DashboardLayoutComponent {
 
   logout(): void {
     this.authService.logout();
+  }
+
+  isAppRoute(): boolean {
+    return this.router.url.startsWith('/app');
+  }
+
+  isAdminDarkMode(): boolean {
+    return this.adminTheme() === 'dark';
+  }
+
+  toggleAdminTheme(): void {
+    const nextTheme = this.adminTheme() === 'dark' ? 'light' : 'dark';
+    this.adminTheme.set(nextTheme);
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('sygepip-admin-theme', nextTheme);
+    }
+  }
+
+  private getStoredAdminTheme(): 'dark' | 'light' {
+    if (typeof window === 'undefined') {
+      return 'dark';
+    }
+
+    return window.localStorage.getItem('sygepip-admin-theme') === 'light' ? 'light' : 'dark';
   }
 }

@@ -192,6 +192,8 @@ export type StatutIdeeProjet =
   | 'RAPPORT_FAISABILITE_VALIDE'
   | 'PRODOC_SOUMIS'
   | 'PRODOC_VALIDE'
+  | 'AVIS_CNDP_FAVORABLE'
+  | 'AVIS_CNDP_REJETE'
   | 'IDENTIFICATION_FINANCEMENT'
   | 'SOUMISSION_DOSSIER_PROJET'
   | 'DOSSIER_PROJET_VALIDE'
@@ -315,6 +317,7 @@ export type TypeDocumentProjet =
   | 'PV_RECEPTION'
   | 'RAPPORT_FAISABILITE'
   | 'PRODOC'
+  | 'AVIS_CNDP'
   | 'ACTE_JURIDIQUE'
   | 'PROJET_ARRETE_CONJOINT'
   | 'PROTOCOLE_ACCORD_ETAT_PARTENAIRE'
@@ -442,6 +445,32 @@ export interface Projet {
   actif: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+export interface PlanFinancementIdeeProjet {
+  id: string;
+  ideeProjetId: string;
+  sourceFinancementId: string;
+  sourceFinancementCode?: string;
+  sourceFinancementNom?: string;
+  sourceFinancementType?: string;
+  modeFinancement: ModeFinancement;
+  montant: number;
+  pourcentage?: number | null;
+  statut?: string | null;
+  dateEngagement?: string | null;
+  actif?: boolean;
+  updatedAt?: string;
+}
+
+export interface PlanFinancementIdeeProjetPayload {
+  sourceFinancementId: string;
+  modeFinancement: ModeFinancement;
+  montant: number;
+  pourcentage?: number | null;
+  statut?: string | null;
+  dateEngagement?: string | null;
+  actif?: boolean;
 }
 
 export interface PipAnnuel {

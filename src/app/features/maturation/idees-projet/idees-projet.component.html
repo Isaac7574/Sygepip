@@ -73,6 +73,37 @@
     </div>
   }
 
+  @if (isCndpRole()) {
+    <div class="card p-2">
+      <div class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          (click)="setCndpTab('a-examiner')"
+          class="px-4 py-2 text-sm font-semibold rounded-xl border transition-colors"
+          [class.bg-primary-600]="cndpTab() === 'a-examiner'"
+          [class.text-white]="cndpTab() === 'a-examiner'"
+          [class.border-primary-600]="cndpTab() === 'a-examiner'"
+          [class.bg-white]="cndpTab() !== 'a-examiner'"
+          [class.text-gray-700]="cndpTab() !== 'a-examiner'"
+          [class.border-gray-200]="cndpTab() !== 'a-examiner'">
+          Dossiers CNDP
+        </button>
+        <button
+          type="button"
+          (click)="setCndpTab('rejetes')"
+          class="px-4 py-2 text-sm font-semibold rounded-xl border transition-colors"
+          [class.bg-primary-600]="cndpTab() === 'rejetes'"
+          [class.text-white]="cndpTab() === 'rejetes'"
+          [class.border-primary-600]="cndpTab() === 'rejetes'"
+          [class.bg-white]="cndpTab() !== 'rejetes'"
+          [class.text-gray-700]="cndpTab() !== 'rejetes'"
+          [class.border-gray-200]="cndpTab() !== 'rejetes'">
+          Avis non favorables
+        </button>
+      </div>
+    </div>
+  }
+
   <div class="card overflow-hidden">
     <div class="flex flex-wrap justify-between items-center gap-3 p-4 border-b border-gray-200 bg-gray-50/50">
       <div class="flex flex-1 flex-wrap items-center gap-3 min-w-0">
@@ -111,7 +142,7 @@
           </button>
         }
       </div>
-      @if (!isInstructionRole() && !isCndpRole()) {
+      @if (!isInstructionRole() && !isCndpRole() && !isDgepRole()) {
         <button (click)="openModal()" class="btn-primary flex-shrink-0 whitespace-nowrap">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -204,7 +235,8 @@
           <tr>
             <td colspan="7" class="px-6 py-12 text-center text-gray-500">
               @if (searchTerm) { Aucun résultat pour "{{ searchTerm }}" }
-              @else if (isInstructionRole()) { Aucune idée de projet trouvée pour {{ getCurrentInstructionTabLabel() }} }
+              @else if (isInstructionRole() || isCndpRole()) { Aucune idée de projet trouvée pour {{ getCurrentInstructionTabLabel() }} }
+              @else if (isDgepRole()) { Aucun projet éligible à la mobilisation du financement n'a été trouvé }
               @else { Aucune idée de projet trouvée }
             </td>
           </tr>

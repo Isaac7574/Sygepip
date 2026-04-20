@@ -1,172 +1,193 @@
-<div class="landing-wrapper">
-
-  <!-- ===== NAVBAR ===== -->
-  <header class="landing-nav">
-    <div class="nav-logo">
-      <img src="assets/images/armoirie-bf.png" alt="Armoirie du Burkina Faso" class="armoirie-img"/>
-      <span class="logo-text">SYGEPIP</span>
+<div class="landing-page">
+  <header class="site-header">
+    <div class="site-header__flag" aria-hidden="true">
+      <span class="flag-red"></span>
+      <span class="flag-gold"></span>
+      <span class="flag-green"></span>
     </div>
-    <div class="nav-right">
-      <button class="btn-connexion" (click)="login()">Connexion</button>
+
+    <div class="site-header__inner">
+      <a href="/" class="brand" aria-label="Accueil SYGEPIP">
+        <div class="brand__emblem">
+          <img
+            src="assets/images/newarmoiriebfnb.png"
+            alt="Armoiries du Burkina Faso"
+            onerror="this.src='assets/images/armoirie-bf.png'">
+        </div>
+        <div class="brand__text">
+          <span class="brand__name">SYGEPIP</span>
+          <span class="brand__meta">Suivi institutionnel</span>
+        </div>
+      </a>
+
+      <button type="button" class="header-btn header-btn--primary" (click)="login()">
+        Connexion
+      </button>
     </div>
   </header>
 
+  <main>
+    <section class="hero-section">
+      <div class="hero-glow hero-glow--top"></div>
+      <div class="hero-glow hero-glow--bottom"></div>
+      <div class="hero-blob"></div>
+      <div class="hero-blob-highlight"></div>
 
-  <!-- ===== DRAPEAU ===== -->
-  <div class="top-flag">
-    <div class="flag-red"></div>
-    <div class="flag-star">
-      <svg viewBox="0 0 24 24" fill="#FFD700" width="26" height="26">
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-      </svg>
-    </div>
-    <div class="flag-green"></div>
-  </div>
+      <div class="hero-shell">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <div class="hero-pill">
+              <span class="hero-pill__dot"></span>
+              Excellence Institutionnelle
+            </div>
 
-  <!-- ===== HERO SLIDER ===== -->
-  <section class="hero-section">
-
-    <button class="arrow arrow-left" (click)="prev()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-      </svg>
-    </button>
-
-    <div class="slides-container">
-      @for (slide of slides; track slide.tag; let i = $index) {
-        <div class="slide" [class.active]="i === currentSlide()" [class.prev]="i === (currentSlide() - 1 + slides.length) % slides.length">
-
-          <div class="slide-left">
-            <span class="slide-tag">{{ slide.tag }}</span>
-            <h1 class="slide-title">
-              {{ slide.title }}<br/>
-              <span class="slide-title-accent">{{ slide.titleAccent }}</span>
+            <h1>
+              Suivez l'execution en
+              <span>temps reel</span>
             </h1>
-            <p class="slide-desc">{{ slide.description }}</p>
-            <button class="btn-demo" (click)="login()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              Accéder au Tableau de bord
-            </button>
-          </div>
 
-          <div class="slide-right">
-            <div class="mockup-glow"></div>
-            <div class="dashboard-card">
-              <div class="dash-header">
-                <div class="dash-dot red"></div>
-                <div class="dash-dot yellow"></div>
-                <div class="dash-dot green"></div>
-                <span class="dash-title">{{ slide.tag }} — SYGEPIP</span>
-                <div class="dash-search">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                  </svg>
-                  <span>Rechercher…</span>
-                </div>
-              </div>
-              <div class="dash-body">
-                <div class="dash-kpi-row">
-                  @for (kpi of slide.kpis; track kpi.label) {
-                    <div class="dash-kpi" [class]="kpi.color">
-                      <span class="dash-kpi-lbl">{{ kpi.label }}</span>
-                      <span class="dash-kpi-val">{{ kpi.value }}</span>
-                      <span class="dash-kpi-trend" [class.up]="kpi.up">{{ kpi.trend }}</span>
-                    </div>
-                  }
-                </div>
-                <div class="dash-chart-area">
-                  <span class="dash-chart-title">{{ slide.chartTitle }}</span>
-                  <div class="dash-bars">
-                    @for (h of slide.chartHeights; track $index) {
-                      <div class="dash-bar-wrap">
-                        <div class="dash-bar" [style.height.%]="h"></div>
-                      </div>
-                    }
-                  </div>
-                  <div class="dash-bar-labels">
-                    @for (lbl of slide.chartLabels; track $index) {
-                      <span>{{ lbl }}</span>
-                    }
-                  </div>
-                </div>
-              </div>
+            <p class="hero-lead">
+              Pilotez la maturation, la programmation PiP et le suivi-evaluation avec une
+              visibilite consolidee, des indicateurs clairs et des statuts operationnels.
+            </p>
+
+            <div class="hero-actions">
+              <button type="button" class="cta-btn cta-btn--primary" (click)="login()">
+                Demarrer
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M13 5l7 7-7 7M20 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+
+              <a href="#modules" class="cta-btn cta-btn--secondary">
+                En savoir plus
+              </a>
+            </div>
+
+            <div class="hero-statuses">
+              <span><i class="status-dot bg-blue"></i>Statut informatif</span>
+              <span><i class="status-dot bg-green"></i>En progression</span>
+              <span><i class="status-dot bg-amber"></i>A risque</span>
+              <span><i class="status-dot bg-red"></i>Bloque</span>
             </div>
           </div>
 
+          <div class="hero-visual">
+            <div class="floating-card floating-card--metric">
+              <p class="floating-card__eyebrow">Taux de realisation</p>
+              <div class="floating-card__metric-row">
+                <strong>94.2%</strong>
+                <span>+2.1%</span>
+              </div>
+              <div class="floating-card__progress">
+                <span style="width: 94%"></span>
+              </div>
+            </div>
+
+            <div class="hero-screen-shadow"></div>
+
+            <div class="hero-screen">
+              <img
+                src="assets/images/dashboard-dark.png"
+                alt="Dashboard SYGEPIP en mode sombre"
+                class="hero-screen__image">
+            </div>
+
+            <div class="floating-card floating-card--alert">
+              <p class="floating-card__eyebrow">Alerte</p>
+              <strong>12 projets a valider</strong>
+              <span>Mise a jour il y a 5 min</span>
+            </div>
+          </div>
         </div>
-      }
+      </div>
+    </section>
+
+    <section id="modules" class="modules-section">
+      <div class="modules-shell">
+        <p class="modules-label">Modules Principaux</p>
+
+        <div class="modules-grid">
+          <article class="module-card module-card--blue">
+            <div class="module-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 19V5a2 2 0 0 1 2-2h10l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                <path d="M14 3v4h4" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h3>Maturation</h3>
+            <p>Preparation et consolidation des projets : fiches, criteres et priorisation.</p>
+            <span class="module-card__pin" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+              </svg>
+            </span>
+          </article>
+
+          <article class="module-card module-card--green">
+            <div class="module-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 6h16M4 12h10M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </div>
+            <h3>Programmation PiP</h3>
+            <p>Planification budgetaire, jalons, arbitrages et tracabilite des decisions.</p>
+            <span class="module-card__pin" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+              </svg>
+            </span>
+          </article>
+
+          <article class="module-card module-card--amber">
+            <div class="module-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M3 12h6l3 8 4-16 2 8h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h3>Suivi-Evaluation</h3>
+            <p>Indicateurs, alertes, statuts et reporting multi-niveaux sur l'execution.</p>
+            <span class="module-card__pin" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+              </svg>
+            </span>
+          </article>
+
+          <article class="module-card module-card--red">
+            <div class="module-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" stroke="currentColor" stroke-width="2" />
+                <path d="M8 15h8M8 11h8M8 7h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </div>
+            <h3>Tableau de bord</h3>
+            <p>Vue consolidee : performances, ecarts, tendances et decisions rapides.</p>
+            <span class="module-card__pin" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+              </svg>
+            </span>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <div class="site-footer__brand">
+        <img
+          src="assets/images/newarmoiriebfnb.png"
+          alt="Armoiries du Burkina Faso"
+          onerror="this.src='assets/images/armoirie-bf.png'">
+        <div>
+          <strong>SYGEPIP</strong>
+          <span>Plateforme institutionnelle</span>
+        </div>
+      </div>
+
+      <p>&copy; {{ currentYear }} SYGEPIP - Plateforme institutionnelle</p>
     </div>
-
-    <button class="arrow arrow-right" (click)="next()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-      </svg>
-    </button>
-
-    <div class="dots">
-      @for (slide of slides; track slide.tag; let i = $index) {
-        <button class="dot" [class.active]="i === currentSlide()" (click)="goTo(i)"></button>
-      }
-    </div>
-
-  </section>
-
-  <!-- ===== MODULES ===== -->
-  <section class="modules-section">
-    <p class="modules-label">Modules principaux</p>
-    <div class="modules-row">
-
-      <div class="module-card" (click)="goTo(1)">
-        <div class="module-icon maturation-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-          </svg>
-        </div>
-        <h3>Maturation</h3>
-        <p>De l'idée au projet validé.</p>
-      </div>
-
-      <div class="module-card" (click)="goTo(2)">
-        <div class="module-icon pip-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-          </svg>
-        </div>
-        <h3>Programmation PIP</h3>
-        <p>Planification annuelle et pluriannuelle.</p>
-      </div>
-
-      <div class="module-card" (click)="goTo(3)">
-        <div class="module-icon suivi-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-          </svg>
-        </div>
-        <h3>Suivi-Évaluation</h3>
-        <p>Exécution et performance en temps réel.</p>
-      </div>
-
-      <div class="module-card" (click)="goTo(0)">
-        <div class="module-icon stats-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
-          </svg>
-        </div>
-        <h3>Tableau de bord</h3>
-        <p>Statistiques et indicateurs clés du PIP.</p>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ===== FOOTER ===== -->
-  <footer class="landing-footer">
-    <p class="footer-copy">SYGEPIP — Système de Gestion Intégré des Projets et Programmes d'Investissements Publics du Burkina Faso</p>
-    <p class="footer-copy footer-copy-sub">© {{ currentYear }} Propulsé par MTDPCE</p>
   </footer>
-
 </div>

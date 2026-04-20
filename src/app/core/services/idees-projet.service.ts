@@ -83,6 +83,14 @@ export class IdeesProjetService {
     return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/valider-prodoc`, payload);
   }
 
+  emettreAvisCndpFavorable(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/emettre-avis-cndp-favorable`, payload);
+  }
+
+  emettreAvisCndpRejete(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
+    return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/emettre-avis-cndp-rejete`, payload);
+  }
+
   identifierFinancement(id: string | number, payload: MaturationActionRequestDTO): Observable<IdeeProjet> {
     return this.api.post<IdeeProjet>(`${this.maturationEndpoint}/${id}/identifier-financement`, payload);
   }

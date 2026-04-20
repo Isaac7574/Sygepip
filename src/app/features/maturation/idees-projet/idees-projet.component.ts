@@ -2,7 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Subscription, forkJoin, Observable, of } from 'rxjs';
+import { Subscription, forkJoin, Observable, of, map } from 'rxjs';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
@@ -48,6 +48,7 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
   selectedStatut = '';
   isMesIdeesMode = false;
   instructionTab = signal<'sommaire' | 'validation-note' | 'faisabilite' | 'prodoc'>('sommaire');
+  cndpTab = signal<'a-examiner' | 'rejetes'>('a-examiner');
   exporting = signal(false);
   private currentUserSub?: Subscription;
 
@@ -107,6 +108,8 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
     { value: 'RAPPORT_FAISABILITE_VALIDE', label: 'Faisabilité validée' },
     { value: 'PRODOC_SOUMIS', label: 'ProDoc soumis' },
     { value: 'PRODOC_VALIDE', label: 'ProDoc validé' },
+    { value: 'AVIS_CNDP_FAVORABLE', label: 'Avis CNDP favorable' },
+    { value: 'AVIS_CNDP_REJETE', label: 'Avis CNDP non favorable' },
     { value: 'IDENTIFICATION_FINANCEMENT', label: 'Financement identifié' },
     { value: 'SOUMISSION_DOSSIER_PROJET', label: 'Dossier projet soumis' },
     { value: 'DOSSIER_PROJET_VALIDE', label: 'Dossier projet validé' },
@@ -215,7 +218,13 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
     }
 
     if (this.isCndpRole()) {
-      return this.ideesService.getByStatut('PRODOC_SOUMIS');
+      return this.ideesService.getByStatut(this.getCndpStatusFilter());
+    }
+
+    if (this.isDgepRole()) {
+      return this.ideesService.getAll().pipe(
+        map(items => items.filter(item => this.isDgepEligibleStatus(item.statut)))
+      );
     }
 
     if (this.isInstructionRole()) {
@@ -247,6 +256,9 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
     if (this.isCndpRole()) {
       return 'Avis CNDP';
     }
+    if (this.isDgepRole()) {
+      return 'Mobilisation du financement';
+    }
     if (this.isInstructionRole()) {
       return 'Files d’instruction';
     }
@@ -258,7 +270,12 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
       return 'Liste de vos idées de projet';
     }
     if (this.isCndpRole()) {
-      return 'Idées de projet avec ProDoc soumis pour avis de conformité';
+      return this.cndpTab() === 'rejetes'
+        ? 'Dossiers avec avis CNDP non favorable'
+        : 'Idées de projet avec ProDoc validé pour avis de conformité';
+    }
+    if (this.isDgepRole()) {
+      return 'Liste des projets avec avis de conformité CNDP validé pour élaborer le plan de financement';
     }
     if (this.isInstructionRole()) {
       return 'Sommaires, validations de notes et faisabilité de votre ministère';
@@ -271,12 +288,21 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
+  setCndpTab(tab: 'a-examiner' | 'rejetes'): void {
+    this.cndpTab.set(tab);
+    this.load();
+  }
+
   isInstructionRole(): boolean {
     return this.authService.hasRole(['INSTRUCTEUR', 'INSTRUCTEUR_DGESS', 'DGESS']);
   }
 
   isCndpRole(): boolean {
     return this.authService.hasRole('CNDP');
+  }
+
+  isDgepRole(): boolean {
+    return this.authService.hasRole('DGEP');
   }
 
   private isAdminRole(): boolean {
@@ -292,6 +318,9 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
   }
 
   getCurrentInstructionTabLabel(): string {
+    if (this.isCndpRole()) {
+      return this.cndpTab() === 'rejetes' ? 'avis CNDP non favorables' : 'dossiers CNDP à examiner';
+    }
     switch (this.instructionTab()) {
       case 'sommaire':
         return 'identifications sommaires soumises';
@@ -324,7 +353,7 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
 
   private getInstructionStatusFilter(): string | null {
     if (this.isCndpRole()) {
-      return 'PRODOC_SOUMIS';
+      return this.getCndpStatusFilter();
     }
 
     if (!this.isInstructionRole()) {
@@ -343,9 +372,13 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
     }
   }
 
+  private getCndpStatusFilter(): string {
+    return this.cndpTab() === 'rejetes' ? 'AVIS_CNDP_REJETE' : 'PRODOC_VALIDE';
+  }
+
   canManageIdea(item: IdeeProjet): boolean {
     void item;
-    if (this.isCndpRole()) {
+    if (this.isCndpRole() || this.isDgepRole()) {
       return false;
     }
     return !this.isInstructionRole() && !this.isMesIdeesMode ? true : !this.isInstructionRole();
@@ -357,12 +390,19 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
 
   canEditIdea(item: IdeeProjet): boolean {
     void item;
-    return !this.isInstructionRole() && !this.isCndpRole();
+    return !this.isInstructionRole() && !this.isCndpRole() && !this.isDgepRole();
   }
 
   canDeleteIdea(item: IdeeProjet): boolean {
     void item;
-    return !this.isInstructionRole() && !this.isCndpRole();
+    return !this.isInstructionRole() && !this.isCndpRole() && !this.isDgepRole();
+  }
+
+  private isDgepEligibleStatus(statut?: string): boolean {
+    return statut === 'AVIS_CNDP_FAVORABLE'
+      || statut === 'IDENTIFICATION_FINANCEMENT'
+      || statut === 'SOUMISSION_DOSSIER_PROJET'
+      || statut === 'DOSSIER_PROJET_RETOURNE';
   }
 
   loadMinisteres(): void {
@@ -886,6 +926,8 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
       'RAPPORT_FAISABILITE_VALIDE': 'badge-success',
       'PRODOC_SOUMIS': 'badge-info',
       'PRODOC_VALIDE': 'badge-success',
+      'AVIS_CNDP_FAVORABLE': 'badge-success',
+      'AVIS_CNDP_REJETE': 'badge-danger',
       'IDENTIFICATION_FINANCEMENT': 'badge-warning',
       'SOUMISSION_DOSSIER_PROJET': 'badge-info',
       'DOSSIER_PROJET_VALIDE': 'badge-success',

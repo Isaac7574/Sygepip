@@ -66,6 +66,7 @@ export class DocumentsComponent implements OnInit {
     { value: 'ETUDE_FAISABILITE', label: 'Etude de faisabilite' },
     { value: 'RAPPORT_FAISABILITE', label: 'Rapport de faisabilite' },
     { value: 'PRODOC', label: 'ProDoc' },
+    { value: 'AVIS_CNDP', label: 'Avis CNDP' },
     { value: 'ACTE_JURIDIQUE', label: 'Acte juridique' },
     { value: 'PROJET_ARRETE_CONJOINT', label: 'Projet arrete conjoint' },
     { value: 'PROTOCOLE_ACCORD_ETAT_PARTENAIRE', label: 'Protocole accord Etat partenaire' },

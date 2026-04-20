@@ -1,144 +1,267 @@
-<!-- Bannière drapeau Burkina Faso -->
-<div class="burkina-flag"></div>
-
-<!-- HEADER / NAVIGATION -->
-<nav class="bg-white/95 backdrop-blur-md py-3 px-6 md:px-12 flex justify-between items-center sticky top-3 z-50 border-b border-gray-200 shadow-sm">
-
-  <!-- Logo + Nom (gauche) -->
-  <div class="flex items-center gap-3">
-    <img src="assets/images/newarmoiriebfnb.png"
-         alt="Armoiries du Burkina Faso"
-         class="h-12 w-auto object-contain drop-shadow-sm"
-         onerror="this.src='assets/images/armoirie-bf.png'">
-    <div>
-      <p class="text-sm font-extrabold text-gray-900 leading-tight">SYGEPIP</p>
-      <p class="text-xs text-gray-500 leading-tight hidden md:block">Burkina Faso</p>
+<div class="accueil-page">
+  <header class="site-header">
+    <div class="site-header__flag" aria-hidden="true">
+      <span class="flag-green"></span>
+      <span class="flag-red"></span>
+      <span class="flag-gold"></span>
     </div>
-  </div>
 
-  <!-- Liens (centre) -->
-  <ul class="hidden md:flex items-center gap-8">
-    <li>
-      <a routerLink="/" class="nav-link text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-green-700 transition-colors">Accueil</a>
-    </li>
-  </ul>
-
-  <!-- CTA (droite) -->
-  <div class="flex items-center gap-2">
-    @if (authService.isAuthenticated()) {
-      <a routerLink="/app/dashboard" class="text-xs font-bold uppercase tracking-widest text-white bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded shadow transition-colors">
-        Tableau de bord
+    <div class="site-header__inner">
+      <a routerLink="/" class="brand" aria-label="Accueil SYGEPIP">
+        <div class="brand__emblem">
+          <img
+            src="assets/images/newarmoiriebfnb.png"
+            alt="Armoiries du Burkina Faso"
+            onerror="this.src='assets/images/armoirie-bf.png'">
+        </div>
+        <div class="brand__text">
+          <span class="brand__name">SYGEPIP</span>
+          <span class="brand__meta">Suivi institutionnel</span>
+        </div>
       </a>
-      <button (click)="logout()" class="text-xs font-bold uppercase tracking-widest text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded shadow transition-colors">
-        Déconnexion
-      </button>
-    } @else {
-      <button (click)="login()" class="text-xs font-bold uppercase tracking-widest text-white bg-green-700 hover:bg-green-800 px-5 py-2 rounded shadow transition-colors cursor-pointer">
-        Connexion
-      </button>
-    }
-  </div>
-</nav>
 
-<!-- SECTION PRINCIPALE -->
-<main class="hero-section flex-grow flex flex-col items-center justify-center px-4 py-14 w-full min-h-screen">
-
-  <div class="w-full max-w-6xl mx-auto flex flex-col items-center gap-10">
-
-    <!-- HERO CARD -->
-    <div class="glass-card grid-pattern w-full rounded-2xl p-8 md:p-14 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 relative overflow-hidden ring-1 ring-white/30 animate-fade-in-up">
-
-      <!-- Logo -->
-      <div class="flex-shrink-0 drop-shadow-2xl relative z-10">
-        <img src="assets/images/baobablogo.png"
-             alt="Logo SYGEPIP"
-             class="h-40 md:h-64 w-auto object-contain filter drop-shadow-[0_10px_10px_rgba(0,0,0,0.3)]"
-             onerror="this.style.display='none'">
-      </div>
-
-      <!-- Texte + Stats -->
-      <div class="text-center md:text-left text-white max-w-2xl relative z-10">
-        <h1 class="text-5xl md:text-7xl text-white tracking-tight mb-2 drop-shadow-lg font-sans">SYGE-PIP</h1>
-        <div class="h-1 bg-yellow-400 w-24 mx-auto md:mx-0 my-5 rounded-full shadow-lg"></div>
-        <p class="text-lg md:text-2xl font-medium leading-relaxed text-white drop-shadow-md">
-          Système de Gestion Intégrée des Projets <br>
-          et Programmes d'Investissements Publics
-        </p>
-        <p class="text-sm font-bold mt-3 text-gray-200 tracking-[0.2em] uppercase opacity-90">Burkina Faso</p>
-
-        <!-- Stats inline -->
-        @if (stats()) {
-          <div class="mt-8 flex flex-wrap gap-6 justify-center md:justify-start">
-            <div class="text-center">
-              <p class="text-3xl font-black text-yellow-400">{{ stats()?.totalProjets }}</p>
-              <p class="text-xs text-gray-300 uppercase tracking-widest mt-0.5">Projets</p>
-            </div>
-            <div class="w-px bg-white/20 hidden md:block"></div>
-            <div class="text-center">
-              <p class="text-3xl font-black text-yellow-400">{{ stats()?.projetsEnCours }}</p>
-              <p class="text-xs text-gray-300 uppercase tracking-widest mt-0.5">En cours</p>
-            </div>
-            <div class="w-px bg-white/20 hidden md:block"></div>
-            <div class="text-center">
-              <p class="text-3xl font-black text-yellow-400">{{ formatBudget(stats()?.budgetTotal) }}</p>
-              <p class="text-xs text-gray-300 uppercase tracking-widest mt-0.5">Budget total</p>
-            </div>
-          </div>
-        }
-
-        <!-- CTA -->
-        <div class="mt-8 flex gap-3 justify-center md:justify-start">
-          <button (click)="login()" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-sm px-6 py-3 rounded-lg shadow-lg transition-all hover:scale-105">
-            Accéder à la plateforme
+      <div class="header-actions">
+        @if (authService.isAuthenticated()) {
+          <a routerLink="/app/dashboard" class="header-btn header-btn--primary">
+            Tableau de bord
+          </a>
+          <button type="button" (click)="logout()" class="header-btn header-btn--danger">
+            Déconnexion
           </button>
-        </div>
+        } @else {
+          <button type="button" (click)="login()" class="header-btn header-btn--primary">
+            Connexion
+          </button>
+        }
       </div>
     </div>
+  </header>
 
-  </div>
-</main>
+  <main>
+    <section class="hero-section">
+      <div class="hero-glow hero-glow--top"></div>
+      <div class="hero-glow hero-glow--bottom"></div>
+      <div class="hero-blob"></div>
+      <div class="hero-blob-highlight"></div>
 
-<!-- FOOTER -->
-<footer class="bg-gray-900 text-white py-12">
-  <div class="container mx-auto px-4">
-    <div class="grid md:grid-cols-4 gap-8">
-      <div class="md:col-span-2">
-        <div class="flex items-center gap-3 mb-4">
-          <img src="assets/images/newarmoiriebfnb.png"
-               alt="Armoirie"
-               class="h-12 w-12 object-contain brightness-0 invert"
-               onerror="this.src='assets/images/armoirie-bf.png'">
-          <div>
-            <h3 class="text-xl font-bold">SYGEPIP</h3>
-            <p class="text-gray-400 text-sm">Burkina Faso</p>
+      <div class="hero-shell">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <div class="hero-pill">
+              <span class="hero-pill__dot"></span>
+              Excellence Institutionnelle
+            </div>
+
+            <h1>
+              Suivez l'exécution en
+              <span>temps réel</span>
+            </h1>
+
+            <p class="hero-lead">
+              Pilotez la maturation, la programmation PiP et le suivi-évaluation avec une
+              visibilité consolidée, des indicateurs clairs et des statuts opérationnels.
+            </p>
+
+            <div class="hero-actions">
+              @if (authService.isAuthenticated()) {
+                <a routerLink="/app/dashboard" class="cta-btn cta-btn--primary">
+                  Démarrer
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M13 5l7 7-7 7M20 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </a>
+              } @else {
+                <button type="button" (click)="login()" class="cta-btn cta-btn--primary">
+                  Démarrer
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M13 5l7 7-7 7M20 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+              }
+
+              <a routerLink="/" fragment="modules" class="cta-btn cta-btn--secondary">
+                En savoir plus
+              </a>
+            </div>
+
+            <div class="hero-statuses">
+              <span><i class="status-dot bg-blue"></i>Statut informatif</span>
+              <span><i class="status-dot bg-green"></i>En progression</span>
+              <span><i class="status-dot bg-amber"></i>À risque</span>
+              <span><i class="status-dot bg-red"></i>Bloqué</span>
+            </div>
+          </div>
+
+          <div class="hero-visual">
+            <div class="floating-card floating-card--metric">
+              <p class="floating-card__eyebrow">Taux de réalisation</p>
+              <div class="floating-card__metric-row">
+                <strong>{{ stats()?.tauxExecutionGlobal ?? 94.2 }}%</strong>
+                <span>+2.1%</span>
+              </div>
+              <div class="floating-card__progress">
+                <span [style.width.%]="stats()?.tauxExecutionGlobal ?? 94.2"></span>
+              </div>
+            </div>
+
+            <div class="hero-screen-shadow"></div>
+
+            <div class="hero-screen">
+              <div class="hero-screen__header">
+                <div class="screen-brand">
+                  <img
+                    src="assets/images/newarmoiriebfnb.png"
+                    alt="Armoiries du Burkina Faso"
+                    onerror="this.src='assets/images/armoirie-bf.png'">
+                  <div>
+                    <span>SYGEPIP</span>
+                    <small>Plateforme institutionnelle</small>
+                  </div>
+                </div>
+                <div class="screen-badges">
+                  <span class="screen-badge screen-badge--green"></span>
+                  <span class="screen-badge screen-badge--gold"></span>
+                  <span class="screen-badge screen-badge--red"></span>
+                </div>
+              </div>
+
+              <div class="hero-screen__body">
+                <div class="screen-kpi screen-kpi--blue">
+                  <div class="screen-kpi__icon">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M4 19V5a2 2 0 0 1 2-2h10l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                      <path d="M14 3v4h4" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                    </svg>
+                  </div>
+                  <div>
+                    <strong>{{ stats()?.totalProjets ?? 245 }}</strong>
+                    <span>Projets suivis</span>
+                  </div>
+                </div>
+
+                <div class="screen-kpi screen-kpi--green">
+                  <div class="screen-kpi__icon">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M4 6h16M4 12h10M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                  </div>
+                  <div>
+                    <strong>{{ stats()?.projetsEnCours ?? 120 }}</strong>
+                    <span>En exécution</span>
+                  </div>
+                </div>
+
+                <div class="screen-chart">
+                  <div class="screen-chart__top">
+                    <span>Performance consolidée</span>
+                    <strong>{{ formatBudget(stats()?.budgetTotal) }}</strong>
+                  </div>
+                  <div class="screen-bars" aria-hidden="true">
+                    <span style="height: 45%"></span>
+                    <span style="height: 68%"></span>
+                    <span style="height: 58%"></span>
+                    <span style="height: 82%"></span>
+                    <span style="height: 74%"></span>
+                    <span style="height: 92%"></span>
+                  </div>
+                </div>
+
+                <div class="screen-panel">
+                  <div class="screen-panel__row">
+                    <span>Programmation PiP</span>
+                    <strong>Opérationnelle</strong>
+                  </div>
+                  <div class="screen-panel__row">
+                    <span>Suivi-évaluation</span>
+                    <strong>Mis à jour</strong>
+                  </div>
+                  <div class="screen-panel__row">
+                    <span>Alertes actives</span>
+                    <strong>{{ stats()?.alertesActives ?? 12 }}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="floating-card floating-card--alert">
+              <p class="floating-card__eyebrow">Alerte</p>
+              <strong>12 projets à valider</strong>
+              <span>Mise à jour il y a 5 min</span>
+            </div>
           </div>
         </div>
-        <p class="text-gray-400 leading-relaxed">
-          Système de Gestion Intégrée des Projets et Programmes d'Investissements Publics du Burkina Faso.
-        </p>
+      </div>
+    </section>
+
+    <section id="modules" class="modules-section">
+      <div class="modules-shell">
+        <p class="modules-label">Modules Principaux</p>
+
+        <div class="modules-grid">
+          <article class="module-card module-card--blue">
+            <div class="module-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 19V5a2 2 0 0 1 2-2h10l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                <path d="M14 3v4h4" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h3>Maturation</h3>
+            <p>Préparation et consolidation des projets : fiches, critères et priorisation.</p>
+            <span class="module-card__pin"></span>
+          </article>
+
+          <article class="module-card module-card--green">
+            <div class="module-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 6h16M4 12h10M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </div>
+            <h3>Programmation PiP</h3>
+            <p>Planification budgétaire, jalons, arbitrages et traçabilité des décisions.</p>
+            <span class="module-card__pin"></span>
+          </article>
+
+          <article class="module-card module-card--amber">
+            <div class="module-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M3 12h6l3 8 4-16 2 8h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h3>Suivi-Évaluation</h3>
+            <p>Indicateurs, alertes, statuts et reporting multi-niveaux sur l’exécution.</p>
+            <span class="module-card__pin"></span>
+          </article>
+
+          <article class="module-card module-card--red">
+            <div class="module-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" stroke="currentColor" stroke-width="2" />
+                <path d="M8 15h8M8 11h8M8 7h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </div>
+            <h3>Tableau de bord</h3>
+            <p>Vue consolidée : performances, écarts, tendances et décisions rapides.</p>
+            <span class="module-card__pin"></span>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <div class="site-footer__brand">
+        <img
+          src="assets/images/newarmoiriebfnb.png"
+          alt="Armoiries du Burkina Faso"
+          onerror="this.src='assets/images/armoirie-bf.png'">
+        <div>
+          <strong>SYGEPIP</strong>
+          <span>Plateforme institutionnelle</span>
+        </div>
       </div>
 
-      <div>
-        <h4 class="text-base font-semibold mb-4">Contact</h4>
-        <ul class="space-y-2 text-gray-400">
-          <li class="flex items-center gap-2">
-            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-            </svg>
-            <span>Ouagadougou, Burkina Faso</span>
-          </li>
-          <li class="flex items-center gap-2">
-            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
-            <span>contact&#64;sygepip.gov.bf</span>
-          </li>
-        </ul>
-      </div>
+      <p>&copy; {{ currentYear }} SYGEPIP — Ministère de l'Économie, des Finances et de la Prospective</p>
     </div>
-
-    <div class="border-t border-gray-800 mt-8 pt-6 text-center text-gray-400 text-sm">
-      <p>&copy; {{ currentYear }} SYGEPIP - Ministère de l'Économie, des Finances et de la Prospective</p>
-    </div>
-  </div>
-</footer>
+  </footer>
+</div>

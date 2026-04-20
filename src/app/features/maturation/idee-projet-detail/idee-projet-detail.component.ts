@@ -10,14 +10,17 @@ import { SecteursService } from '@core/services/secteurs.service';
 import { CiblesService } from '@core/services/cibles.service';
 import { AuthService } from '@core/services/auth.service';
 import { WorkflowService } from '@core/services/workflow.service';
-import { AvisCndpService } from '@core/services/avis-cndp.service';
+import { SourcesFinancementService } from '@core/services/sources-financement.service';
+import { PlanFinancementIdeeProjetService } from '@core/services/plan-financement-idee-projet.service';
 import {
-  AvisConformiteCNDP,
   Cible,
   IdeeProjet,
   IdeeProjetNoteConceptuelleResponse,
   Ministere,
   ModeFinancement,
+  PlanFinancementIdeeProjet,
+  PlanFinancementIdeeProjetPayload,
+  SourceFinancement,
   Secteur,
   DocumentIdeeProjetResponseDTO,
   TypeDocumentProjet,
@@ -50,7 +53,8 @@ export class IdeeProjetDetailComponent implements OnInit {
   private ciblesService = inject(CiblesService);
   private authService = inject(AuthService);
   private workflowService = inject(WorkflowService);
-  private avisCndpService = inject(AvisCndpService);
+  private sourcesFinancementService = inject(SourcesFinancementService);
+  private planFinancementIdeeProjetService = inject(PlanFinancementIdeeProjetService);
 
   idee = signal<IdeeProjet | null>(null);
   note = signal<Partial<IdeeProjetNoteConceptuelleResponse>>({});
@@ -58,18 +62,29 @@ export class IdeeProjetDetailComponent implements OnInit {
   loadingNote = signal(false);
   error = signal<string | null>(null);
   documents = signal<DocumentIdeeProjetResponseDTO[]>([]);
+  sourcesFinancement = signal<SourceFinancement[]>([]);
+  planFinancement = signal<PlanFinancementIdeeProjet[]>([]);
   loadingDocuments = signal(false);
+  loadingPlanFinancement = signal(false);
   documentsError = signal<string | null>(null);
+  planFinancementError = signal<string | null>(null);
   actionComment = '';
   actionInProgress = signal(false);
+  savingPlanFinancement = signal(false);
+  editingPlanFinancementId = signal<string | null>(null);
   availableActions = signal<WorkflowNextAction[]>([]);
   requiredDocumentTypes = signal<TypeDocumentProjet[]>([]);
-  cndpAvis = signal<AvisConformiteCNDP | null>(null);
-  loadingCndpAvis = signal(false);
   selectedFiles: Partial<Record<TypeDocumentProjet, File>> = {};
   uploadingDocumentType = signal<TypeDocumentProjet | null>(null);
-  cndpDecision: 'FAVORABLE' | 'DEFAVORABLE' | '' = '';
-  cndpObservations = '';
+  planFinancementForm: {
+    sourceFinancementId: string;
+    modeFinancement: ModeFinancement | '';
+    montant: number | null;
+    pourcentage: number | null;
+    statut: string;
+    dateEngagement: string;
+    actif: boolean;
+  } = this.resetPlanFinancementForm();
 
   ministeres = signal<Ministere[]>([]);
   secteurs = signal<Secteur[]>([]);
@@ -81,6 +96,12 @@ export class IdeeProjetDetailComponent implements OnInit {
     { value: 'PROVINCIALE', label: 'Provinciale' },
     { value: 'COMMUNALE', label: 'Communale' },
     { value: 'LOCALE', label: 'Locale' }
+  ];
+
+  modesFinancement = [
+    { value: 'CONTREPARTIE' as ModeFinancement, label: 'Contrepartie' },
+    { value: 'SUBVENTION' as ModeFinancement, label: 'Subvention' },
+    { value: 'PRET' as ModeFinancement, label: 'Prêt' }
   ];
 
   statuts: { value: StatutIdeeProjet; label: string }[] = [
@@ -95,6 +116,8 @@ export class IdeeProjetDetailComponent implements OnInit {
     { value: 'RAPPORT_FAISABILITE_VALIDE', label: 'Faisabilité validée' },
     { value: 'PRODOC_SOUMIS', label: 'ProDoc soumis' },
     { value: 'PRODOC_VALIDE', label: 'ProDoc validé' },
+    { value: 'AVIS_CNDP_FAVORABLE', label: 'Avis CNDP favorable' },
+    { value: 'AVIS_CNDP_REJETE', label: 'Avis CNDP non favorable' },
     { value: 'IDENTIFICATION_FINANCEMENT', label: 'Financement identifié' },
     { value: 'SOUMISSION_DOSSIER_PROJET', label: 'Dossier projet soumis' },
     { value: 'DOSSIER_PROJET_VALIDE', label: 'Dossier projet validé' },
@@ -107,6 +130,7 @@ export class IdeeProjetDetailComponent implements OnInit {
     { value: 'ETUDE_FAISABILITE', label: 'Étude de faisabilité' },
     { value: 'RAPPORT_FAISABILITE', label: 'Rapport de faisabilité' },
     { value: 'PRODOC', label: 'ProDoc' },
+    { value: 'AVIS_CNDP', label: 'Avis CNDP' },
     { value: 'ACTE_JURIDIQUE', label: 'Acte juridique' },
     { value: 'PROJET_ARRETE_CONJOINT', label: 'Projet arrete conjoint' },
     { value: 'PROTOCOLE_ACCORD_ETAT_PARTENAIRE', label: 'Protocole accord Etat partenaire' },
@@ -135,6 +159,10 @@ export class IdeeProjetDetailComponent implements OnInit {
 
   isCndpRole(): boolean {
     return this.authService.hasRole('CNDP');
+  }
+
+  isDgepRole(): boolean {
+    return this.authService.hasRole('DGEP');
   }
 
   private isAgentRole(): boolean {
@@ -174,8 +202,33 @@ export class IdeeProjetDetailComponent implements OnInit {
     return this.isInstructionRole() && this.isSameMinistere();
   }
 
-  canGiveCndpAvis(): boolean {
-    return this.isCndpRole() && this.idee()?.statut === 'PRODOC_SOUMIS';
+  canEmitCndpAvisFavorable(): boolean {
+    return this.isCndpRole()
+      && this.idee()?.statut === 'PRODOC_VALIDE'
+      && this.hasCndpFavorableAction();
+  }
+
+  canEmitCndpAvisRejete(): boolean {
+    return this.isCndpRole()
+      && this.idee()?.statut === 'PRODOC_VALIDE'
+      && this.hasCndpRejeteAction();
+  }
+
+  canManagePlanFinancement(): boolean {
+    return this.isDgepRole() && this.isDgepEligibleStatus(this.idee()?.statut);
+  }
+
+  canIdentifierFinancement(): boolean {
+    return this.canManagePlanFinancement() && this.idee()?.statut === 'AVIS_CNDP_FAVORABLE';
+  }
+
+  canSoumettreDossierProjet(): boolean {
+    return this.canManagePlanFinancement()
+      && (this.idee()?.statut === 'IDENTIFICATION_FINANCEMENT' || this.idee()?.statut === 'DOSSIER_PROJET_RETOURNE');
+  }
+
+  canValiderDossierProjet(): boolean {
+    return this.canManagePlanFinancement() && this.idee()?.statut === 'SOUMISSION_DOSSIER_PROJET';
   }
 
   private hasValidationNoteConceptuelleAction(): boolean {
@@ -186,10 +239,29 @@ export class IdeeProjetDetailComponent implements OnInit {
     );
   }
 
+  private hasCndpFavorableAction(): boolean {
+    return this.availableActions().some(action =>
+      action.etatCible === 'AVIS_CNDP_FAVORABLE'
+      || action.codeEtape === 'EMETTRE_AVIS_CNDP_FAVORABLE'
+      || action.nomEtape?.toLowerCase().includes('avis cndp favorable')
+    );
+  }
+
+  private hasCndpRejeteAction(): boolean {
+    return this.availableActions().some(action =>
+      action.etatCible === 'AVIS_CNDP_REJETE'
+      || action.codeEtape === 'EMETTRE_AVIS_CNDP_REJETE'
+      || action.nomEtape?.toLowerCase().includes('avis cndp')
+      || action.nomEtape?.toLowerCase().includes('non favorable')
+      || action.nomEtape?.toLowerCase().includes('rejete')
+    );
+  }
+
   ngOnInit(): void {
     this.loadMinisteres();
     this.loadSecteurs();
     this.loadCibles();
+    this.loadSourcesFinancement();
 
     this.route.paramMap.subscribe(params => {
       const id = params.get('ididee') ?? params.get('id');
@@ -234,12 +306,33 @@ export class IdeeProjetDetailComponent implements OnInit {
     this.fetchIdee(id);
   }
 
+  private resetPlanFinancementForm() {
+    return {
+      sourceFinancementId: '',
+      modeFinancement: '' as ModeFinancement | '',
+      montant: null,
+      pourcentage: null,
+      statut: 'PREVISIONNEL',
+      dateEngagement: '',
+      actif: true
+    };
+  }
+
   private fetchIdee(id: string): void {
     this.loading.set(true);
     this.error.set(null);
     this.ideesService.getById(id).subscribe({
       next: (data) => {
-        if (this.isCndpRole() && data.statut !== 'PRODOC_SOUMIS' && data.statut !== 'PRODOC_VALIDE') {
+        if (this.isCndpRole()
+          && data.statut !== 'PRODOC_VALIDE'
+          && data.statut !== 'AVIS_CNDP_FAVORABLE'
+          && data.statut !== 'AVIS_CNDP_REJETE') {
+          this.showToast("Vous n'avez pas accès à cette idée de projet.", 'error');
+          this.router.navigate(['/app/maturation/idees-projet'], { replaceUrl: true });
+          this.loading.set(false);
+          return;
+        }
+        if (this.isDgepRole() && !this.isDgepEligibleStatus(data.statut)) {
           this.showToast("Vous n'avez pas accès à cette idée de projet.", 'error');
           this.router.navigate(['/app/maturation/idees-projet'], { replaceUrl: true });
           this.loading.set(false);
@@ -250,8 +343,8 @@ export class IdeeProjetDetailComponent implements OnInit {
         this.requiredDocumentTypes.set(this.getRequiredDocumentTypes(data.statut));
         this.loadNoteConceptuelle(data.id);
         this.loadDocuments(data.id);
+        this.loadPlanFinancement(data.id);
         this.loadAvailableActions(data.statut);
-        this.loadCndpAvis(data.id);
       },
       error: () => {
         this.error.set('Erreur lors du chargement de l’idée de projet.');
@@ -289,6 +382,28 @@ export class IdeeProjetDetailComponent implements OnInit {
     });
   }
 
+  private loadSourcesFinancement(): void {
+    this.sourcesFinancementService.getActifs().subscribe({
+      next: (data) => this.sourcesFinancement.set(data),
+      error: () => this.sourcesFinancement.set([])
+    });
+  }
+
+  private loadPlanFinancement(id: string | number): void {
+    this.loadingPlanFinancement.set(true);
+    this.planFinancementError.set(null);
+    this.planFinancementIdeeProjetService.getAll(id).subscribe({
+      next: (data) => {
+        this.planFinancement.set(data);
+        this.loadingPlanFinancement.set(false);
+      },
+      error: () => {
+        this.planFinancementError.set('Erreur lors du chargement du plan de financement.');
+        this.loadingPlanFinancement.set(false);
+      }
+    });
+  }
+
   private loadAvailableActions(statut?: string): void {
     if (!statut) {
       this.availableActions.set([]);
@@ -301,31 +416,6 @@ export class IdeeProjetDetailComponent implements OnInit {
     });
   }
 
-  private loadCndpAvis(id: string | number): void {
-    this.loadingCndpAvis.set(true);
-    this.avisCndpService.getAll({ ideeProjetId: String(id) }).subscribe({
-      next: (avis) => {
-        const latestAvis = [...avis].sort((a, b) => {
-          const dateA = new Date(a.updatedAt ?? a.dateAvis ?? a.createdAt ?? 0).getTime();
-          const dateB = new Date(b.updatedAt ?? b.dateAvis ?? b.createdAt ?? 0).getTime();
-          return dateB - dateA;
-        })[0] ?? null;
-        this.cndpAvis.set(latestAvis);
-        this.cndpDecision = latestAvis?.decision === 'DEFAVORABLE'
-          ? 'DEFAVORABLE'
-          : latestAvis?.decision === 'FAVORABLE'
-            ? 'FAVORABLE'
-            : '';
-        this.cndpObservations = latestAvis?.observations ?? '';
-        this.loadingCndpAvis.set(false);
-      },
-      error: () => {
-        this.cndpAvis.set(null);
-        this.loadingCndpAvis.set(false);
-      }
-    });
-  }
-
   getRequiredDocumentTypes(statut?: string): TypeDocumentProjet[] {
     switch (statut) {
       case 'CONCEPTION_VALIDEE':
@@ -335,7 +425,11 @@ export class IdeeProjetDetailComponent implements OnInit {
       case 'PRODOC_SOUMIS':
         return ['PRODOC'];
       case 'PRODOC_VALIDE':
+        return ['AVIS_CNDP'];
+      case 'AVIS_CNDP_FAVORABLE':
         return ['ACTE_JURIDIQUE'];
+      case 'AVIS_CNDP_REJETE':
+        return ['AVIS_CNDP'];
       case 'IDENTIFICATION_FINANCEMENT':
       case 'SOUMISSION_DOSSIER_PROJET':
       case 'DOSSIER_PROJET_RETOURNE':
@@ -390,6 +484,137 @@ export class IdeeProjetDetailComponent implements OnInit {
       .join(', ');
   }
 
+  startCreatePlanFinancement(): void {
+    if (!this.canManagePlanFinancement()) {
+      this.showToast('Seul le role DGEP peut gerer le plan de financement', 'error');
+      return;
+    }
+    this.editingPlanFinancementId.set(null);
+    this.planFinancementForm = this.resetPlanFinancementForm();
+  }
+
+  editPlanFinancement(line: PlanFinancementIdeeProjet): void {
+    if (!this.canManagePlanFinancement()) {
+      this.showToast('Seul le role DGEP peut gerer le plan de financement', 'error');
+      return;
+    }
+    this.editingPlanFinancementId.set(line.id);
+    this.planFinancementForm = {
+      sourceFinancementId: line.sourceFinancementId,
+      modeFinancement: line.modeFinancement,
+      montant: line.montant,
+      pourcentage: line.pourcentage ?? null,
+      statut: line.statut ?? '',
+      dateEngagement: line.dateEngagement ?? '',
+      actif: line.actif ?? true
+    };
+  }
+
+  cancelPlanFinancementEdit(): void {
+    this.editingPlanFinancementId.set(null);
+    this.planFinancementForm = this.resetPlanFinancementForm();
+  }
+
+  savePlanFinancement(): void {
+    const item = this.idee();
+    if (!item) return;
+    if (!this.canManagePlanFinancement()) {
+      this.showToast('Seul le role DGEP peut gerer le plan de financement', 'error');
+      return;
+    }
+
+    if (!this.planFinancementForm.sourceFinancementId || !this.planFinancementForm.modeFinancement || this.planFinancementForm.montant === null) {
+      this.showToast('Source, mode de financement et montant sont obligatoires', 'error');
+      return;
+    }
+
+    if (this.hasDuplicatePlanLine(
+      this.planFinancementForm.sourceFinancementId,
+      this.planFinancementForm.modeFinancement,
+      this.editingPlanFinancementId() ?? undefined
+    )) {
+      this.showToast('Cette source a déjà une ligne avec ce mode de financement.', 'error');
+      return;
+    }
+
+    const payload: PlanFinancementIdeeProjetPayload = {
+      sourceFinancementId: this.planFinancementForm.sourceFinancementId,
+      modeFinancement: this.planFinancementForm.modeFinancement,
+      montant: this.planFinancementForm.montant,
+      pourcentage: this.planFinancementForm.pourcentage,
+      statut: this.planFinancementForm.statut || null,
+      dateEngagement: this.planFinancementForm.dateEngagement || null,
+      actif: this.planFinancementForm.actif
+    };
+
+    this.savingPlanFinancement.set(true);
+    const editingId = this.editingPlanFinancementId();
+    const request$ = editingId
+      ? this.planFinancementIdeeProjetService.update(item.id, editingId, payload)
+      : this.planFinancementIdeeProjetService.create(item.id, payload);
+
+    request$.subscribe({
+      next: () => {
+        this.savingPlanFinancement.set(false);
+        this.cancelPlanFinancementEdit();
+        this.loadPlanFinancement(item.id);
+        this.showToast(editingId ? 'Ligne de financement mise à jour' : 'Ligne de financement ajoutée', 'success');
+      },
+      error: (err: any) => {
+        this.savingPlanFinancement.set(false);
+        const message = err?.message?.includes('deja')
+          ? 'Cette source a déjà une ligne avec ce mode de financement.'
+          : 'Erreur lors de l’enregistrement de la ligne de financement';
+        this.showToast(message, 'error');
+      }
+    });
+  }
+
+  deletePlanFinancement(line: PlanFinancementIdeeProjet): void {
+    const item = this.idee();
+    if (!item) return;
+    if (!this.canManagePlanFinancement()) {
+      this.showToast('Seul le role DGEP peut gerer le plan de financement', 'error');
+      return;
+    }
+
+    this.savingPlanFinancement.set(true);
+    this.planFinancementIdeeProjetService.delete(item.id, line.id).subscribe({
+      next: () => {
+        this.savingPlanFinancement.set(false);
+        if (this.editingPlanFinancementId() === line.id) {
+          this.cancelPlanFinancementEdit();
+        }
+        this.loadPlanFinancement(item.id);
+        this.showToast('Ligne de financement supprimée', 'success');
+      },
+      error: () => {
+        this.savingPlanFinancement.set(false);
+        this.showToast('Erreur lors de la suppression de la ligne de financement', 'error');
+      }
+    });
+  }
+
+  hasDuplicatePlanLine(sourceFinancementId: string, modeFinancement: ModeFinancement, currentId?: string): boolean {
+    return this.planFinancement().some(line =>
+      line.id !== currentId
+      && line.sourceFinancementId === sourceFinancementId
+      && line.modeFinancement === modeFinancement
+    );
+  }
+
+  currentPlanFinancementHasDuplicate(): boolean {
+    if (!this.planFinancementForm.sourceFinancementId || !this.planFinancementForm.modeFinancement) {
+      return false;
+    }
+
+    return this.hasDuplicatePlanLine(
+      this.planFinancementForm.sourceFinancementId,
+      this.planFinancementForm.modeFinancement,
+      this.editingPlanFinancementId() ?? undefined
+    );
+  }
+
   getMissingRequiredDocumentsMessage(): string {
     const missing = this.getMissingRequiredDocumentTypes();
     if (missing.length === 0) {
@@ -437,8 +662,22 @@ export class IdeeProjetDetailComponent implements OnInit {
   }
 
   canUploadDocumentType(type: TypeDocumentProjet): boolean {
+    if (type === 'AVIS_CNDP' && !this.isCndpRole()) {
+      return false;
+    }
+
     if ((type === 'RAPPORT_FAISABILITE' || type === 'PRODOC') && !this.canManageProdoc()) {
       return false;
+    }
+
+    if (this.isDgepEligibleStatus(this.idee()?.statut)) {
+      const dgepDocuments: TypeDocumentProjet[] = [
+        'ACTE_JURIDIQUE',
+        ...DOSSIER_PROJET_REQUIRED_TYPES
+      ];
+      if (dgepDocuments.includes(type) && !this.isDgepRole()) {
+        return false;
+      }
     }
 
     return !this.hasDocumentType(type);
@@ -447,6 +686,10 @@ export class IdeeProjetDetailComponent implements OnInit {
   onSoumettreDossierProjet(): void {
     const item = this.idee();
     if (!item) return;
+    if (!this.canSoumettreDossierProjet()) {
+      this.showToast('Seul le role DGEP peut soumettre le dossier a cette etape', 'error');
+      return;
+    }
 
     const missing = this.getMissingRequiredDocumentTypes();
     if (missing.length > 0) {
@@ -471,6 +714,10 @@ export class IdeeProjetDetailComponent implements OnInit {
   onValiderDossierProjet(): void {
     const item = this.idee();
     if (!item) return;
+    if (!this.canValiderDossierProjet()) {
+      this.showToast('Seul le role DGEP peut traiter le dossier a cette etape', 'error');
+      return;
+    }
 
     if (item.statut !== 'SOUMISSION_DOSSIER_PROJET') {
       this.showToast('Impossible de valider : l\'idee n\'est pas en SOUMISSION_DOSSIER_PROJET.', 'error');
@@ -640,45 +887,46 @@ export class IdeeProjetDetailComponent implements OnInit {
     );
   }
 
-  onSaveCndpAvis(): void {
+  onEmettreAvisCndpFavorable(): void {
     const item = this.idee();
-    if (!item || !this.canGiveCndpAvis()) return;
+    if (!item || !this.canEmitCndpAvisFavorable()) return;
 
-    if (!this.cndpDecision) {
-      this.showToast('La décision de conformité est obligatoire', 'error');
+    if (!this.hasDocumentType('AVIS_CNDP')) {
+      this.showToast("Le document AVIS_CNDP est obligatoire avant d'émettre un avis favorable", 'error');
       return;
     }
 
-    this.actionInProgress.set(true);
-    const payload: Partial<AvisConformiteCNDP> = {
-      ideeProjetId: String(item.id),
-      typeAvis: 'CONFORMITE',
-      decision: this.cndpDecision,
-      observations: this.cndpObservations.trim() || undefined,
-      dateAvis: new Date(),
-      actif: true
-    };
+    this.runAction(
+      this.ideesService.emettreAvisCndpFavorable(item.id, { userId: this.getUserId() }),
+      'Avis CNDP favorable émis avec succès'
+    );
+  }
 
-    const existingAvis = this.cndpAvis();
-    const request$ = existingAvis
-      ? this.avisCndpService.update(existingAvis.id, payload)
-      : this.avisCndpService.create(payload);
+  onEmettreAvisCndpRejete(): void {
+    const item = this.idee();
+    if (!item || !this.canEmitCndpAvisRejete()) return;
 
-    request$.subscribe({
-      next: (avis) => {
-        this.actionInProgress.set(false);
-        this.cndpAvis.set(avis);
-        this.showToast('Avis de conformité enregistré avec succès', 'success');
-        this.loadCndpAvis(item.id);
-      },
-      error: () => {
-        this.actionInProgress.set(false);
-        this.showToast("Erreur lors de l'enregistrement de l'avis CNDP", 'error');
-      }
-    });
+    if (!this.hasDocumentType('AVIS_CNDP')) {
+      this.showToast("Le document AVIS_CNDP est obligatoire avant d'émettre un avis non favorable", 'error');
+      return;
+    }
+
+    if (!this.actionComment.trim()) {
+      this.showToast('Un commentaire est obligatoire pour un avis CNDP non favorable', 'error');
+      return;
+    }
+
+    this.runAction(
+      this.ideesService.emettreAvisCndpRejete(item.id, this.buildActionPayload()),
+      'Avis CNDP non favorable émis avec succès'
+    );
   }
 
   onIdentifierFinancement(): void {
+    if (!this.canIdentifierFinancement()) {
+      this.showToast('Seul le role DGEP peut identifier le financement a cette etape', 'error');
+      return;
+    }
     if (!this.hasRequiredDocuments()) {
       this.showToast('Acte juridique requis avant cette action', 'error');
       return;
@@ -692,6 +940,10 @@ export class IdeeProjetDetailComponent implements OnInit {
   }
 
   onRetournerDossierProjet(): void {
+    if (!this.canValiderDossierProjet()) {
+      this.showToast('Seul le role DGEP peut retourner le dossier a cette etape', 'error');
+      return;
+    }
     if (!this.actionComment.trim()) {
       this.showToast('Un commentaire est obligatoire pour retourner le dossier', 'error');
       return;
@@ -728,8 +980,8 @@ export class IdeeProjetDetailComponent implements OnInit {
         this.requiredDocumentTypes.set(this.getRequiredDocumentTypes(updated.statut));
         this.loadNoteConceptuelle(updated.id);
         this.loadDocuments(updated.id);
+        this.loadPlanFinancement(updated.id);
         this.loadAvailableActions(updated.statut);
-        this.loadCndpAvis(updated.id);
         afterRefresh?.();
       },
       error: () => {}
@@ -746,6 +998,13 @@ export class IdeeProjetDetailComponent implements OnInit {
 
   private getUserId(): string | undefined {
     return this.authService.currentUser()?.id;
+  }
+
+  private isDgepEligibleStatus(statut?: string): boolean {
+    return statut === 'AVIS_CNDP_FAVORABLE'
+      || statut === 'IDENTIFICATION_FINANCEMENT'
+      || statut === 'SOUMISSION_DOSSIER_PROJET'
+      || statut === 'DOSSIER_PROJET_RETOURNE';
   }
 
   private loadMinisteres(): void {
@@ -792,6 +1051,8 @@ export class IdeeProjetDetailComponent implements OnInit {
       'RAPPORT_FAISABILITE_VALIDE': 'badge-success',
       'PRODOC_SOUMIS': 'badge-info',
       'PRODOC_VALIDE': 'badge-success',
+      'AVIS_CNDP_FAVORABLE': 'badge-success',
+      'AVIS_CNDP_REJETE': 'badge-danger',
       'IDENTIFICATION_FINANCEMENT': 'badge-warning',
       'SOUMISSION_DOSSIER_PROJET': 'badge-info',
       'DOSSIER_PROJET_VALIDE': 'badge-success',
@@ -841,6 +1102,12 @@ export class IdeeProjetDetailComponent implements OnInit {
       default:
         return '';
     }
+  }
+
+  getSourceFinancementLabel(id: string | undefined): string {
+    if (!id) return '-';
+    const source = this.sourcesFinancement().find(item => item.id === id);
+    return source ? source.nom : '-';
   }
 
   getDocumentStatutBadgeClass(statut: string): string {

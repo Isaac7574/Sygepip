@@ -16,6 +16,35 @@
 }
 
 // Stats Cards
+.dashboard-kpi-card {
+  border-top-width: 4px;
+  border-top-style: solid;
+}
+
+.dashboard-kpi-card--blue {
+  border-top-color: #2563eb;
+}
+
+.dashboard-kpi-card--green {
+  border-top-color: #009e49;
+}
+
+.dashboard-kpi-card--emerald {
+  border-top-color: #059669;
+}
+
+.dashboard-kpi-card--amber {
+  border-top-color: #d97706;
+}
+
+.dashboard-kpi-card--purple {
+  border-top-color: #9333ea;
+}
+
+.dashboard-kpi-card--teal {
+  border-top-color: #0d9488;
+}
+
 .stat-card {
   @apply p-6;
 

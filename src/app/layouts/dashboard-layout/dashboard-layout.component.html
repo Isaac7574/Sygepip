@@ -1,4 +1,4 @@
-<div class="min-h-screen flex" style="background-color: #f9fafb;">
+<div class="min-h-screen flex" [class.admin-dark-mode]="isAdminDarkMode()" [style.background-color]="isAdminDarkMode() ? '#141414' : '#e9f5ee'">
   <!-- Sidebar -->
   <aside class="sidebar-glass fixed inset-y-0 left-0 z-50 transition-all duration-300 overflow-hidden"
          [style.width]="sidebarOpen() ? '16rem' : '4rem'">
@@ -438,6 +438,22 @@
       </button>
 
       <div class="flex items-center gap-3 ml-auto">
+        @if (isAppRoute()) {
+          <button
+            (click)="toggleAdminTheme()"
+            class="theme-toggle-btn"
+            [class.theme-toggle-btn-dark]="adminTheme() === 'dark'"
+            [attr.aria-label]="adminTheme() === 'dark' ? 'Passer au mode clair' : 'Passer au mode sombre'"
+            [title]="adminTheme() === 'dark' ? 'Mode clair' : 'Mode sombre'">
+            <span class="theme-lamp" [class.theme-lamp-on]="adminTheme() === 'dark'">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 18h6m-5 3h4m-6.364-9a6.364 6.364 0 1110.728 0c-.55.62-1.095 1.2-1.339 2.05-.15.523-.66.95-1.204.95h-5.642c-.544 0-1.054-.427-1.204-.95-.244-.85-.789-1.43-1.339-2.05z"/>
+              </svg>
+            </span>
+            <span class="theme-toggle-text">{{ adminTheme() === 'dark' ? 'Dark' : 'Light' }}</span>
+          </button>
+        }
+
         <button class="relative p-2 rounded-xl hover:bg-gray-100">
           <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
