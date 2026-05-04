@@ -361,6 +361,49 @@ export interface DocumentIdeeProjetResponseDTO {
   updatedAt: Date;
 }
 
+export type DossierProjetTypeDocument =
+  | 'DEMANDE_CREATION_PROJET'
+  | 'PROJET_ARRETE_CONJOINT'
+  | 'PRODOC'
+  | 'PROTOCOLE_ACCORD_ETAT_PARTENAIRE';
+
+export type StatutDossierProjetIdee =
+  | 'BROUILLON'
+  | 'COMPLET'
+  | 'SOUMIS'
+  | 'VALIDE'
+  | 'RETOURNE';
+
+export interface DossierProjetIdeeDocument {
+  id: string;
+  dossierProjetIdeeId: string;
+  documentIdeeProjetId: string;
+  typeDocument: DossierProjetTypeDocument;
+  titre?: string;
+  version?: string;
+  obligatoire: boolean;
+  documentCreatedAt?: string;
+  createdAt?: string;
+}
+
+export interface DossierProjetIdee {
+  id: string;
+  ideeProjetId: string;
+  statut: StatutDossierProjetIdee;
+  dateSoumission?: string;
+  dateValidation?: string;
+  soumisPar?: string;
+  validePar?: string;
+  retournePar?: string;
+  commentaireRetour?: string;
+  actif: boolean;
+  complet: boolean;
+  piecesManquantes: DossierProjetTypeDocument[];
+  documents: DossierProjetIdeeDocument[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface DocumentUploadRequest {
   file: File;
   typeDocument: TypeDocumentProjet;
@@ -393,6 +436,11 @@ export type TypeProjetPip = 'NOYAU_SUR' | 'NATIONAL';
 export type StatutInscriptionPip = 'EN_EXECUTION' | 'INSTANCE_DEMARRAGE';
 
 export type StatutProjet =
+  | 'MATURE'
+  | 'SELECTIONNE'
+  | 'PROG_OPERATIONNELLE'
+  | 'PROG_FINANCIERE'
+  | 'PROG_FINANCIERE_VALIDE'
   | 'CREE'
   | 'PIP_TECHNIQUE_EN_COURS'
   | 'PIP_TECHNIQUE_SOUMIS'

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ProjetsService } from '@core/services/projets.service';
+import { AuthService } from '@core/services/auth.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
 import { RegionsService } from '@core/services/regions.service';
@@ -13,14 +14,17 @@ import { AutorisationEngagementService } from '@core/services/autorisation-engag
 import { CreditPaiementService } from '@core/services/credit-paiement.service';
 import { DecaissementService } from '@core/services/decaissement.service';
 import { IndicateursService } from '@core/services/indicateurs.service';
+import { PlanFinancementService } from '@core/services/plan-financement.service';
 import { SourcesFinancementService } from '@core/services/sources-financement.service';
 import { NatureDepenseService } from '@core/services/nature-depense.service';
 import { SuiviExecutionService } from '@core/services/suivi-execution.service';
+import { WorkflowService } from '@core/services/workflow.service';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 import {
   Projet, Ministere, Secteur, Region, Programme, IdeeProjet,
   AutorisationEngagement, CreditPaiement, SourceFinancement, NatureDepense,
-  CategorieProjet, TypeProjetPip, StatutInscriptionPip, ModeFinancement, Decaissement, Indicateur
+  CategorieProjet, TypeProjetPip, StatutInscriptionPip, ModeFinancement, Decaissement, Indicateur,
+  PlanFinancement, WorkflowNextAction
 } from '@core/models';
 
 type ActiveTab = 'general' | 'technique' | 'financier' | 'indicateurs' | 'suivi-indicateurs';
@@ -35,6 +39,7 @@ type ActiveTab = 'general' | 'technique' | 'financier' | 'indicateurs' | 'suivi-
 export class ProjetDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private projetsService = inject(ProjetsService);
+  private authService = inject(AuthService);
   private ministeresService = inject(MinisteresService);
   private secteursService = inject(SecteursService);
   private regionsService = inject(RegionsService);
@@ -44,17 +49,26 @@ export class ProjetDetailComponent implements OnInit {
   private cpService = inject(CreditPaiementService);
   private decaissementService = inject(DecaissementService);
   private indicateursService = inject(IndicateursService);
+  private planFinancementService = inject(PlanFinancementService);
   private sourcesFinancementService = inject(SourcesFinancementService);
   private natureDepenseService = inject(NatureDepenseService);
   private suiviExecutionService = inject(SuiviExecutionService);
+  private workflowService = inject(WorkflowService);
 
-  // ── État principal ──────────────────────────────────────────────────────
+  //  Etat principal 
   projet = signal<Projet | null>(null);
   loading = signal(true);
   error = signal<string | null>(null);
   activeTab = signal<ActiveTab>('general');
+  availableActions = signal<WorkflowNextAction[]>([]);
+  loadingSelection = signal(false);
+  validatingFinancial = signal(false);
+  passingToArbitrage = signal(false);
+  processingArbitrage = signal(false);
+  validatingPip = signal(false);
+  selectionComment = 'Projet retenu comme projet structurant';
 
-  // ── Référentiels ────────────────────────────────────────────────────────
+  //  Referentiels 
   ministeres = signal<Ministere[]>([]);
   secteurs = signal<Secteur[]>([]);
   regions = signal<Region[]>([]);
@@ -63,7 +77,7 @@ export class ProjetDetailComponent implements OnInit {
   sourcesFinancement = signal<SourceFinancement[]>([]);
   naturesDepense = signal<NatureDepense[]>([]);
 
-  // ── Programmation technique ─────────────────────────────────────────────
+  //  Programmation technique 
   ptForm = {
     code: '',
     categorie: '' as CategorieProjet | '',
@@ -77,14 +91,17 @@ export class ProjetDetailComponent implements OnInit {
     statutInscriptionPip: '' as StatutInscriptionPip | '',
   };
   savingPT = signal(false);
+  validatingPT = signal(false);
 
-  // ── AE ──────────────────────────────────────────────────────────────────
+  //  AE 
   aes = signal<AutorisationEngagement[]>([]);
   loadingAes = signal(false);
   selectedAe = signal<AutorisationEngagement | null>(null);
   showAeForm = signal(false);
   savingAe = signal(false);
+  editingAeId = signal<string | null>(null);
   aeForm = {
+    annee: null as number | null,
     montantAe: null as number | null,
     sourceFinancementId: '',
     modeFinancement: '' as ModeFinancement | '',
@@ -96,11 +113,12 @@ export class ProjetDetailComponent implements OnInit {
     actif: true,
   };
 
-  // ── CP ──────────────────────────────────────────────────────────────────
+  //  CP 
   cps = signal<CreditPaiement[]>([]);
   loadingCps = signal(false);
   showCpForm = signal(false);
   savingCp = signal(false);
+  editingCpId = signal<string | null>(null);
   selectedCp = signal<CreditPaiement | null>(null);
   selectedCpProjet = signal<Projet | null>(null);
   cpForm = {
@@ -113,7 +131,21 @@ export class ProjetDetailComponent implements OnInit {
     actif: true,
   };
 
-  // ── Décaissement ───────────────────────────────────────────────────────────────
+  planFinancements = signal<PlanFinancement[]>([]);
+  loadingPlanFinancements = signal(false);
+  savingPlanFinancement = signal(false);
+  editingPlanFinancementId = signal<string | null>(null);
+  showPlanFinancementForm = signal(false);
+  planFinancementForm = {
+    sourceFinancementId: '',
+    montant: null as number | null,
+    pourcentage: null as number | null,
+    statut: '',
+    dateEngagement: '',
+    actif: true,
+  };
+
+  //  Decaissement 
   decaissements = signal<Decaissement[]>([]);
   loadingDecaissements = signal(false);
   showDecaissementForm = signal(false);
@@ -135,51 +167,51 @@ export class ProjetDetailComponent implements OnInit {
   showAllIndicateurs = signal(false);
   indicateurValeursActuelles: Record<string, number | null> = {};
 
-  // ── Toast ───────────────────────────────────────────────────────────────
+  //  Toast 
   toastVisible = signal(false);
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
 
-  // ── Listes d'options ────────────────────────────────────────────────────
+  //  Listes d'options 
   categoriesPip: { value: CategorieProjet; label: string }[] = [
-    { value: 'CATEGORIE_1_ADMINISTRATION_DIRECTE', label: 'Catégorie 1 – Administration directe' },
-    { value: 'CATEGORIE_2_STRUCTURE_AUTONOME',     label: 'Catégorie 2 – Structure autonome' },
-    { value: 'CATEGORIE_3_AGENCES_PTF_ONG',        label: 'Catégorie 3 – Agences / PTF / ONG' },
-    { value: 'CATEGORIE_4_PPP',                    label: 'Catégorie 4 – PPP' },
+    { value: 'CATEGORIE_1_ADMINISTRATION_DIRECTE', label: 'Categorie 1 - Administration directe' },
+    { value: 'CATEGORIE_2_STRUCTURE_AUTONOME',     label: 'Categorie 2 - Structure autonome' },
+    { value: 'CATEGORIE_3_AGENCES_PTF_ONG',        label: 'Categorie 3 - Agences / PTF / ONG' },
+    { value: 'CATEGORIE_4_PPP',                    label: 'Categorie 4 - PPP' },
   ];
 
   typesProjetPip: { value: TypeProjetPip; label: string }[] = [
-    { value: 'NOYAU_SUR', label: 'Noyau sûr' },
+    { value: 'NOYAU_SUR', label: 'Noyau sur' },
     { value: 'NATIONAL',  label: 'National' },
   ];
 
   statutsInscriptionPip: { value: StatutInscriptionPip; label: string }[] = [
-    { value: 'EN_EXECUTION',      label: 'En exécution' },
-    { value: 'INSTANCE_DEMARRAGE', label: 'Instance démarrage' },
+    { value: 'EN_EXECUTION',      label: 'En execution' },
+    { value: 'INSTANCE_DEMARRAGE', label: 'Instance de demarrage' },
   ];
 
   modesFinancement: { value: ModeFinancement; label: string }[] = [
     { value: 'CONTREPARTIE', label: 'Contrepartie' },
     { value: 'SUBVENTION',   label: 'Subvention' },
-    { value: 'PRET',         label: 'Prêt' },
+    { value: 'PRET',         label: 'Pret' },
   ];
 
   statuts = [
-    { value: 'PLANIFIE', label: 'Planifié' },
+    { value: 'PLANIFIE', label: 'Planifie' },
     { value: 'EN_COURS', label: 'En cours' },
     { value: 'SUSPENDU', label: 'Suspendu' },
-    { value: 'TERMINE',  label: 'Terminé' },
-    { value: 'ANNULE',   label: 'Annulé' }
+    { value: 'TERMINE',  label: 'Termine' },
+    { value: 'ANNULE',   label: 'Annule' }
   ];
 
   categories = [
     { value: 'NOUVEAU',       label: 'Nouveau' },
     { value: 'EN_COURS',      label: 'En cours' },
     { value: 'EXTENSION',     label: 'Extension' },
-    { value: 'REHABILITATION', label: 'Réhabilitation' }
+    { value: 'REHABILITATION', label: 'Rehabilitation' }
   ];
 
-  // ── Lifecycle ────────────────────────────────────────────────────────────
+  //  Lifecycle 
   ngOnInit(): void {
     this.ministeresService.getAll().subscribe({ next: (d) => this.ministeres.set(d) });
     this.secteursService.getAll().subscribe({ next: (d) => this.secteurs.set(d) });
@@ -200,7 +232,7 @@ export class ProjetDetailComponent implements OnInit {
     });
   }
 
-  // ── Chargement ───────────────────────────────────────────────────────────
+  //  Chargement 
   private loadProjet(id: string): void {
     this.loading.set(true);
     this.error.set(null);
@@ -210,12 +242,39 @@ export class ProjetDetailComponent implements OnInit {
         this.projet.set(p);
         this.loading.set(false);
         this.initPtForm(p);
-        this.loadAes(p.id);
         this.loadIndicateurs(p.id);
+        this.loadAvailableActions(p.statut, () => {
+          if (this.showFinanciereSection()) {
+            this.loadAes(p.id);
+            this.loadPlanFinancements(p.id);
+          } else {
+            this.clearFinancialData();
+          }
+          this.ensureActiveTabVisible();
+        });
       },
       error: () => {
         this.error.set('Erreur lors du chargement du projet.');
         this.loading.set(false);
+      }
+    });
+  }
+
+  private loadAvailableActions(statut?: string, afterLoad?: () => void): void {
+    if (!statut) {
+      this.availableActions.set([]);
+      afterLoad?.();
+      return;
+    }
+
+    this.workflowService.getMyActions('PROJET', statut).subscribe({
+      next: (actions) => {
+        this.availableActions.set(actions);
+        afterLoad?.();
+      },
+      error: () => {
+        this.availableActions.set([]);
+        afterLoad?.();
       }
     });
   }
@@ -225,6 +284,20 @@ export class ProjetDetailComponent implements OnInit {
     this.aeService.getByProjet(projetId).subscribe({
       next: (data) => { this.aes.set(data); this.loadingAes.set(false); },
       error: ()   => { this.loadingAes.set(false); }
+    });
+  }
+
+  private loadPlanFinancements(projetId: string): void {
+    this.loadingPlanFinancements.set(true);
+    this.planFinancementService.getByProjet(projetId).subscribe({
+      next: (data) => {
+        this.planFinancements.set(data);
+        this.loadingPlanFinancements.set(false);
+      },
+      error: () => {
+        this.planFinancements.set([]);
+        this.loadingPlanFinancements.set(false);
+      }
     });
   }
 
@@ -241,6 +314,233 @@ export class ProjetDetailComponent implements OnInit {
       },
       error: ()    => { this.loadingCps.set(false); }
     });
+  }
+
+  isInstructeur(): boolean {
+    return this.authService.hasRole('INSTRUCTEUR');
+  }
+
+  isDgep(): boolean {
+    return this.authService.hasRole('DGEP');
+  }
+
+  canSelectPip(): boolean {
+    return this.availableActions().some(action =>
+      action.codeEtape === 'PIP_SELECTION' ||
+      action.etatCible === 'SELECTIONNE'
+    );
+  }
+
+  canProgramTechnique(): boolean {
+    return this.availableActions().some(action =>
+      action.codeEtape === 'PIP_PROG_OPERATIONNELLE' ||
+      action.etatCible === 'PROG_OPERATIONNELLE'
+    );
+  }
+
+  canValidateFinanciere(): boolean {
+    return this.availableActions().some(action =>
+      action.codeEtape === 'PIP_PROG_FINANCIERE' ||
+      action.etatCible === 'PROG_FINANCIERE_VALIDE'
+    );
+  }
+
+  canPasserArbitrage(): boolean {
+    return this.availableActions().some(action =>
+      action.codeEtape === 'PIP_PASSAGE_ARBITRAGE' ||
+      action.etatCible === 'EN_ARBITRAGE'
+    );
+  }
+
+  canRetenirArbitrage(): boolean {
+    return this.availableActions().some(action =>
+      action.codeEtape === 'PIP_ARBITRAGE_RETENU' ||
+      action.etatCible === 'ARBITRAGE_RETENU'
+    );
+  }
+
+  canAjournerArbitrage(): boolean {
+    return this.availableActions().some(action =>
+      action.codeEtape === 'PIP_ARBITRAGE_AJOURNE' ||
+      action.etatCible === 'ARBITRAGE_AJOURNE'
+    );
+  }
+
+  canValiderInscriptionPip(): boolean {
+    return this.availableActions().some(action =>
+      action.codeEtape === 'PIP_VALIDATION_INSCRIPTION' ||
+      action.etatCible === 'PIP_VALIDE'
+    );
+  }
+
+  canPasserExecution(): boolean {
+    return this.availableActions().some(action =>
+      action.codeEtape === 'PIP_PASSAGE_EXECUTION' ||
+      action.etatCible === 'EN_EXECUTION'
+    );
+  }
+
+  showTechniqueSection(): boolean {
+    return this.isInstructeur() && this.canProgramTechnique();
+  }
+
+  showSelectPipButton(): boolean {
+    return this.isDgep() && this.canSelectPip();
+  }
+
+  showValidateFinanciereButton(): boolean {
+    return this.isDgep() && this.canValidateFinanciere();
+  }
+
+  showPasserArbitrageButton(): boolean {
+    return this.isDgep() && this.canPasserArbitrage();
+  }
+
+  showRetenirArbitrageButton(): boolean {
+    return this.isDgep() && this.canRetenirArbitrage();
+  }
+
+  showAjournerArbitrageButton(): boolean {
+    return this.isDgep() && this.canAjournerArbitrage();
+  }
+
+  showValiderInscriptionPipButton(): boolean {
+    return this.isDgep() && this.canValiderInscriptionPip();
+  }
+
+  showFinanciereSection(): boolean {
+    const statut = this.projet()?.statut;
+    return this.isDgep() && (
+      this.canValidateFinanciere() ||
+      this.canPasserArbitrage() ||
+      statut === 'PROG_OPERATIONNELLE' ||
+      statut === 'PROG_FINANCIERE_VALIDE' ||
+      statut === 'PROG_FINANCIERE' ||
+      statut === 'EN_EXECUTION'
+    );
+  }
+
+  showArbitrageSection(): boolean {
+    const statut = this.projet()?.statut;
+    return (
+      this.canRetenirArbitrage() ||
+      this.canAjournerArbitrage() ||
+      this.canValiderInscriptionPip() ||
+      statut === 'EN_ARBITRAGE' ||
+      statut === 'ARBITRAGE_RETENU' ||
+      statut === 'ARBITRAGE_AJOURNE' ||
+      statut === 'PIP_VALIDE'
+    );
+  }
+
+  getWorkflowStatusMessage(): string {
+    const statut = this.projet()?.statut;
+    if (statut === 'MATURE') {
+      return 'Projet mature en attente de selection par la DGEP.';
+    }
+    if (statut === 'SELECTIONNE') {
+      return 'Projet selectionne. La programmation technique peut etre renseignee par l\'instructeur.';
+    }
+    if (statut === 'PROG_OPERATIONNELLE') {
+      return 'La programmation technique est validee. La DGEP peut finaliser la programmation financiere.';
+    }
+    if (statut === 'PROG_FINANCIERE_VALIDE' || statut === 'PROG_FINANCIERE') {
+      return 'La programmation financiere est validee. Le projet peut maintenant etre transmis a l\'arbitrage.';
+    }
+    if (statut === 'EN_ARBITRAGE') {
+      return 'Le projet est en cours d\'arbitrage.';
+    }
+    if (statut === 'ARBITRAGE_RETENU') {
+      return 'Le projet a ete retenu apres arbitrage. Il peut etre inscrit au PIP.';
+    }
+    if (statut === 'ARBITRAGE_AJOURNE') {
+      return 'Le projet a ete ajourne apres arbitrage.';
+    }
+    if (statut === 'PIP_VALIDE') {
+      return 'Le projet est inscrit au PIP. Il peut maintenant etre mis en execution.';
+    }
+    if (statut === 'EN_EXECUTION') {
+      return this.projet()?.decaissementActif === true
+        ? 'Le projet est en execution et le decaissement est active.'
+        : 'Le projet est en execution. Le decaissement peut etre active.';
+    }
+    return 'Les actions disponibles sur ce projet sont pilotees par le workflow courant.';
+  }
+
+  getFinancialSectionMessage(): string {
+    const statut = this.projet()?.statut;
+    if (statut === 'PROG_OPERATIONNELLE') {
+      return 'Renseignez les AE, les CP et le plan de financement, puis validez la programmation financiere.';
+    }
+    if (statut === 'PROG_FINANCIERE_VALIDE' || statut === 'PROG_FINANCIERE') {
+      return 'La programmation financiere est validee. Vous pouvez maintenant transmettre le projet a l\'arbitrage.';
+    }
+    if (statut === 'EN_EXECUTION' && this.projet()?.decaissementActif === true) {
+      return 'Le projet est en execution. Selectionnez une AE puis un CP pour enregistrer des operations de decaissement.';
+    }
+    if (statut === 'EN_EXECUTION') {
+      return 'Le projet est en execution. Selectionnez une AE puis un CP pour preparer les operations de decaissement.';
+    }
+    return 'Le bloc financier reste pilote par les actions disponibles du workflow.';
+  }
+
+  getArbitrageSectionMessage(): string {
+    const statut = this.projet()?.statut;
+    if (statut === 'EN_ARBITRAGE') {
+      return 'Le projet est en cours d\'arbitrage.';
+    }
+    if (statut === 'ARBITRAGE_RETENU') {
+      return 'Le projet a ete retenu apres arbitrage. Il peut etre inscrit au PIP.';
+    }
+    if (statut === 'ARBITRAGE_AJOURNE') {
+      return 'Le projet a ete ajourne apres arbitrage.';
+    }
+    if (statut === 'PIP_VALIDE') {
+      return 'Le projet est inscrit au PIP. Il peut maintenant etre mis en execution.';
+    }
+    if (statut === 'EN_EXECUTION' && this.projet()?.decaissementActif === true) {
+      return 'Le projet est en execution et le decaissement est active.';
+    }
+    if (statut === 'EN_EXECUTION') {
+      return 'Le projet est en execution. Le decaissement peut etre active.';
+    }
+    return 'Le bloc arbitrage reste pilote par les actions disponibles du workflow.';
+  }
+
+  showPasserEnExecutionButton(): boolean {
+    const projet = this.projet();
+    return !!projet && this.isDgep() && this.canPasserExecution() && projet.statut === 'PIP_VALIDE';
+  }
+
+  canActiverDecaissementProjet(): boolean {
+    const projet = this.projet();
+    return !!projet && projet.statut === 'EN_EXECUTION' && projet.decaissementActif !== true;
+  }
+
+  getExecutionSectionMessage(): string {
+    const projet = this.projet();
+    if (!projet) return '';
+    if (projet.statut === 'PIP_VALIDE') {
+      return 'Le projet est inscrit au PIP. Il peut maintenant etre mis en execution.';
+    }
+    if (projet.statut === 'EN_EXECUTION' && projet.decaissementActif === true) {
+      return 'Le projet est en execution et le decaissement est active.';
+    }
+    if (projet.statut === 'EN_EXECUTION') {
+      return 'Le projet est en execution. Le decaissement peut etre active.';
+    }
+    return '';
+  }
+
+  private ensureActiveTabVisible(): void {
+    if (this.activeTab() === 'technique' && !this.showTechniqueSection()) {
+      this.activeTab.set(this.showFinanciereSection() ? 'financier' : 'general');
+      return;
+    }
+
+    if (this.activeTab() === 'financier' && !this.showFinanciereSection()) {
+      this.activeTab.set(this.showTechniqueSection() ? 'technique' : 'general');
+    }
   }
 
   private loadIndicateurs(projetId: string): void {
@@ -283,7 +583,7 @@ export class ProjetDetailComponent implements OnInit {
     });
   }
 
-  // ── Initialisation formulaire PT ─────────────────────────────────────────
+  //  Initialisation formulaire PT 
   private initPtForm(p: Projet): void {
     this.ptForm.code = p.code ?? '';
     this.ptForm.categorie = (p.categorie as CategorieProjet) ?? '';
@@ -297,10 +597,14 @@ export class ProjetDetailComponent implements OnInit {
     this.ptForm.statutInscriptionPip = (p.statutInscriptionPip as StatutInscriptionPip) ?? '';
   }
 
-  // ── Sauvegarde PT ────────────────────────────────────────────────────────
+  //  Sauvegarde PT 
   saveProgrammationTechnique(): void {
     const p = this.projet();
     if (!p) return;
+    if (!this.showTechniqueSection()) {
+      this.showToast('Vous n\'avez pas la permission d\'effectuer la programmation technique de ce projet.', 'error');
+      return;
+    }
     this.savingPT.set(true);
     const payload: any = {
       code: this.ptForm.code || undefined,
@@ -318,30 +622,239 @@ export class ProjetDetailComponent implements OnInit {
       next: (updated) => {
         this.projet.set(this.adaptProjetDates(updated));
         this.savingPT.set(false);
-        this.showToast('Programmation technique enregistrée', 'success');
+        this.refreshProjetAndActions(p.id);
+        this.showToast('Programmation technique enregistree', 'success');
       },
       error: (err) => {
         this.savingPT.set(false);
-        this.showToast(err?.message || 'Erreur lors de l\'enregistrement', 'error');
+        this.showPermissionAwareError(err, 'Vous n\'avez pas la permission d\'effectuer la programmation technique de ce projet.');
       }
     });
   }
 
-  // ── AE ───────────────────────────────────────────────────────────────────
+  //  AE 
+  validateProgrammationTechnique(): void {
+    const projet = this.projet();
+    const userId = this.authService.currentUser()?.id;
+    if (!projet || !userId) return;
+    if (!this.showTechniqueSection()) {
+      this.showToast('Vous n\'avez pas la permission d\'effectuer la programmation technique de ce projet.', 'error');
+      return;
+    }
+
+    this.validatingPT.set(true);
+    this.projetsService.validerProgrammationTechnique(projet.id, {
+      userId,
+      commentaire: 'Programmation technique validee'
+    }).subscribe({
+      next: () => {
+        this.validatingPT.set(false);
+        this.refreshProjetAndActions(projet.id, true);
+        this.showToast('Programmation technique validee', 'success');
+      },
+      error: (err) => {
+        this.validatingPT.set(false);
+        this.showPermissionAwareError(err, 'Vous n\'avez pas la permission d\'effectuer la programmation technique de ce projet.');
+      }
+    });
+  }
+
+  selectPip(): void {
+    const projet = this.projet();
+    const userId = this.authService.currentUser()?.id;
+    if (!projet || !userId) return;
+    if (!this.showSelectPipButton()) {
+      this.showToast('Vous n\'avez pas la permission de selectionner ce projet pour le PIP.', 'error');
+      return;
+    }
+
+    this.loadingSelection.set(true);
+    this.projetsService.selectionnerPip(projet.id, {
+      userId,
+      commentaire: this.selectionComment || 'Projet retenu comme projet structurant'
+    }).subscribe({
+      next: () => {
+        this.loadingSelection.set(false);
+        this.refreshProjetAndActions(projet.id);
+        this.showToast('Projet selectionne pour le PIP', 'success');
+      },
+      error: (err) => {
+        this.loadingSelection.set(false);
+        this.showPermissionAwareError(err, 'Vous n\'avez pas la permission de selectionner ce projet pour le PIP.');
+      }
+    });
+  }
+
+  validateProgrammationFinanciere(): void {
+    const projet = this.projet();
+    const userId = this.authService.currentUser()?.id;
+    if (!projet || !userId) return;
+    if (!this.showValidateFinanciereButton()) {
+      this.showToast('Vous n\'avez pas la permission de valider la programmation financiere de ce projet.', 'error');
+      return;
+    }
+
+    this.validatingFinancial.set(true);
+    this.projetsService.validerProgrammationFinanciere(projet.id, {
+      userId,
+      commentaire: 'Programmation financiere validee'
+    }).subscribe({
+      next: () => {
+        this.validatingFinancial.set(false);
+        this.refreshProjetAndActions(projet.id, true);
+        this.showToast('Programmation financiere validee', 'success');
+      },
+      error: (err) => {
+        this.validatingFinancial.set(false);
+        this.showPermissionAwareError(err, 'Vous n\'avez pas la permission de valider la programmation financiere de ce projet.');
+      }
+    });
+  }
+
+  passerArbitrageProjet(): void {
+    const projet = this.projet();
+    const userId = this.authService.currentUser()?.id;
+    if (!projet || !userId) return;
+    if (!this.showPasserArbitrageButton()) {
+      this.showToast('Vous n\'avez pas la permission de transmettre ce projet a l\'arbitrage.', 'error');
+      return;
+    }
+
+    this.passingToArbitrage.set(true);
+    this.projetsService.passerArbitrage(projet.id, {
+      userId,
+      commentaire: 'Projet transmis a l\'arbitrage'
+    }).subscribe({
+      next: () => {
+        this.passingToArbitrage.set(false);
+        this.refreshProjetAndActions(projet.id, true);
+        this.showToast('Projet transmis a l\'arbitrage', 'success');
+      },
+      error: (err) => {
+        this.passingToArbitrage.set(false);
+        this.showPermissionAwareError(err, 'Vous n\'avez pas la permission de transmettre ce projet a l\'arbitrage.');
+      }
+    });
+  }
+
+  retenirProjet(): void {
+    const projet = this.projet();
+    const userId = this.authService.currentUser()?.id;
+    if (!projet || !userId) return;
+    if (!this.showRetenirArbitrageButton()) {
+      this.showToast('Vous n\'avez pas la permission de retenir ce projet apres arbitrage.', 'error');
+      return;
+    }
+
+    this.processingArbitrage.set(true);
+    this.projetsService.retenirArbitrage(projet.id, {
+      userId,
+      commentaire: 'Projet retenu apres arbitrage'
+    }).subscribe({
+      next: () => {
+        this.processingArbitrage.set(false);
+        this.refreshProjetAndActions(projet.id);
+        this.showToast('Projet retenu apres arbitrage', 'success');
+      },
+      error: (err) => {
+        this.processingArbitrage.set(false);
+        this.showPermissionAwareError(err, 'Vous n\'avez pas la permission de retenir ce projet apres arbitrage.');
+      }
+    });
+  }
+
+  ajournerProjet(): void {
+    const projet = this.projet();
+    const userId = this.authService.currentUser()?.id;
+    if (!projet || !userId) return;
+    if (!this.showAjournerArbitrageButton()) {
+      this.showToast('Vous n\'avez pas la permission d\'ajourner ce projet apres arbitrage.', 'error');
+      return;
+    }
+
+    this.processingArbitrage.set(true);
+    this.projetsService.ajournerArbitrage(projet.id, {
+      userId,
+      commentaire: 'Projet ajourne apres arbitrage'
+    }).subscribe({
+      next: () => {
+        this.processingArbitrage.set(false);
+        this.refreshProjetAndActions(projet.id);
+        this.showToast('Projet ajourne apres arbitrage', 'success');
+      },
+      error: (err) => {
+        this.processingArbitrage.set(false);
+        this.showPermissionAwareError(err, 'Vous n\'avez pas la permission d\'ajourner ce projet apres arbitrage.');
+      }
+    });
+  }
+
+  validerPip(): void {
+    const projet = this.projet();
+    const userId = this.authService.currentUser()?.id;
+    if (!projet || !userId) return;
+    if (!this.showValiderInscriptionPipButton()) {
+      this.showToast('Vous n\'avez pas la permission de valider l\'inscription de ce projet au PIP.', 'error');
+      return;
+    }
+
+    this.validatingPip.set(true);
+    this.projetsService.validerInscriptionPip(projet.id, {
+      userId,
+      commentaire: 'Inscription au PIP validee'
+    }).subscribe({
+      next: () => {
+        this.validatingPip.set(false);
+        this.refreshProjetAndActions(projet.id);
+        this.showToast('Inscription au PIP validee', 'success');
+      },
+      error: (err) => {
+        this.validatingPip.set(false);
+        this.showPermissionAwareError(err, 'Vous n\'avez pas la permission de valider l\'inscription de ce projet au PIP.');
+      }
+    });
+  }
+
   openAeForm(): void {
-    this.aeForm = { montantAe: null, sourceFinancementId: '', modeFinancement: '',
+    this.editingAeId.set(null);
+    this.aeForm = { annee: null, montantAe: null, sourceFinancementId: '', modeFinancement: '',
       ligneBudgetaire: '', natureDepenseId: '', dateAutorisation: '',
       statut: '', observations: '', actif: true };
     this.showAeForm.set(true);
   }
 
-  cancelAeForm(): void { this.showAeForm.set(false); }
+  editAe(ae: AutorisationEngagement): void {
+    this.editingAeId.set(ae.id);
+    this.aeForm = {
+      annee: ae.annee ?? null,
+      montantAe: ae.montantAe ?? ae.montantAE ?? null,
+      sourceFinancementId: ae.sourceFinancementId ?? '',
+      modeFinancement: '' as ModeFinancement | '',
+      ligneBudgetaire: ae.ligneBudgetaire ?? ae.lignebudgetaire ?? '',
+      natureDepenseId: ae.natureDepenseId ?? '',
+      dateAutorisation: ae.dateAutorisation ? this.toDatetimeLocal(ae.dateAutorisation) : '',
+      statut: ae.statut ?? '',
+      observations: ae.observations ?? '',
+      actif: ae.actif ?? true,
+    };
+    this.showAeForm.set(true);
+  }
+
+  cancelAeForm(): void {
+    this.showAeForm.set(false);
+    this.editingAeId.set(null);
+  }
 
   saveAe(): void {
     const p = this.projet();
     if (!p) return;
+    if (!this.showFinanciereSection()) {
+      this.showToast('Vous n\'avez pas la permission d\'effectuer la programmation financiere de ce projet.', 'error');
+      return;
+    }
     this.savingAe.set(true);
     const payload: any = {
+      annee: this.aeForm.annee ?? undefined,
       montantAe: this.aeForm.montantAe ?? undefined,
       sourceFinancementId: this.aeForm.sourceFinancementId || undefined,
       modeFinancement: this.aeForm.modeFinancement || undefined,
@@ -352,16 +865,57 @@ export class ProjetDetailComponent implements OnInit {
       observations: this.aeForm.observations || undefined,
       actif: this.aeForm.actif,
     };
-    this.aeService.createForProjet(p.id, payload).subscribe({
+    const editingAeId = this.editingAeId();
+    const request = editingAeId
+      ? this.aeService.update(editingAeId, payload)
+      : this.aeService.createForProjet(p.id, payload);
+    request.subscribe({
       next: () => {
         this.savingAe.set(false);
         this.showAeForm.set(false);
-        this.showToast('Autorisation d\'engagement créée', 'success');
-        this.loadAes(p.id);
+        this.editingAeId.set(null);
+        this.showToast('Autorisation d\'engagement creee', 'success');
+        this.refreshProjetAndActions(p.id, true);
       },
       error: (err) => {
         this.savingAe.set(false);
-        this.showToast(err?.message || 'Erreur lors de la création de l\'AE', 'error');
+        if (err?.status === 403) {
+          this.showToast('Vous n\'avez pas la permission d\'effectuer la programmation financiere de ce projet.', 'error');
+          return;
+        }
+        this.showToast(err?.message || 'Erreur lors de la creation de l\'AE', 'error');
+      }
+    });
+  }
+
+  deleteAe(ae: AutorisationEngagement, event?: Event): void {
+    event?.stopPropagation();
+    const p = this.projet();
+    if (!p) return;
+    if (!this.showFinanciereSection()) {
+      this.showToast('Vous n\'avez pas la permission d\'effectuer la programmation financiere de ce projet.', 'error');
+      return;
+    }
+
+    this.savingAe.set(true);
+    this.aeService.delete(ae.id).subscribe({
+      next: () => {
+        this.savingAe.set(false);
+        if (this.selectedAe()?.id === ae.id) {
+          this.selectedAe.set(null);
+          this.selectedCp.set(null);
+          this.cps.set([]);
+        }
+        this.showToast('Autorisation d\'engagement supprimee', 'success');
+        this.refreshProjetAndActions(p.id, true);
+      },
+      error: (err) => {
+        this.savingAe.set(false);
+        if (err?.status === 403) {
+          this.showToast('Vous n\'avez pas la permission d\'effectuer la programmation financiere de ce projet.', 'error');
+          return;
+        }
+        this.showToast(err?.message || 'Erreur lors de la suppression de l\'AE', 'error');
       }
     });
   }
@@ -377,18 +931,34 @@ export class ProjetDetailComponent implements OnInit {
     this.loadCps(ae.id);
   }
 
-  // ── CP ───────────────────────────────────────────────────────────────────
+  //  CP 
   openCpForm(): void {
+    this.editingCpId.set(null);
     this.cpForm = { annee: null, montantCp: null, natureDepenseId: '',
       montantPaye: null, dateEcheance: '', statut: '', actif: true };
     this.showCpForm.set(true);
   }
 
-  cancelCpForm(): void { this.showCpForm.set(false); }
+  editCp(cp: CreditPaiement, event?: Event): void {
+    event?.stopPropagation();
+    this.editingCpId.set(cp.id);
+    this.cpForm = { annee: cp.annee ?? null, montantCp: cp.montantCp ?? null, natureDepenseId: cp.natureDepenseId ?? '',
+      montantPaye: cp.montantPaye ?? null, dateEcheance: cp.dateEcheance ? this.toDatetimeLocal(cp.dateEcheance) : '', statut: cp.statut ?? '', actif: cp.actif ?? true };
+    this.showCpForm.set(true);
+  }
+
+  cancelCpForm(): void {
+    this.showCpForm.set(false);
+    this.editingCpId.set(null);
+  }
 
   saveCp(): void {
     const ae = this.selectedAe();
     if (!ae) return;
+    if (!this.showFinanciereSection()) {
+      this.showToast('Vous n\'avez pas la permission d\'effectuer la programmation financiere de ce projet.', 'error');
+      return;
+    }
     this.savingCp.set(true);
     const payload: any = {
       annee: this.cpForm.annee ?? undefined,
@@ -399,32 +969,82 @@ export class ProjetDetailComponent implements OnInit {
       statut: this.cpForm.statut || undefined,
       actif: this.cpForm.actif,
     };
-    this.cpService.createForAe(ae.id, payload).subscribe({
+    const editingCpId = this.editingCpId();
+    const request = editingCpId
+      ? this.cpService.update(editingCpId, payload)
+      : this.cpService.createForAe(ae.id, payload);
+    request.subscribe({
       next: () => {
         this.savingCp.set(false);
         this.showCpForm.set(false);
-        this.showToast('Crédit de paiement créé', 'success');
+        this.editingCpId.set(null);
+        this.showToast('Credit de paiement cree', 'success');
         this.loadCps(ae.id);
       },
       error: (err) => {
         this.savingCp.set(false);
-        this.showToast(err?.message || 'Erreur lors de la création du CP', 'error');
+        if (err?.status === 403) {
+          this.showToast('Vous n\'avez pas la permission d\'effectuer la programmation financiere de ce projet.', 'error');
+          return;
+        }
+        this.showToast(err?.message || 'Erreur lors de la creation du CP', 'error');
       }
     });
   }
 
-  // ── Helpers date ─────────────────────────────────────────────────────────
+  //  Helpers date 
+  deleteCp(cp: CreditPaiement, event?: Event): void {
+    event?.stopPropagation();
+    const ae = this.selectedAe();
+    if (!ae) return;
+    if (!this.showFinanciereSection()) {
+      this.showToast('Vous n\'avez pas la permission d\'effectuer la programmation financiere de ce projet.', 'error');
+      return;
+    }
+
+    this.savingCp.set(true);
+    this.cpService.delete(cp.id).subscribe({
+      next: () => {
+        this.savingCp.set(false);
+        if (this.selectedCp()?.id === cp.id) {
+          this.selectedCp.set(null);
+          this.decaissements.set([]);
+        }
+        this.showToast('Credit de paiement supprime', 'success');
+        this.loadCps(ae.id);
+      },
+      error: (err) => {
+        this.savingCp.set(false);
+        if (err?.status === 403) {
+          this.showToast('Vous n\'avez pas la permission d\'effectuer la programmation financiere de ce projet.', 'error');
+          return;
+        }
+        this.showToast(err?.message || 'Erreur lors de la suppression du CP', 'error');
+      }
+    });
+  }
+
   selectCp(cp: CreditPaiement): void {
     this.selectedCp.set(cp);
     this.selectedCpProjet.set(null);
     this.showDecaissementForm.set(false);
     this.decaissements.set([]);
     this.loadDecaissements(cp.id);
+    this.autoOpenDecaissementFormForSelectedCp();
     if (cp.projetId) {
       this.projetsService.getById(cp.projetId).subscribe({
-        next: (projet) => this.selectedCpProjet.set(this.adaptProjetDates(projet)),
+        next: (projet) => {
+          this.selectedCpProjet.set(this.adaptProjetDates(projet));
+          this.autoOpenDecaissementFormForSelectedCp();
+        },
         error: () => this.selectedCpProjet.set(null)
       });
+    }
+  }
+
+  private autoOpenDecaissementFormForSelectedCp(): void {
+    if (this.canCreateDecaissement()) {
+      this.openDecaissementForm();
     }
   }
 
@@ -538,13 +1158,13 @@ export class ProjetDetailComponent implements OnInit {
       next: () => {
         this.savingDecaissement.set(false);
         this.showDecaissementForm.set(false);
-        this.showToast('Décaissement créé', 'success');
+        this.showToast('Decaissement cree', 'success');
         this.refreshAfterDecaissement(projet.id, cp.id);
       },
       error: (err) => {
         this.savingDecaissement.set(false);
         this.showToast(
-          err?.error?.message || err?.message || 'Erreur lors de la création du décaissement',
+          err?.error?.message || err?.message || 'Erreur lors de la creation du decaissement',
           'error'
         );
       }
@@ -553,34 +1173,54 @@ export class ProjetDetailComponent implements OnInit {
 
   activateDecaissement(): void {
     const projet = this.projet();
-    if (!projet) return;
+    const userId = this.authService.currentUser()?.id;
+    if (!projet || !userId) return;
+    if (!this.canActiverDecaissementProjet()) {
+      this.showToast('Vous n\'avez pas la permission d\'activer le decaissement pour ce projet.', 'error');
+      return;
+    }
 
-    this.projetsService.update(projet.id, { decaissementActif: true }).subscribe({
-      next: (updated) => {
-        this.projet.set(this.adaptProjetDates(updated));
-        this.showToast('Décaissement activé', 'success');
+    this.activatingDecaissement.set(true);
+    this.projetsService.activerDecaissement(projet.id, {
+      userId,
+      commentaire: 'Decaissement active'
+    }).subscribe({
+      next: () => {
+        this.activatingDecaissement.set(false);
+        this.activeTab.set('financier');
+        this.refreshProjetAndActions(projet.id, true);
+        this.showToast('Decaissement active', 'success');
       },
       error: (err) => {
-        this.showToast(err?.message || 'Erreur lors de l\'activation du décaissement', 'error');
+        this.activatingDecaissement.set(false);
+        this.showPermissionAwareError(err, 'Vous n\'avez pas la permission d\'activer le decaissement pour ce projet.');
       }
     });
   }
 
   passerEnExecution(): void {
     const projet = this.projet();
-    if (!projet || this.isProjetEnExecution()) return;
+    const userId = this.authService.currentUser()?.id;
+    if (!projet || !userId || this.isProjetEnExecution()) return;
+    if (!this.showPasserEnExecutionButton()) {
+      this.showToast('Vous n\'avez pas la permission de passer ce projet en execution.', 'error');
+      return;
+    }
 
     this.switchingToExecution.set(true);
-    this.projetsService.update(projet.id, { statut: 'EN_EXECUTION' }).subscribe({
-      next: (updated) => {
-        const adapted = this.adaptProjetDates(updated);
-        this.projet.set(adapted);
+    this.projetsService.passerExecution(projet.id, {
+      userId,
+      commentaire: 'Projet passe en execution'
+    }).subscribe({
+      next: () => {
         this.switchingToExecution.set(false);
+        this.activeTab.set('financier');
+        this.refreshProjetAndActions(projet.id, true);
         this.showToast('Projet passe en execution', 'success');
       },
       error: (err) => {
         this.switchingToExecution.set(false);
-        this.showToast(err?.message || 'Erreur lors du passage en execution', 'error');
+        this.showPermissionAwareError(err, 'Vous n\'avez pas la permission de passer ce projet en execution.');
       }
     });
   }
@@ -605,6 +1245,10 @@ export class ProjetDetailComponent implements OnInit {
   canCreateDecaissement(): boolean {
     const projet = this.selectedCpProjet() ?? this.projet();
     return !!projet && this.isProjetEnExecution() && projet.decaissementActif === true;
+  }
+
+  shouldDisplayDecaissementForm(): boolean {
+    return !!this.selectedCp() && this.canCreateDecaissement();
   }
 
   canActivateDecaissement(): boolean {
@@ -650,18 +1294,164 @@ export class ProjetDetailComponent implements OnInit {
 
   getDecaissementMessage(): string {
     const projet = this.selectedCpProjet() ?? this.projet();
+    if (!this.selectedAe()) {
+      return 'Selectionnez d abord une AE.';
+    }
+    if (!this.selectedCp()) {
+      return 'Selectionnez ensuite un CP pour saisir un decaissement.';
+    }
     if (!projet) return '';
     if (!this.isProjetEnExecution()) {
-      return 'Décaissement non autorisé : le projet n’est pas en exécution.';
+      return 'Decaissement non autorise : le projet nest pas en execution.';
     }
     if (projet.decaissementActif !== true) {
-      return 'Décaissement désactivé. Activez-le d’abord.';
+      return 'Decaissement desactive. Activez-le dabord.';
     }
     return '';
   }
 
+  openPlanFinancementForm(): void {
+    this.editingPlanFinancementId.set(null);
+    this.planFinancementForm = {
+      sourceFinancementId: '',
+      montant: null,
+      pourcentage: null,
+      statut: '',
+      dateEngagement: '',
+      actif: true,
+    };
+    this.showPlanFinancementForm.set(true);
+  }
+
+  editPlanFinancement(line: PlanFinancement, event?: Event): void {
+    event?.stopPropagation();
+    this.editingPlanFinancementId.set(line.id);
+    this.planFinancementForm = {
+      sourceFinancementId: line.sourceFinancementId ?? '',
+      montant: line.montant ?? null,
+      pourcentage: line.pourcentage ?? null,
+      statut: line.statut ?? '',
+      dateEngagement: line.dateEngagement ? this.toDatetimeLocal(line.dateEngagement) : '',
+      actif: line.actif ?? true,
+    };
+    this.showPlanFinancementForm.set(true);
+  }
+
+  cancelPlanFinancementForm(): void {
+    this.showPlanFinancementForm.set(false);
+    this.editingPlanFinancementId.set(null);
+  }
+
+  savePlanFinancement(): void {
+    const projet = this.projet();
+    if (!projet) return;
+    if (!this.showFinanciereSection()) {
+      this.showToast('Vous n\'avez pas la permission d\'effectuer la programmation financiere de ce projet.', 'error');
+      return;
+    }
+
+    this.savingPlanFinancement.set(true);
+    const payload: Partial<PlanFinancement> = {
+      projetId: projet.id,
+      sourceFinancementId: this.planFinancementForm.sourceFinancementId || undefined,
+      montant: this.planFinancementForm.montant ?? undefined,
+      pourcentage: this.planFinancementForm.pourcentage ?? undefined,
+      statut: this.planFinancementForm.statut || undefined,
+      dateEngagement: this.planFinancementForm.dateEngagement ? new Date(this.toIso(this.planFinancementForm.dateEngagement)) : undefined,
+      actif: this.planFinancementForm.actif,
+    };
+    const editingPlanFinancementId = this.editingPlanFinancementId();
+    const request = editingPlanFinancementId
+      ? this.planFinancementService.update(editingPlanFinancementId, payload)
+      : this.planFinancementService.create(payload);
+
+    request.subscribe({
+      next: () => {
+        this.savingPlanFinancement.set(false);
+        this.showPlanFinancementForm.set(false);
+        this.editingPlanFinancementId.set(null);
+        this.showToast('Plan de financement enregistre', 'success');
+        this.refreshProjetAndActions(projet.id, true);
+      },
+      error: (err) => {
+        this.savingPlanFinancement.set(false);
+        if (err?.status === 403) {
+          this.showToast('Vous n\'avez pas la permission d\'effectuer la programmation financiere de ce projet.', 'error');
+          return;
+        }
+        this.showToast(err?.message || 'Erreur lors de l\'enregistrement du plan de financement', 'error');
+      }
+    });
+  }
+
+  deletePlanFinancement(line: PlanFinancement, event?: Event): void {
+    event?.stopPropagation();
+    const projet = this.projet();
+    if (!projet) return;
+    if (!this.showFinanciereSection()) {
+      this.showToast('Vous n\'avez pas la permission d\'effectuer la programmation financiere de ce projet.', 'error');
+      return;
+    }
+
+    this.savingPlanFinancement.set(true);
+    this.planFinancementService.delete(line.id).subscribe({
+      next: () => {
+        this.savingPlanFinancement.set(false);
+        this.showToast('Plan de financement supprime', 'success');
+        this.refreshProjetAndActions(projet.id, true);
+      },
+      error: (err) => {
+        this.savingPlanFinancement.set(false);
+        if (err?.status === 403) {
+          this.showToast('Vous n\'avez pas la permission d\'effectuer la programmation financiere de ce projet.', 'error');
+          return;
+        }
+        this.showToast(err?.message || 'Erreur lors de la suppression du plan de financement', 'error');
+      }
+    });
+  }
+
+  private refreshProjetAndActions(id: string, reloadFinance = false): void {
+    this.projetsService.getById(id).subscribe({
+      next: (data) => {
+        const projet = this.adaptProjetDates(data);
+        this.projet.set(projet);
+        this.initPtForm(projet);
+        this.loadAvailableActions(projet.statut, () => {
+          if (reloadFinance) {
+            if (this.showFinanciereSection()) {
+              this.loadAes(projet.id);
+              this.loadPlanFinancements(projet.id);
+            } else {
+              this.clearFinancialData();
+            }
+          }
+          this.ensureActiveTabVisible();
+        });
+      }
+    });
+  }
+
+  private clearFinancialData(): void {
+    this.aes.set([]);
+    this.planFinancements.set([]);
+    this.selectedAe.set(null);
+    this.selectedCp.set(null);
+    this.selectedCpProjet.set(null);
+    this.cps.set([]);
+    this.decaissements.set([]);
+  }
+
+  private showPermissionAwareError(err: any, forbiddenMessage: string): void {
+    if (err?.status === 403) {
+      this.showToast(forbiddenMessage, 'error');
+      return;
+    }
+    this.showToast(err?.message || 'Erreur lors du traitement de la requete', 'error');
+  }
+
   private toIso(datetimeLocal: string): string {
-    // datetime-local gives YYYY-MM-DDTHH:mm → backend wants YYYY-MM-DDTHH:mm:ss
+    // datetime-local gives YYYY-MM-DDTHH:mm  backend wants YYYY-MM-DDTHH:mm:ss
     return datetimeLocal.length === 16 ? datetimeLocal + ':00' : datetimeLocal;
   }
 
@@ -671,7 +1461,7 @@ export class ProjetDetailComponent implements OnInit {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
-  // ── Adapt / Format ───────────────────────────────────────────────────────
+  //  Adapt / Format 
   private adaptProjetDates(projet: any): Projet {
     return {
       ...projet,
@@ -679,7 +1469,7 @@ export class ProjetDetailComponent implements OnInit {
       dateFinPrevu:   projet.dateFinPrevu   ? new Date(projet.dateFinPrevu)   : undefined,
       createdAt:    projet.createdAt    ? new Date(projet.createdAt)    : new Date(),
       dateCreation: projet.dateCreation ? new Date(projet.dateCreation) : new Date(),
-      statut:    projet.statut    || 'PLANIFIE',
+      statut:    projet.statut    || 'MATURE',
       categorie: projet.categorie || 'NOUVEAU'
     };
   }
@@ -705,25 +1495,25 @@ export class ProjetDetailComponent implements OnInit {
   getProgrammeNom(id: string | number | undefined): string {
     if (!id) return '-';
     const p = this.programmes().find(p => String(p.id) === String(id));
-    return p ? (p.code + ' – ' + p.nom) : '-';
+    return p ? (p.code + '  ' + p.nom) : '-';
   }
 
   getIdeeProjetNom(id: string | number | undefined): string {
     if (!id) return '-';
     const ip = this.ideesProjet().find(ip => String(ip.id) === String(id));
-    return ip ? (ip.code + ' – ' + ip.titre) : '-';
+    return ip ? (ip.code + '  ' + ip.titre) : '-';
   }
 
   getSourceFinancementNom(id: string | number | undefined): string {
     if (!id) return '-';
     const s = this.sourcesFinancement().find(s => String(s.id) === String(id));
-    return s ? (s.code + ' – ' + s.nom) : '-';
+    return s ? (s.code + '  ' + s.nom) : '-';
   }
 
   getNatureDepenseNom(id: string | number | undefined): string {
     if (!id) return '-';
     const n = this.naturesDepense().find(n => String(n.id) === String(id));
-    return n ? (n.code + ' – ' + n.nom) : '-';
+    return n ? (n.code + '  ' + n.nom) : '-';
   }
 
   getCategorieLabel(value: string | undefined): string {
@@ -733,12 +1523,34 @@ export class ProjetDetailComponent implements OnInit {
 
   getStatutLabel(statut: string | undefined): string {
     if (!statut) return '-';
-    return this.statuts.find(s => s.value === statut)?.label || statut;
+    const workflowLabels: Record<string, string> = {
+      'MATURE': 'Mature',
+      'SELECTIONNE': 'Selectionne',
+      'PROG_OPERATIONNELLE': 'Programmation technique finalisee',
+      'PROG_FINANCIERE': 'Programmation financiere validee',
+      'PROG_FINANCIERE_VALIDE': 'Programmation financiere validee',
+      'EN_ARBITRAGE': 'En arbitrage',
+      'ARBITRAGE_RETENU': 'Arbitrage retenu',
+      'ARBITRAGE_AJOURNE': 'Arbitrage ajourne',
+      'PIP_VALIDE': 'Inscrit au PIP',
+      'EN_EXECUTION': 'En execution'
+    };
+    return workflowLabels[statut] || this.statuts.find(s => s.value === statut)?.label || statut;
   }
 
   getStatutBadgeClass(statut: string | undefined): string {
     if (!statut) return 'badge-secondary';
     const classes: Record<string, string> = {
+      'MATURE': 'badge-info',
+      'SELECTIONNE': 'badge-warning',
+      'PROG_OPERATIONNELLE': 'badge-primary',
+      'PROG_FINANCIERE': 'badge-success',
+      'PROG_FINANCIERE_VALIDE': 'badge-success',
+      'EN_ARBITRAGE': 'badge-warning',
+      'ARBITRAGE_RETENU': 'badge-success',
+      'ARBITRAGE_AJOURNE': 'badge-warning',
+      'PIP_VALIDE': 'badge-primary',
+      'EN_EXECUTION': 'badge-success',
       'PLANIFIE': 'badge-info',
       'EN_COURS': 'badge-warning',
       'SUSPENDU': 'badge-danger',

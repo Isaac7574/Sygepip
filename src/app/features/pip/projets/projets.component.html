@@ -17,28 +17,94 @@
   </div>
 
   <div class="card overflow-hidden">
+    @if (showMatureSelectionTab()) {
+      <div class="border-b border-gray-200 bg-white px-4 pt-4">
+        <div class="flex flex-wrap gap-2">
+          <button (click)="setActiveTab('all')"
+                  class="rounded-t-xl px-4 py-2 text-sm font-semibold transition-colors"
+                  [class.bg-gray-900]="activeTab() === 'all'"
+                  [class.text-white]="activeTab() === 'all'"
+                  [class.bg-gray-100]="activeTab() !== 'all'"
+                  [class.text-gray-600]="activeTab() !== 'all'">
+            Tous les projets
+          </button>
+          <button (click)="setActiveTab('mature')"
+                  class="rounded-t-xl px-4 py-2 text-sm font-semibold transition-colors"
+                  [class.bg-blue-600]="activeTab() === 'mature'"
+                  [class.text-white]="activeTab() === 'mature'"
+                  [class.bg-blue-50]="activeTab() !== 'mature'"
+                  [class.text-blue-700]="activeTab() !== 'mature'">
+            Projets matures
+            <span class="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-white/80 px-1.5 text-xs font-bold text-blue-700">
+              {{ matureItems().length }}
+            </span>
+          </button>
+        </div>
+      </div>
+    }
+
     <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50/50">
       <div class="relative w-full max-w-sm">
         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
-        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher par code, titre ou ministère..." class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher par code, titre ou ministere..." class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
       </div>
-      <button (click)="openModal()" class="btn-primary">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        Nouveau Projet
-      </button>
+      <div class="flex items-center gap-3">
+        @if (showMatureSelectionTab() && activeTab() === 'mature') {
+          <button (click)="selectMatureProjects()"
+                  class="btn-primary"
+                  [disabled]="loadingSelection() || selectedMatureProjectIds().length === 0 || !canSelectPip()">
+            {{ loadingSelection() ? 'Selection...' : 'Selectionner les projets coches' }}
+          </button>
+        }
+        <button (click)="openModal()" class="btn-primary">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Nouveau Projet
+        </button>
+      </div>
     </div>
+    @if (showMatureSelectionTab() && activeTab() === 'mature') {
+      <div class="border-b border-gray-200 bg-blue-50/60 px-4 py-4">
+        @if (loadingMatureActions()) {
+          <p class="text-sm text-blue-700">Chargement des actions DGEP...</p>
+        } @else if (!canSelectPip()) {
+          <p class="text-sm text-amber-700">
+            L'action de selection PIP n'est pas ouverte par le workflow pour le statut MATURE.
+          </p>
+        } @else {
+          <div class="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div>
+              <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-blue-800">Commentaire de selection</label>
+              <textarea [(ngModel)]="selectionComment"
+                        rows="2"
+                        class="form-input"
+                        placeholder="Projet retenu comme projet structurant"></textarea>
+            </div>
+            <div class="rounded-xl bg-white px-4 py-3 text-sm text-blue-900 shadow-sm">
+              {{ selectedMatureProjectIds().length }} projet(s) coche(s)
+            </div>
+          </div>
+        }
+      </div>
+    }
     <table class="w-full">
       <thead class="bg-gray-50">
         <tr>
+          @if (showMatureSelectionTab() && activeTab() === 'mature' && canSelectPip()) {
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <input type="checkbox"
+                     [checked]="allVisibleMatureProjectsSelected()"
+                     (change)="toggleSelectAllMatureProjects($any($event.target).checked)">
+            </th>
+          }
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Titre</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ministère</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Catégorie</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Coût Total</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ministere</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categorie</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cout total</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Avancement</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
           <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -47,6 +113,13 @@
       <tbody class="divide-y divide-gray-100">
         @for (item of filteredItems(); track item.id) {
           <tr class="hover:bg-gray-50">
+            @if (showMatureSelectionTab() && activeTab() === 'mature' && canSelectPip()) {
+              <td class="px-6 py-4">
+                <input type="checkbox"
+                       [checked]="isSelectedForPip(item.id)"
+                       (change)="toggleMatureSelection(item.id, $any($event.target).checked)">
+              </td>
+            }
             <td class="px-6 py-4 font-medium text-gray-900">{{ item.code }}</td>
             <td class="px-6 py-4 text-gray-900">{{ item.titre }}</td>
             <td class="px-6 py-4 text-gray-500">{{ getMinistereNom(item.ministereId) }}</td>
@@ -57,7 +130,7 @@
               <span class="badge" [ngClass]="getStatutBadgeClass(item.statut)">{{ getStatutLabel(item.statut) }}</span>
             </td>
             <td class="px-6 py-4 text-right">
-              <a [routerLink]="['/app/pip/projets', item.id]" class="text-bf-green-600 hover:text-bf-green-800 mr-2 inline-flex" title="Voir détail">
+              <a [routerLink]="['/app/pip/projets', item.id]" class="text-bf-green-600 hover:text-bf-green-800 mr-2 inline-flex" title="Voir detail">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
               </a>
               <button (click)="edit(item)" class="text-primary-600 hover:text-primary-800 mr-2" title="Modifier">
@@ -70,7 +143,8 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="8" class="px-6 py-12 text-center text-gray-500">Aucun projet trouvé</td>
+            <td [attr.colspan]="showMatureSelectionTab() && activeTab() === 'mature' && canSelectPip() ? 9 : 8"
+                class="px-6 py-12 text-center text-gray-500">Aucun projet trouve</td>
           </tr>
         }
       </tbody>
@@ -113,53 +187,53 @@
 
       <div class="modal-body space-y-5">
 
-        <!-- ── Rattachement institutionnel ── -->
+        <!--  Rattachement institutionnel  -->
         <div>
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Rattachement institutionnel</p>
           <div class="grid grid-cols-3 gap-3">
             <div class="bg-gray-50 rounded-xl p-3">
-              <p class="text-xs text-gray-400 mb-1">Ministère</p>
-              <p class="text-sm font-medium text-gray-800">{{ getMinistereNom(viewingItem()!.ministereId) || '�? }}</p>
+              <p class="text-xs text-gray-400 mb-1">Ministere</p>
+              <p class="text-sm font-medium text-gray-800">{{ getMinistereNom(viewingItem()!.ministereId) || '-' }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">Secteur</p>
-              <p class="text-sm font-medium text-gray-800">{{ getSecteurNom(viewingItem()!.secteurId) || '�? }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ getSecteurNom(viewingItem()!.secteurId) || '-' }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
-              <p class="text-xs text-gray-400 mb-1">Région</p>
-              <p class="text-sm font-medium text-gray-800">{{ getRegionNom(viewingItem()!.regionId) || '�? }}</p>
+              <p class="text-xs text-gray-400 mb-1">Region</p>
+              <p class="text-sm font-medium text-gray-800">{{ getRegionNom(viewingItem()!.regionId) || '-' }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">Programme</p>
-              <p class="text-sm font-medium text-gray-800">{{ getProgrammeNom(viewingItem()!.programmeId) || '�? }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ getProgrammeNom(viewingItem()!.programmeId) || '-' }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3 col-span-2">
-              <p class="text-xs text-gray-400 mb-1">Idée de projet source</p>
-              <p class="text-sm font-medium text-gray-800">{{ getIdeeProjetNom(viewingItem()!.ideeProjetId) || '�? }}</p>
+              <p class="text-xs text-gray-400 mb-1">Idee de projet source</p>
+              <p class="text-sm font-medium text-gray-800">{{ getIdeeProjetNom(viewingItem()!.ideeProjetId) || '-' }}</p>
             </div>
           </div>
         </div>
 
-        <!-- ── Classification & Finances ── -->
+        <!--  Classification & Finances  -->
         <div>
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Classification & Finances</p>
           <div class="grid grid-cols-3 gap-3">
             <div class="bg-gray-50 rounded-xl p-3">
-              <p class="text-xs text-gray-400 mb-1">Catégorie</p>
-              <p class="text-sm font-medium text-gray-800">{{ getCategorieLabel(viewingItem()!.categorie) || '�? }}</p>
+              <p class="text-xs text-gray-400 mb-1">Categorie</p>
+              <p class="text-sm font-medium text-gray-800">{{ getCategorieLabel(viewingItem()!.categorie) || '-' }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
               <p class="text-xs text-gray-400 mb-1">Statut</p>
               <span class="badge mt-0.5" [ngClass]="getStatutBadgeClass(viewingItem()!.statut)">{{ getStatutLabel(viewingItem()!.statut) }}</span>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
-              <p class="text-xs text-gray-400 mb-1">Coût total</p>
+              <p class="text-xs text-gray-400 mb-1">Cout total</p>
               <p class="text-sm font-semibold text-gray-800">{{ formatBudget(viewingItem()!.coutTotal) }}</p>
             </div>
           </div>
         </div>
 
-        <!-- ── Description & Objectifs ── -->
+        <!--  Description & Objectifs  -->
         @if (viewingItem()!.description || viewingItem()!.objectifsStrategiques || viewingItem()!.objectifsOperationnel) {
           <div>
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Description & Objectifs</p>
@@ -172,13 +246,13 @@
               }
               @if (viewingItem()!.objectifsStrategiques) {
                 <div class="bg-gray-50 rounded-xl p-3">
-                  <p class="text-xs text-gray-400 mb-1">Objectifs stratégiques</p>
+                  <p class="text-xs text-gray-400 mb-1">Objectifs strategiques</p>
                   <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ viewingItem()!.objectifsStrategiques }}</p>
                 </div>
               }
               @if (viewingItem()!.objectifsOperationnel) {
                 <div class="bg-gray-50 rounded-xl p-3">
-                  <p class="text-xs text-gray-400 mb-1">Objectifs opérationnels</p>
+                  <p class="text-xs text-gray-400 mb-1">Objectifs operationnels</p>
                   <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ viewingItem()!.objectifsOperationnel }}</p>
                 </div>
               }
@@ -186,37 +260,37 @@
           </div>
         }
 
-        <!-- ── Planification ── -->
+        <!--  Planification  -->
         <div>
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Planification</p>
           <div class="grid grid-cols-3 gap-3">
             <div class="bg-gray-50 rounded-xl p-3">
-              <p class="text-xs text-gray-400 mb-1">Date de début prévue</p>
-              <p class="text-sm font-medium text-gray-800">{{ formatDate(viewingItem()!.dateDebutPrevu) || '�? }}</p>
+              <p class="text-xs text-gray-400 mb-1">Date de debut prevue</p>
+              <p class="text-sm font-medium text-gray-800">{{ formatDate(viewingItem()!.dateDebutPrevu) || '-' }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
-              <p class="text-xs text-gray-400 mb-1">Date de fin prévue</p>
-              <p class="text-sm font-medium text-gray-800">{{ formatDate(viewingItem()!.dateFinPrevu) || '�? }}</p>
+              <p class="text-xs text-gray-400 mb-1">Date de fin prevue</p>
+              <p class="text-sm font-medium text-gray-800">{{ formatDate(viewingItem()!.dateFinPrevu) || '-' }}</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
-              <p class="text-xs text-gray-400 mb-1">Durée</p>
-              <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.dureeEnMois ? viewingItem()!.dureeEnMois + ' mois' : '�? }}</p>
+              <p class="text-xs text-gray-400 mb-1">Duree</p>
+              <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.dureeEnMois ? viewingItem()!.dureeEnMois + ' mois' : '-' }}</p>
             </div>
           </div>
         </div>
 
-        <!-- ── Géolocalisation ── -->
+        <!--  Geolocalisation  -->
         @if (viewingItem()!.latitude != null || viewingItem()!.longitude != null) {
           <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Géolocalisation</p>
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Geolocalisation</p>
             <div class="grid grid-cols-3 gap-3">
               <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs text-gray-400 mb-1">Latitude</p>
-                <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.latitude ?? '�? }}</p>
+                <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.latitude ?? '-' }}</p>
               </div>
               <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs text-gray-400 mb-1">Longitude</p>
-                <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.longitude ?? '�? }}</p>
+                <p class="text-sm font-medium text-gray-800">{{ viewingItem()!.longitude ?? '-' }}</p>
               </div>
             </div>
           </div>
@@ -251,7 +325,7 @@
       </div>
       <div class="modal-body space-y-6">
 
-        <!-- ── Identification ── -->
+        <!--  Identification  -->
         <div>
           <div class="flex items-center gap-2 mb-4">
             <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
@@ -264,15 +338,15 @@
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div class="form-group">
-              <label class="form-label">Référence <span class="text-red-500">*</span></label>
+              <label class="form-label">Reference <span class="text-red-500">*</span></label>
               <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: PRJ-2026-001">
             </div>
             <div class="form-group">
-              <label class="form-label">Idée de projet source</label>
+              <label class="form-label">Idee de projet source</label>
               <select [(ngModel)]="formData.ideeProjetId" class="form-input">
-                <option [ngValue]="undefined">�?Aucune �?/option>
+                <option [ngValue]="undefined">Aucune</option>
                 @for (ip of ideesProjet(); track ip.id) {
-                  <option [ngValue]="ip.id">{{ ip.code }} �?{{ ip.titre }}</option>
+                  <option [ngValue]="ip.id">{{ ip.code }} - {{ ip.titre }}</option>
                 }
               </select>
             </div>
@@ -285,17 +359,17 @@
               <textarea [(ngModel)]="formData.description" class="form-input" rows="2" placeholder="Description du projet" readonly></textarea>
             </div>
             <div class="form-group col-span-2">
-              <label class="form-label">Objectifs stratégiques</label>
-              <textarea [(ngModel)]="formData.objectifsStrategiques" class="form-input" rows="2" placeholder="Objectifs stratégiques du projet"></textarea>
+              <label class="form-label">Objectifs strategiques</label>
+              <textarea [(ngModel)]="formData.objectifsStrategiques" class="form-input" rows="2" placeholder="Objectifs strategiques du projet"></textarea>
             </div>
             <div class="form-group col-span-2">
-              <label class="form-label">Objectifs opérationnels</label>
-              <textarea [(ngModel)]="formData.objectifsOperationnel" class="form-input" rows="2" placeholder="Objectifs opérationnels du projet"></textarea>
+              <label class="form-label">Objectifs operationnels</label>
+              <textarea [(ngModel)]="formData.objectifsOperationnel" class="form-input" rows="2" placeholder="Objectifs operationnels du projet"></textarea>
             </div>
           </div>
         </div>
 
-        <!-- ── Rattachement institutionnel ── -->
+        <!--  Rattachement institutionnel  -->
         <div>
           <div class="flex items-center gap-2 mb-4">
             <div class="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
@@ -308,27 +382,27 @@
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div class="form-group">
-              <label class="form-label">Ministère <span class="text-red-500">*</span></label>
+              <label class="form-label">Ministre <span class="text-red-500">*</span></label>
               <select [(ngModel)]="formData.ministereId" class="form-input" disabled>
-                <option [ngValue]="undefined">�?Sélectionner �?/option>
+                <option [ngValue]="undefined">Selectionner</option>
                 @for (m of ministeres(); track m.id) {
-                  <option [ngValue]="m.id">{{ m.sigle }} �?{{ m.nom }}</option>
+                  <option [ngValue]="m.id">{{ m.sigle }} - {{ m.nom }}</option>
                 }
               </select>
             </div>
             <div class="form-group">
               <label class="form-label">Secteur</label>
               <select [(ngModel)]="formData.secteurId" class="form-input" disabled>
-                <option [ngValue]="undefined">�?Sélectionner �?/option>
+                <option [ngValue]="undefined">Selectionner</option>
                 @for (s of secteurs(); track s.id) {
                   <option [ngValue]="s.id">{{ s.nom }}</option>
                 }
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Région</label>
+              <label class="form-label">Region</label>
               <select [(ngModel)]="formData.regionId" class="form-input" disabled>
-                <option [ngValue]="undefined">�?Sélectionner �?/option>
+                <option [ngValue]="undefined">Selectionner</option>
                 @for (r of regions(); track r.id) {
                   <option [ngValue]="r.id">{{ r.nom }}</option>
                 }
@@ -337,16 +411,16 @@
             <div class="form-group">
               <label class="form-label">Programme</label>
               <select [(ngModel)]="formData.programmeId" class="form-input">
-                <option [ngValue]="undefined">�?Sélectionner �?/option>
+                <option [ngValue]="undefined">Selectionner</option>
                 @for (p of programmes(); track p.id) {
-                  <option [ngValue]="p.id">{{ p.code }} �?{{ p.nom }}</option>
+                  <option [ngValue]="p.id">{{ p.code }} - {{ p.nom }}</option>
                 }
               </select>
             </div>
           </div>
         </div>
 
-        <!-- ── Classification & Finances ── -->
+        <!--  Classification & Finances  -->
         <div>
           <div class="flex items-center gap-2 mb-4">
             <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
@@ -359,7 +433,7 @@
           </div>
           <div class="grid grid-cols-3 gap-4">
             <div class="form-group">
-              <label class="form-label">Catégorie <span class="text-red-500">*</span></label>
+              <label class="form-label">Categorie <span class="text-red-500">*</span></label>
               <select [(ngModel)]="formData.categorie" class="form-input">
                 @for (c of categories; track c.value) {
                   <option [value]="c.value">{{ c.label }}</option>
@@ -375,13 +449,13 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Coût total (FCFA) <span class="text-red-500">*</span></label>
+              <label class="form-label">Cout total (FCFA) <span class="text-red-500">*</span></label>
               <input type="number" [(ngModel)]="formData.coutTotal" class="form-input" placeholder="0">
             </div>
           </div>
         </div>
 
-        <!-- ── Classification PIP ── -->
+        <!--  Classification PIP  -->
         <div>
           <div class="flex items-center gap-2 mb-4">
             <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
@@ -396,7 +470,7 @@
             <div class="form-group">
               <label class="form-label">Type de projet PIP</label>
               <select [(ngModel)]="formData.typeProjetPip" class="form-input">
-                <option [ngValue]="undefined">�?Sélectionner �?/option>
+                <option [ngValue]="undefined">Selectionner</option>
                 @for (t of typesProjetPip; track t.value) {
                   <option [value]="t.value">{{ t.label }}</option>
                 }
@@ -405,7 +479,7 @@
             <div class="form-group">
               <label class="form-label">Statut inscription PIP</label>
               <select [(ngModel)]="formData.statutInscriptionPip" class="form-input">
-                <option [ngValue]="undefined">�?Sélectionner �?/option>
+                <option [ngValue]="undefined">Selectionner</option>
                 @for (s of statutsInscriptionPip; track s.value) {
                   <option [value]="s.value">{{ s.label }}</option>
                 }
@@ -414,16 +488,16 @@
             <div class="form-group">
               <label class="form-label">PIP Annuel</label>
               <select [(ngModel)]="formData.pipAnnuelId" class="form-input">
-                <option [ngValue]="undefined">�?Sélectionner �?/option>
+                <option [ngValue]="undefined">Selectionner</option>
                 @for (p of pipAnnuels(); track p.id) {
-                  <option [ngValue]="p.id">{{ p.code }} �?{{ p.annee }}</option>
+                  <option [ngValue]="p.id">{{ p.code }} - {{ p.annee }}</option>
                 }
               </select>
             </div>
             <div class="form-group">
               <label class="form-label">Source de financement</label>
               <select [(ngModel)]="formData.sourceFinancement" class="form-input">
-                <option [ngValue]="undefined">�?Sélectionner �?/option>
+                <option [ngValue]="undefined">Selectionner</option>
                 @for (s of sourcesFinancement; track s.value) {
                   <option [value]="s.value">{{ s.label }}</option>
                 }
@@ -432,7 +506,7 @@
             <div class="form-group col-span-2">
               <label class="form-label">Chef de projet</label>
               <select [(ngModel)]="formData.chefProjetId" class="form-input">
-                <option [ngValue]="undefined">�?Sélectionner �?/option>
+                <option [ngValue]="undefined">Selectionner</option>
                 @for (u of utilisateurs(); track u.id) {
                   <option [ngValue]="u.id">{{ u.prenom }} {{ u.nom }}</option>
                 }
@@ -441,7 +515,7 @@
           </div>
         </div>
 
-        <!-- ── Planification ── -->
+        <!--  Planification  -->
         <div>
           <div class="flex items-center gap-2 mb-4">
             <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
@@ -454,21 +528,21 @@
           </div>
           <div class="grid grid-cols-3 gap-4">
             <div class="form-group">
-              <label class="form-label">Date de début prévue</label>
+              <label class="form-label">Date de debut prevue</label>
               <input type="date" [(ngModel)]="formData.dateDebutPrevu" (ngModelChange)="calculerDuree()" class="form-input">
             </div>
             <div class="form-group">
-              <label class="form-label">Date de fin prévue</label>
+              <label class="form-label">Date de fin prevue</label>
               <input type="date" [(ngModel)]="formData.dateFinPrevu" (ngModelChange)="calculerDuree()" class="form-input">
             </div>
             <div class="form-group">
-              <label class="form-label">Durée (mois)</label>
-              <input type="number" [(ngModel)]="formData.dureeEnMois" class="form-input" placeholder="Calculé automatiquement" min="0" readonly>
+              <label class="form-label">Duree (mois)</label>
+              <input type="number" [(ngModel)]="formData.dureeEnMois" class="form-input" placeholder="Calcul automatique" min="0" readonly>
             </div>
           </div>
         </div>
 
-        <!-- ── Géolocalisation & Paramètres ── -->
+        <!--  Geolocalisation & Paramtres  -->
         <div>
           <div class="flex items-center gap-2 mb-4">
             <div class="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
@@ -477,7 +551,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
             </div>
-            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Géolocalisation & Paramètres</span>
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Geolocalisation & Parametres</span>
             <div class="flex-1 h-px bg-gray-200"></div>
           </div>
           <div class="grid grid-cols-3 gap-4">
@@ -492,7 +566,7 @@
             <div class="form-group flex items-end pb-1">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" [(ngModel)]="formData.financementBoucle" class="form-checkbox">
-                <span class="text-sm text-gray-700">Financement bouclé</span>
+                <span class="text-sm text-gray-700">Financement boucle</span>
               </label>
             </div>
           </div>
@@ -508,7 +582,7 @@
       <div class="modal-footer">
         <button (click)="closeModal()" class="btn-outline">Annuler</button>
         <button (click)="save()" [disabled]="saving()" class="btn-primary">
-          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer le projet') }}
+          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Creer le projet') }}
         </button>
       </div>
     </div>
@@ -531,4 +605,5 @@
   [type]="toastType"
   (close)="toastVisible.set(false)">
 </app-toast>
+
 

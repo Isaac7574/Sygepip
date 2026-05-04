@@ -33,5 +33,9 @@ export class PlanFinancementService {
   delete(id: string | number): Observable<void> {
     return this.api.delete<void>(this.endpoint, id);
   }
+
+  getByProjet(projetId: string | number): Observable<PlanFinancement[]> {
+    return this.api.get<PlanFinancement[]>(this.endpoint, { projetId });
+  }
 }
 

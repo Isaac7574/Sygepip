@@ -2,9 +2,10 @@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable, of, switchMap } from 'rxjs';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
 import { DocumentIdeeService } from '@core/services/document-idee.service';
+import { DossierProjetIdeeService } from '@core/services/dossier-projet-idee.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
 import { CiblesService } from '@core/services/cibles.service';
@@ -23,18 +24,30 @@ import {
   SourceFinancement,
   Secteur,
   DocumentIdeeProjetResponseDTO,
+  DossierProjetIdee,
+  DossierProjetIdeeDocument,
+  DossierProjetTypeDocument,
   TypeDocumentProjet,
   StatutIdeeProjet,
   WorkflowNextAction
 } from '@core/models';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 
+type DgepWorkspaceTab = 'synthese' | 'financement' | 'dossier';
+
 const DOSSIER_PROJET_REQUIRED_TYPES: TypeDocumentProjet[] = [
   'DEMANDE_CREATION_PROJET',
   'PROJET_ARRETE_CONJOINT',
-  'PROTOCOLE_ACCORD_ETAT_PARTENAIRE',
-  'PRODOC'
+  'PRODOC',
+  'PROTOCOLE_ACCORD_ETAT_PARTENAIRE'
 ];
+
+const DOSSIER_DOCUMENT_LABELS: Record<DossierProjetTypeDocument, string> = {
+  DEMANDE_CREATION_PROJET: 'Lettre de demande de creation de projet',
+  PROJET_ARRETE_CONJOINT: 'Projet d\'arrete conjoint de creation',
+  PRODOC: 'Document du projet valide',
+  PROTOCOLE_ACCORD_ETAT_PARTENAIRE: 'Protocole d\'accord / convention de financement'
+};
 
 @Component({
   selector: 'app-idee-projet-detail',
@@ -48,6 +61,7 @@ export class IdeeProjetDetailComponent implements OnInit {
   private router = inject(Router);
   private ideesService = inject(IdeesProjetService);
   private documentIdeeService = inject(DocumentIdeeService);
+  private dossierProjetIdeeService = inject(DossierProjetIdeeService);
   private ministeresService = inject(MinisteresService);
   private secteursService = inject(SecteursService);
   private ciblesService = inject(CiblesService);
@@ -62,11 +76,14 @@ export class IdeeProjetDetailComponent implements OnInit {
   loadingNote = signal(false);
   error = signal<string | null>(null);
   documents = signal<DocumentIdeeProjetResponseDTO[]>([]);
+  dossierProjet = signal<DossierProjetIdee | null>(null);
   sourcesFinancement = signal<SourceFinancement[]>([]);
   planFinancement = signal<PlanFinancementIdeeProjet[]>([]);
   loadingDocuments = signal(false);
+  loadingDossierProjet = signal(false);
   loadingPlanFinancement = signal(false);
   documentsError = signal<string | null>(null);
+  dossierProjetError = signal<string | null>(null);
   planFinancementError = signal<string | null>(null);
   actionComment = '';
   actionInProgress = signal(false);
@@ -76,6 +93,7 @@ export class IdeeProjetDetailComponent implements OnInit {
   requiredDocumentTypes = signal<TypeDocumentProjet[]>([]);
   selectedFiles: Partial<Record<TypeDocumentProjet, File>> = {};
   uploadingDocumentType = signal<TypeDocumentProjet | null>(null);
+  activeDgepTab = signal<DgepWorkspaceTab>('synthese');
   planFinancementForm: {
     sourceFinancementId: string;
     modeFinancement: ModeFinancement | '';
@@ -218,8 +236,83 @@ export class IdeeProjetDetailComponent implements OnInit {
     return this.isDgepRole() && this.isDgepEligibleStatus(this.idee()?.statut);
   }
 
+  isDgepWorkspace(): boolean {
+    return this.canManagePlanFinancement();
+  }
+
+  canAccessDgepFinancementTab(): boolean {
+    return this.isDgepWorkspace();
+  }
+
+  canAccessDgepDossierTab(): boolean {
+    return this.isDgepWorkspace() && this.idee()?.statut !== 'AVIS_CNDP_FAVORABLE';
+  }
+
+  setDgepTab(tab: DgepWorkspaceTab): void {
+    this.activeDgepTab.set(tab);
+  }
+
+  private syncDgepTab(statut?: string): void {
+    if (!this.isDgepRole()) {
+      this.activeDgepTab.set('synthese');
+      return;
+    }
+
+    if (statut === 'AVIS_CNDP_FAVORABLE') {
+      this.activeDgepTab.set('financement');
+      return;
+    }
+
+    if (this.isDossierProjetStatus(statut)) {
+      this.activeDgepTab.set('dossier');
+      return;
+    }
+
+    this.activeDgepTab.set('synthese');
+  }
+
+  showDgepSyntheseContent(): boolean {
+    return !this.isDgepWorkspace() || this.activeDgepTab() === 'synthese';
+  }
+
+  showDgepFinancementContent(): boolean {
+    return !this.isDgepWorkspace() || this.activeDgepTab() === 'financement';
+  }
+
+  showDgepDossierContent(): boolean {
+    return !this.isDgepWorkspace() || this.activeDgepTab() === 'dossier';
+  }
+
+  shouldShowPlanFinancementSection(): boolean {
+    return this.canManagePlanFinancement() && this.showDgepFinancementContent();
+  }
+
+  shouldShowDocumentsSection(): boolean {
+    return !this.isDgepWorkspace() || this.showDgepDossierContent();
+  }
+
+  shouldShowActionsSection(): boolean {
+    if (!this.isDgepWorkspace()) {
+      return true;
+    }
+
+    const statut = this.idee()?.statut;
+    if (statut === 'AVIS_CNDP_FAVORABLE') {
+      return this.showDgepFinancementContent();
+    }
+
+    if (this.isDossierProjetStatus(statut)) {
+      return this.showDgepDossierContent();
+    }
+
+    return this.showDgepSyntheseContent();
+  }
+
   canIdentifierFinancement(): boolean {
-    return this.canManagePlanFinancement() && this.idee()?.statut === 'AVIS_CNDP_FAVORABLE';
+    return this.canManagePlanFinancement()
+      && this.idee()?.statut === 'AVIS_CNDP_FAVORABLE'
+      && this.hasActivePlanFinancement()
+      && this.hasIdentifierFinancementAction();
   }
 
   canSoumettreDossierProjet(): boolean {
@@ -228,7 +321,23 @@ export class IdeeProjetDetailComponent implements OnInit {
   }
 
   canValiderDossierProjet(): boolean {
-    return this.canManagePlanFinancement() && this.idee()?.statut === 'SOUMISSION_DOSSIER_PROJET';
+    return this.canManagePlanFinancement()
+      && this.idee()?.statut === 'SOUMISSION_DOSSIER_PROJET'
+      && this.hasRequiredDocuments()
+      && this.hasDossierProjetValidationAction();
+  }
+
+  canFinaliserDossierProjet(): boolean {
+    const statut = this.idee()?.statut;
+    if (!this.canManagePlanFinancement() || !this.isDossierProjetStatus(statut) || !this.hasRequiredDocuments()) {
+      return false;
+    }
+
+    if (statut === 'SOUMISSION_DOSSIER_PROJET') {
+      return this.hasDossierProjetValidationAction();
+    }
+
+    return this.hasDossierProjetSubmissionAction() || statut === 'IDENTIFICATION_FINANCEMENT' || statut === 'DOSSIER_PROJET_RETOURNE';
   }
 
   private hasValidationNoteConceptuelleAction(): boolean {
@@ -254,6 +363,30 @@ export class IdeeProjetDetailComponent implements OnInit {
       || action.nomEtape?.toLowerCase().includes('avis cndp')
       || action.nomEtape?.toLowerCase().includes('non favorable')
       || action.nomEtape?.toLowerCase().includes('rejete')
+    );
+  }
+
+  private hasIdentifierFinancementAction(): boolean {
+    return this.availableActions().some(action =>
+      action.etatCible === 'IDENTIFICATION_FINANCEMENT'
+      || action.codeEtape === 'IDENTIFICATION_FINANCEMENT'
+      || action.nomEtape?.toLowerCase().includes('financement')
+    );
+  }
+
+  private hasDossierProjetValidationAction(): boolean {
+    return this.availableActions().some(action =>
+      action.etatCible === 'DOSSIER_PROJET_VALIDE'
+      || action.codeEtape === 'DOSSIER_PROJET_VALIDE'
+      || action.nomEtape?.toLowerCase().includes('dossier projet')
+    );
+  }
+
+  private hasDossierProjetSubmissionAction(): boolean {
+    return this.availableActions().some(action =>
+      action.etatCible === 'SOUMISSION_DOSSIER_PROJET'
+      || action.codeEtape === 'SOUMISSION_DOSSIER_PROJET'
+      || action.nomEtape?.toLowerCase().includes('soumission dossier')
     );
   }
 
@@ -339,10 +472,12 @@ export class IdeeProjetDetailComponent implements OnInit {
           return;
         }
         this.idee.set(data);
+        this.syncDgepTab(data.statut);
         this.loading.set(false);
         this.requiredDocumentTypes.set(this.getRequiredDocumentTypes(data.statut));
         this.loadNoteConceptuelle(data.id);
         this.loadDocuments(data.id);
+        this.loadDossierProjet(data.id, data.statut);
         this.loadPlanFinancement(data.id);
         this.loadAvailableActions(data.statut);
       },
@@ -382,6 +517,28 @@ export class IdeeProjetDetailComponent implements OnInit {
     });
   }
 
+  private loadDossierProjet(id: string | number, statut?: string): void {
+    if (!this.isDossierProjetStatus(statut)) {
+      this.dossierProjet.set(null);
+      this.dossierProjetError.set(null);
+      return;
+    }
+
+    this.loadingDossierProjet.set(true);
+    this.dossierProjetError.set(null);
+    this.dossierProjetIdeeService.getDossier(id).subscribe({
+      next: (data) => {
+        this.dossierProjet.set(data);
+        this.loadingDossierProjet.set(false);
+      },
+      error: () => {
+        this.dossierProjet.set(null);
+        this.dossierProjetError.set('Erreur lors du chargement du dossier de projet.');
+        this.loadingDossierProjet.set(false);
+      }
+    });
+  }
+
   private loadSourcesFinancement(): void {
     this.sourcesFinancementService.getActifs().subscribe({
       next: (data) => this.sourcesFinancement.set(data),
@@ -392,7 +549,7 @@ export class IdeeProjetDetailComponent implements OnInit {
   private loadPlanFinancement(id: string | number): void {
     this.loadingPlanFinancement.set(true);
     this.planFinancementError.set(null);
-    this.planFinancementIdeeProjetService.getAll(id).subscribe({
+    this.planFinancementIdeeProjetService.getAll(id, true).subscribe({
       next: (data) => {
         this.planFinancement.set(data);
         this.loadingPlanFinancement.set(false);
@@ -426,8 +583,6 @@ export class IdeeProjetDetailComponent implements OnInit {
         return ['PRODOC'];
       case 'PRODOC_VALIDE':
         return ['AVIS_CNDP'];
-      case 'AVIS_CNDP_FAVORABLE':
-        return ['ACTE_JURIDIQUE'];
       case 'AVIS_CNDP_REJETE':
         return ['AVIS_CNDP'];
       case 'IDENTIFICATION_FINANCEMENT':
@@ -447,11 +602,27 @@ export class IdeeProjetDetailComponent implements OnInit {
   }
 
   hasRequiredDocuments(): boolean {
+    if (this.isDossierProjetStatus(this.idee()?.statut) && this.dossierProjet()) {
+      return this.dossierProjet()?.complet === true;
+    }
+
     return this.getMissingRequiredDocumentTypes().length === 0;
   }
 
   hasDocumentType(type: TypeDocumentProjet): boolean {
+    if (this.isDossierProjetStatus(this.idee()?.statut) && this.isDossierProjetDocumentType(type)) {
+      return this.hasDossierProjetDocument(type);
+    }
+
     return this.getDocumentForType(type) !== null;
+  }
+
+  hasDossierProjetDocument(type: DossierProjetTypeDocument): boolean {
+    return this.getDossierProjetDocumentForType(type) !== null;
+  }
+
+  getDossierProjetDocumentForType(type: DossierProjetTypeDocument): DossierProjetIdeeDocument | null {
+    return this.dossierProjet()?.documents?.find(doc => doc.typeDocument === type) ?? null;
   }
 
   getDocumentForType(type: TypeDocumentProjet): DocumentIdeeProjetResponseDTO | null {
@@ -475,6 +646,10 @@ export class IdeeProjetDetailComponent implements OnInit {
   }
 
   getMissingRequiredDocumentTypes(): TypeDocumentProjet[] {
+    if (this.isDossierProjetStatus(this.idee()?.statut) && this.dossierProjet()) {
+      return this.dossierProjet()?.piecesManquantes ?? [];
+    }
+
     return this.requiredDocumentTypes().filter(type => !this.hasDocumentType(type));
   }
 
@@ -615,6 +790,10 @@ export class IdeeProjetDetailComponent implements OnInit {
     );
   }
 
+  hasActivePlanFinancement(): boolean {
+    return this.planFinancement().some(line => line.actif !== false);
+  }
+
   getMissingRequiredDocumentsMessage(): string {
     const missing = this.getMissingRequiredDocumentTypes();
     if (missing.length === 0) {
@@ -645,11 +824,19 @@ export class IdeeProjetDetailComponent implements OnInit {
 
     this.actionInProgress.set(true);
     this.uploadingDocumentType.set(type);
-    this.documentIdeeService.upload(selectedFile, type, item.id, this.getUserId()).subscribe({
-      next: () => {
+    this.documentIdeeService.upload(selectedFile, type, item.id, this.getUserId()).pipe(
+      switchMap(() => this.isDossierProjetStatus(item.statut)
+        ? this.dossierProjetIdeeService.synchroniser(item.id)
+        : of(null)
+      )
+    ).subscribe({
+      next: (dossier) => {
         this.actionInProgress.set(false);
         this.uploadingDocumentType.set(null);
         delete this.selectedFiles[type];
+        if (dossier) {
+          this.dossierProjet.set(dossier);
+        }
         this.loadDocuments(item.id);
         this.showToast(`${this.getTypeDocumentLabel(type)} telecharge avec succes`, 'success');
       },
@@ -662,6 +849,10 @@ export class IdeeProjetDetailComponent implements OnInit {
   }
 
   canUploadDocumentType(type: TypeDocumentProjet): boolean {
+    if (this.isDossierProjetStatus(this.idee()?.statut) && this.isDossierProjetDocumentType(type)) {
+      return this.isDgepRole() && this.dossierProjet()?.statut !== 'VALIDE';
+    }
+
     if (type === 'AVIS_CNDP' && !this.isCndpRole()) {
       return false;
     }
@@ -672,7 +863,6 @@ export class IdeeProjetDetailComponent implements OnInit {
 
     if (this.isDgepEligibleStatus(this.idee()?.statut)) {
       const dgepDocuments: TypeDocumentProjet[] = [
-        'ACTE_JURIDIQUE',
         ...DOSSIER_PROJET_REQUIRED_TYPES
       ];
       if (dgepDocuments.includes(type) && !this.isDgepRole()) {
@@ -730,6 +920,51 @@ export class IdeeProjetDetailComponent implements OnInit {
         this.actionInProgress.set(false);
         this.showToast('Dossier valide. Le projet a ete cree automatiquement.', 'success');
         this.refreshIdee(item.id, () => this.router.navigate(['/app/pip/projets']));
+      },
+      error: (err: any) => {
+        this.actionInProgress.set(false);
+        this.handleDossierError(err);
+      }
+    });
+  }
+
+  onFinaliserDossierProjet(): void {
+    const item = this.idee();
+    if (!item) return;
+    if (!this.canFinaliserDossierProjet()) {
+      this.showToast('Seul le role DGEP peut valider un dossier complet a cette etape', 'error');
+      return;
+    }
+
+    if (!this.hasRequiredDocuments()) {
+      this.showToast(this.getMissingRequiredDocumentsMessage(), 'error');
+      return;
+    }
+
+    const payload = this.buildDossierActionPayload();
+    const call = item.statut === 'SOUMISSION_DOSSIER_PROJET'
+      ? this.ideesService.validerDossierProjet(item.id, payload)
+      : this.ideesService.soumettreDossierProjet(item.id, payload).pipe(
+          switchMap(() => this.ideesService.validerDossierProjet(item.id, payload))
+        );
+
+    this.actionInProgress.set(true);
+    call.pipe(
+      switchMap(() => forkJoin({
+        idee: this.ideesService.getById(item.id),
+        dossier: this.dossierProjetIdeeService.getDossier(item.id)
+      }))
+    ).subscribe({
+      next: ({ idee, dossier }) => {
+        this.actionInProgress.set(false);
+        this.idee.set(idee);
+        this.dossierProjet.set(dossier);
+        this.requiredDocumentTypes.set(this.getRequiredDocumentTypes(idee.statut));
+        this.loadDocuments(idee.id);
+        this.loadPlanFinancement(idee.id);
+        this.loadAvailableActions(idee.statut);
+        this.showToast('Dossier valide. Le projet a ete cree automatiquement.', 'success');
+        this.router.navigate(['/app/pip/projets']);
       },
       error: (err: any) => {
         this.actionInProgress.set(false);
@@ -927,15 +1162,15 @@ export class IdeeProjetDetailComponent implements OnInit {
       this.showToast('Seul le role DGEP peut identifier le financement a cette etape', 'error');
       return;
     }
-    if (!this.hasRequiredDocuments()) {
-      this.showToast('Acte juridique requis avant cette action', 'error');
+    if (!this.hasActivePlanFinancement()) {
+      this.showToast('Au moins une ligne active du plan de financement est requise avant cette action', 'error');
       return;
     }
     const item = this.idee();
     if (!item) return;
     this.runAction(
       this.ideesService.identifierFinancement(item.id, this.buildActionPayload()),
-      'Financement identifié avec succès'
+      'Identification du financement validée avec succès'
     );
   }
 
@@ -977,9 +1212,11 @@ export class IdeeProjetDetailComponent implements OnInit {
     this.ideesService.getById(id).subscribe({
       next: (updated) => {
         this.idee.set(updated);
+        this.syncDgepTab(updated.statut);
         this.requiredDocumentTypes.set(this.getRequiredDocumentTypes(updated.statut));
         this.loadNoteConceptuelle(updated.id);
         this.loadDocuments(updated.id);
+        this.loadDossierProjet(updated.id, updated.statut);
         this.loadPlanFinancement(updated.id);
         this.loadAvailableActions(updated.statut);
         afterRefresh?.();
@@ -1000,11 +1237,23 @@ export class IdeeProjetDetailComponent implements OnInit {
     return this.authService.currentUser()?.id;
   }
 
+  private buildDossierActionPayload(): { userId?: string; commentaire?: string } {
+    const payload = this.buildActionPayload();
+    return {
+      userId: payload.userId,
+      commentaire: payload.commentaire ?? 'Validation du dossier de creation de projet par la DGEP'
+    };
+  }
+
   private isDgepEligibleStatus(statut?: string): boolean {
     return statut === 'AVIS_CNDP_FAVORABLE'
       || statut === 'IDENTIFICATION_FINANCEMENT'
       || statut === 'SOUMISSION_DOSSIER_PROJET'
       || statut === 'DOSSIER_PROJET_RETOURNE';
+  }
+
+  private isDossierProjetDocumentType(type: TypeDocumentProjet): type is DossierProjetTypeDocument {
+    return DOSSIER_PROJET_REQUIRED_TYPES.includes(type);
   }
 
   private loadMinisteres(): void {
@@ -1087,6 +1336,10 @@ export class IdeeProjetDetailComponent implements OnInit {
   }
 
   getTypeDocumentLabel(type: TypeDocumentProjet): string {
+    if (this.isDossierProjetDocumentType(type)) {
+      return DOSSIER_DOCUMENT_LABELS[type];
+    }
+
     const found = this.typesDocument.find(t => t.value === type);
     return found ? found.label : type;
   }
@@ -1143,6 +1396,28 @@ export class IdeeProjetDetailComponent implements OnInit {
 
   downloadDocument(item: DocumentIdeeProjetResponseDTO): void {
     this.documentIdeeService.downloadAndSave(item.id, item.titre);
+  }
+
+  downloadDossierProjetDocument(type: DossierProjetTypeDocument): void {
+    const document = this.getDossierProjetDocumentForType(type);
+    if (!document?.documentIdeeProjetId) return;
+
+    this.documentIdeeService.downloadAndSave(
+      document.documentIdeeProjetId,
+      document.titre || this.getTypeDocumentLabel(type)
+    );
+  }
+
+  downloadRequiredDocument(type: TypeDocumentProjet): void {
+    if (this.isDossierProjetStatus(this.idee()?.statut) && this.isDossierProjetDocumentType(type)) {
+      this.downloadDossierProjetDocument(type);
+      return;
+    }
+
+    const document = this.getDocumentForType(type);
+    if (document) {
+      this.downloadDocument(document);
+    }
   }
 
   showToast(message: string, type: 'success' | 'error'): void {

@@ -40,7 +40,7 @@ export class AutorisationEngagementService {
   }
 
   getByProjet(projetId: string): Observable<AutorisationEngagement[]> {
-    return this.getAll().pipe(
+    return this.getAll({ projetId }).pipe(
       map(items => items.filter(item => String(item.projetId) === String(projetId)))
     );
   }

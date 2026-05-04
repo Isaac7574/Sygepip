@@ -28,21 +28,21 @@ describe('ArbitrageComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should load only projects with PIP_FINANCIER_CREE status', () => {
+  it('should load only projects with EN_ARBITRAGE status', () => {
     projetsService.getAll.and.returnValue(of([
-      { id: '1', code: 'P1', titre: 'Projet 1', statut: 'PIP_FINANCIER_CREE', ministereId: 'm1', actif: true },
-      { id: '2', code: 'P2', titre: 'Projet 2', statut: 'EN_ARBITRAGE', ministereId: 'm1', actif: true }
+      { id: '1', code: 'P1', titre: 'Projet 1', statut: 'EN_ARBITRAGE', ministereId: 'm1', actif: true },
+      { id: '2', code: 'P2', titre: 'Projet 2', statut: 'PIP_FINANCIER_CREE', ministereId: 'm1', actif: true }
     ] as any));
 
     component.loadProjets();
 
     expect(component.projets().length).toBe(1);
-    expect(component.projets()[0].statut).toBe('PIP_FINANCIER_CREE');
+    expect(component.projets()[0].statut).toBe('EN_ARBITRAGE');
   });
 
   it('should normalize status before filtering', () => {
     projetsService.getAll.and.returnValue(of([
-      { id: '1', code: 'P1', titre: 'Projet 1', statut: ' pip_financier_cree ', ministereId: 'm1', actif: true }
+      { id: '1', code: 'P1', titre: 'Projet 1', statut: ' en_arbitrage ', ministereId: 'm1', actif: true }
     ] as any));
 
     component.loadProjets();
@@ -51,7 +51,7 @@ describe('ArbitrageComponent', () => {
   });
 
   it('should open modal for selected project', () => {
-    const projet = { id: '1', code: 'P1', titre: 'Projet 1', statut: 'PIP_FINANCIER_CREE', ministereId: 'm1', actif: true } as any;
+    const projet = { id: '1', code: 'P1', titre: 'Projet 1', statut: 'EN_ARBITRAGE', ministereId: 'm1', actif: true } as any;
 
     component.openModal(projet);
 

@@ -54,6 +54,69 @@ export class ProjetsService {
     return this.api.post<Projet>(`${this.endpoint}/${id}/programmation-technique`, data);
   }
 
+  validerProgrammationTechnique(
+    id: string | number,
+    payload: { userId?: string; commentaire?: string }
+  ): Observable<void> {
+    return this.api.post<void>(`${this.endpoint}/${id}/valider-programmation-technique`, payload);
+  }
+
+  validerProgrammationFinanciere(
+    id: string | number,
+    payload: { userId?: string; commentaire?: string }
+  ): Observable<void> {
+    return this.api.post<void>(`${this.endpoint}/${id}/valider-programmation-financiere`, payload);
+  }
+
+  passerArbitrage(
+    id: string | number,
+    payload: { userId?: string; commentaire?: string }
+  ): Observable<void> {
+    return this.api.post<void>(`${this.endpoint}/${id}/passer-arbitrage`, payload);
+  }
+
+  retenirArbitrage(
+    id: string | number,
+    payload: { userId?: string; commentaire?: string }
+  ): Observable<void> {
+    return this.api.post<void>(`${this.endpoint}/${id}/retenir-arbitrage`, payload);
+  }
+
+  ajournerArbitrage(
+    id: string | number,
+    payload: { userId?: string; commentaire?: string }
+  ): Observable<void> {
+    return this.api.post<void>(`${this.endpoint}/${id}/ajourner-arbitrage`, payload);
+  }
+
+  validerInscriptionPip(
+    id: string | number,
+    payload: { userId?: string; commentaire?: string }
+  ): Observable<void> {
+    return this.api.post<void>(`${this.endpoint}/${id}/valider-inscription-pip`, payload);
+  }
+
+  passerExecution(
+    id: string | number,
+    payload: { userId?: string; commentaire?: string }
+  ): Observable<void> {
+    return this.api.post<void>(`${this.endpoint}/${id}/passer-execution`, payload);
+  }
+
+  activerDecaissement(
+    id: string | number,
+    payload: { userId?: string; commentaire?: string }
+  ): Observable<void> {
+    return this.api.post<void>(`${this.endpoint}/${id}/activer-decaissement`, payload);
+  }
+
+  selectionnerPip(
+    id: string | number,
+    payload: { userId?: string; commentaire?: string }
+  ): Observable<Projet> {
+    return this.api.post<Projet>(`${this.endpoint}/${id}/selectionner-pip`, payload);
+  }
+
   getIndicateurs(id: string | number): Observable<any[]> {
     return this.api.get<any[]>(`${this.endpoint}/${id}/indicateurs`);
   }

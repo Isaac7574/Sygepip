@@ -129,12 +129,51 @@
       </div>
     </div>
 
+    @if (isDgepWorkspace()) {
+      <div class="card overflow-hidden">
+        <div class="flex flex-wrap border-b border-gray-200 bg-gray-50">
+          <button type="button"
+                  (click)="setDgepTab('synthese')"
+                  class="flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition-colors border-b-2 -mb-px"
+                  [class.border-blue-600]="activeDgepTab() === 'synthese'"
+                  [class.text-blue-700]="activeDgepTab() === 'synthese'"
+                  [class.border-transparent]="activeDgepTab() !== 'synthese'"
+                  [class.text-gray-500]="activeDgepTab() !== 'synthese'">
+            Synthese
+          </button>
+          @if (canAccessDgepFinancementTab()) {
+            <button type="button"
+                    (click)="setDgepTab('financement')"
+                    class="flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition-colors border-b-2 -mb-px"
+                    [class.border-blue-600]="activeDgepTab() === 'financement'"
+                    [class.text-blue-700]="activeDgepTab() === 'financement'"
+                    [class.border-transparent]="activeDgepTab() !== 'financement'"
+                    [class.text-gray-500]="activeDgepTab() !== 'financement'">
+              Mobilisation du financement
+            </button>
+          }
+          @if (canAccessDgepDossierTab()) {
+            <button type="button"
+                    (click)="setDgepTab('dossier')"
+                    class="flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition-colors border-b-2 -mb-px"
+                    [class.border-blue-600]="activeDgepTab() === 'dossier'"
+                    [class.text-blue-700]="activeDgepTab() === 'dossier'"
+                    [class.border-transparent]="activeDgepTab() !== 'dossier'"
+                    [class.text-gray-500]="activeDgepTab() !== 'dossier'">
+              Dossier de projet
+            </button>
+          }
+        </div>
+      </div>
+    }
+
     <!--  GRILLE PRINCIPALE  -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
       <!-- Colonne gauche (2/3) -->
       <div class="lg:col-span-2 space-y-6">
 
+        @if (showDgepSyntheseContent()) {
         <!-- Informations generales -->
         <div class="card p-6">
           <div class="flex items-center justify-between mb-4">
@@ -201,8 +240,10 @@
             }
           </div>
         </div>
+        }
 
         <!-- Note conceptuelle -->
+        @if (showDgepSyntheseContent()) {
         <div class="card p-6">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
@@ -296,9 +337,10 @@
             }
           }
         </div>
+        }
 
         <!-- Plan de financement de l'idée -->
-        @if (canManagePlanFinancement()) {
+        @if (shouldShowPlanFinancementSection()) {
         <div class="card p-6">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
@@ -426,6 +468,7 @@
         }
 
         <!-- Documents -->
+        @if (shouldShowDocumentsSection()) {
         <div class="card p-6">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
@@ -509,12 +552,14 @@
             </div>
           }
         </div>
+        }
 
       </div>
 
       <!-- Colonne droite (1/3) -->
       <div class="space-y-6">
 
+        @if (shouldShowActionsSection()) {
         <!-- Actions par statut -->
         <div class="card p-6">
           <div class="flex items-center gap-2 mb-4">
@@ -563,6 +608,17 @@
                   <p class="text-xs text-gray-600">
                     Documents attendus : {{ getRequiredDocumentsSummary() }}
                   </p>
+                  @if (isDossierProjetStatus(idee()!.statut)) {
+                    <p class="text-xs text-gray-600 mt-1">
+                      Statut dossier : <span class="font-semibold">{{ dossierProjet()?.statut || 'Non charge' }}</span>
+                    </p>
+                  }
+                  @if (loadingDossierProjet()) {
+                    <p class="text-xs text-gray-500 mt-1">Chargement du dossier de projet...</p>
+                  }
+                  @if (dossierProjetError()) {
+                    <p class="text-xs text-red-600 mt-1">{{ dossierProjetError() }}</p>
+                  }
                   @if (!hasRequiredDocuments() && isDossierProjetStatus(idee()!.statut)) {
                     <p class="text-xs text-amber-700 mt-1">
                       {{ getMissingRequiredDocumentsMessage() }}
@@ -589,6 +645,13 @@
                         }
                       </div>
                       <div class="flex flex-col gap-2 md:flex-row">
+                        @if (hasDocumentType(requiredType)) {
+                          <button type="button"
+                                  (click)="downloadRequiredDocument(requiredType)"
+                                  class="btn-sm btn-outline flex items-center justify-center md:min-w-24">
+                            Voir
+                          </button>
+                        }
                         <input type="file" (change)="onFileSelected($event, requiredType)"
                                [disabled]="actionInProgress() || !canUploadDocumentType(requiredType)"
                                class="block w-full text-xs text-gray-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-white file:text-gray-700 hover:file:bg-gray-100 cursor-pointer">
@@ -603,7 +666,7 @@
                             </svg>
                             Enregistrement...
                           } @else if (hasDocumentType(requiredType)) {
-                            Deja ajoute
+                            Remplacer
                           } @else {
                             Charger {{ getTypeDocumentLabel(requiredType) }}
                           }
@@ -789,12 +852,18 @@
               @case ('AVIS_CNDP_FAVORABLE') {
                 @if (canIdentifierFinancement()) {
                 <div class="flex flex-wrap gap-2">
-                  <button (click)="onIdentifierFinancement()" [disabled]="actionInProgress() || !hasRequiredDocuments()" class="btn-sm btn-primary">
-                    Identifier le financement
+                  <button (click)="onIdentifierFinancement()" [disabled]="actionInProgress() || !hasActivePlanFinancement()" class="btn-sm btn-primary">
+                    Valider l'identification du financement
                   </button>
                 </div>
                 } @else {
-                  <p class="text-sm text-gray-400">Aucune action disponible pour ce profil.</p>
+                  <p class="text-sm text-gray-400">
+                    @if (!hasActivePlanFinancement()) {
+                      Ajoutez au moins une ligne active de financement pour clôturer l'etape de mobilisation.
+                    } @else {
+                      Aucune action disponible pour ce profil.
+                    }
+                  </p>
                 }
               }
 
@@ -803,10 +872,12 @@
               }
 
               @case ('IDENTIFICATION_FINANCEMENT') {
-                @if (canSoumettreDossierProjet()) {
+                @if (canManagePlanFinancement()) {
                 <div class="flex flex-wrap gap-2">
-                  <button (click)="onSoumettreDossierProjet()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
-                    Soumettre le dossier de projet
+                  <button (click)="onFinaliserDossierProjet()"
+                          [disabled]="actionInProgress() || !canFinaliserDossierProjet()"
+                          class="btn-sm btn-primary">
+                    Valider le dossier et creer le projet
                   </button>
                 </div>
                 } @else {
@@ -817,10 +888,10 @@
               @case ('SOUMISSION_DOSSIER_PROJET') {
                 @if (canValiderDossierProjet()) {
                 <div class="flex flex-wrap gap-2">
-                  <button (click)="onValiderDossierProjet()"
-                          [disabled]="actionInProgress()"
+                  <button (click)="onFinaliserDossierProjet()"
+                          [disabled]="actionInProgress() || !canFinaliserDossierProjet()"
                           class="btn-sm btn-primary">
-                    Valider le dossier de projet
+                    Valider le dossier et creer le projet
                   </button>
                   <button (click)="onRetournerDossierProjet()"
                           [disabled]="actionInProgress()"
@@ -834,10 +905,12 @@
               }
 
               @case ('DOSSIER_PROJET_RETOURNE') {
-                @if (canSoumettreDossierProjet()) {
+                @if (canManagePlanFinancement()) {
                 <div class="flex flex-wrap gap-2">
-                  <button (click)="onSoumettreDossierProjet()" [disabled]="actionInProgress()" class="btn-sm btn-primary">
-                    Resoumettre le dossier de projet
+                  <button (click)="onFinaliserDossierProjet()"
+                          [disabled]="actionInProgress() || !canFinaliserDossierProjet()"
+                          class="btn-sm btn-primary">
+                    Valider le dossier et creer le projet
                   </button>
                 </div>
                 } @else {
@@ -852,8 +925,10 @@
             }
           </div>
         </div>
+        }
 
         <!-- Statut & Classification -->
+        @if (showDgepSyntheseContent()) {
         <div class="card p-6">
           <div class="flex items-center gap-2 mb-4">
             <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -905,9 +980,10 @@
             }
           </div>
         </div>
+        }
 
         <!-- Point focal -->
-        @if (idee()!.pointFocalNom || idee()!.pointFocalEmail || idee()!.pointFocalTelephone) {
+        @if (showDgepSyntheseContent() && (idee()!.pointFocalNom || idee()!.pointFocalEmail || idee()!.pointFocalTelephone)) {
           <div class="card p-6">
             <div class="flex items-center gap-2 mb-4">
               <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -964,7 +1040,7 @@
         }
 
         <!-- Metadonnees -->
-        @if (idee()!.createdAt || idee()!.createdBy) {
+        @if (showDgepSyntheseContent() && (idee()!.createdAt || idee()!.createdBy)) {
           <div class="card p-5">
             <div class="flex items-center gap-2 mb-3">
               <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">

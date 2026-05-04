@@ -10,8 +10,11 @@ export class PlanFinancementIdeeProjetService {
   private api = inject(ApiService);
   private endpoint = '/ideeprojet';
 
-  getAll(ideeId: string | number): Observable<PlanFinancementIdeeProjet[]> {
-    return this.api.get<PlanFinancementIdeeProjet[]>(`${this.endpoint}/${ideeId}/plan-financement`);
+  getAll(ideeId: string | number, actif?: boolean): Observable<PlanFinancementIdeeProjet[]> {
+    return this.api.get<PlanFinancementIdeeProjet[]>(
+      `${this.endpoint}/${ideeId}/plan-financement`,
+      actif === undefined ? undefined : { actif }
+    );
   }
 
   getById(ideeId: string | number, id: string | number): Observable<PlanFinancementIdeeProjet> {

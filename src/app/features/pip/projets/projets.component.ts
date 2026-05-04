@@ -2,7 +2,9 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { ProjetsService } from '@core/services/projets.service';
+import { AuthService } from '@core/services/auth.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
 import { RegionsService } from '@core/services/regions.service';
@@ -10,6 +12,7 @@ import { ProgrammesService } from '@core/services/programmes.service';
 import { IdeesProjetService } from '@core/services/idees-projet.service';
 import { PipAnnuelService } from '@core/services/pip-annuel.service';
 import { UtilisateursService } from '@core/services/utilisateurs.service';
+import { WorkflowService } from '@core/services/workflow.service';
 import {
   Projet,
   ProjetEditResponseDTO,
@@ -23,7 +26,8 @@ import {
   CategorieProjet,
   StatutProjet,
   TypeProjetPip,
-  StatutInscriptionPip
+  StatutInscriptionPip,
+  WorkflowNextAction
 } from '@core/models';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ToastComponent } from '@shared/components/toast/toast.component';
@@ -39,6 +43,7 @@ export class ProjetsPIPComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private projetsService = inject(ProjetsService);
+  private authService = inject(AuthService);
   private ministeresService = inject(MinisteresService);
   private secteursService = inject(SecteursService);
   private regionsService = inject(RegionsService);
@@ -46,9 +51,11 @@ export class ProjetsPIPComponent implements OnInit {
   private ideesProjetService = inject(IdeesProjetService);
   private pipAnnuelService = inject(PipAnnuelService);
   private utilisateursService = inject(UtilisateursService);
+  private workflowService = inject(WorkflowService);
 
   items = signal<Projet[]>([]);
   filteredItems = signal<Projet[]>([]);
+  matureItems = signal<Projet[]>([]);
   ministeres = signal<Ministere[]>([]);
   secteurs = signal<Secteur[]>([]);
   regions = signal<Region[]>([]);
@@ -74,45 +81,55 @@ export class ProjetsPIPComponent implements OnInit {
   toastVisible = signal(false);
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
+  activeTab = signal<'all' | 'mature'>('all');
+  matureActions = signal<WorkflowNextAction[]>([]);
+  loadingMatureActions = signal(false);
+  loadingSelection = signal(false);
+  selectionComment = 'Projet retenu comme projet structurant';
+  selectedMatureProjectIds = signal<string[]>([]);
 
   categories: { value: CategorieProjet; label: string }[] = [
-    { value: 'CATEGORIE_1_ADMINISTRATION_DIRECTE', label: 'Catégorie 1 - Administration directe' },
-    { value: 'CATEGORIE_2_STRUCTURE_AUTONOME', label: 'Catégorie 2 - Structure autonome' },
-    { value: 'CATEGORIE_3_AGENCES_PTF_ONG', label: 'Catégorie 3 - Agences/PTF/ONG' },
-    { value: 'CATEGORIE_4_PPP', label: 'Catégorie 4 - PPP' }
+    { value: 'CATEGORIE_1_ADMINISTRATION_DIRECTE', label: 'Categorie 1 - Administration directe' },
+    { value: 'CATEGORIE_2_STRUCTURE_AUTONOME', label: 'Categorie 2 - Structure autonome' },
+    { value: 'CATEGORIE_3_AGENCES_PTF_ONG', label: 'Categorie 3 - Agences/PTF/ONG' },
+    { value: 'CATEGORIE_4_PPP', label: 'Categorie 4 - PPP' }
   ];
 
   typesProjetPip: { value: TypeProjetPip; label: string }[] = [
-    { value: 'NOYAU_SUR', label: 'Noyau sûr' },
+    { value: 'NOYAU_SUR', label: 'Noyau sur' },
     { value: 'NATIONAL', label: 'National' }
   ];
 
   statutsInscriptionPip: { value: StatutInscriptionPip; label: string }[] = [
-    { value: 'EN_EXECUTION', label: 'En exécution' },
-    { value: 'INSTANCE_DEMARRAGE', label: 'Instance de démarrage' }
+    { value: 'EN_EXECUTION', label: 'En execution' },
+    { value: 'INSTANCE_DEMARRAGE', label: 'Instance de demarrage' }
   ];
 
   sourcesFinancement: { value: string; label: string }[] = [
-    { value: 'BUDGET_ETAT', label: 'Budget de l\'État' },
-    { value: 'EXTERIEUR', label: 'Financement extérieur' },
+    { value: 'BUDGET_ETAT', label: 'Budget de l\'Etat' },
+    { value: 'EXTERIEUR', label: 'Financement exterieur' },
     { value: 'MIXTE', label: 'Mixte' },
-    { value: 'PPP', label: 'Partenariat Public-Privé' }
+    { value: 'PPP', label: 'Partenariat Public-Prive' }
   ];
 
   statuts: { value: StatutProjet; label: string }[] = [
-    { value: 'CREE', label: 'Créé' },
+    { value: 'MATURE', label: 'Mature' },
+    { value: 'SELECTIONNE', label: 'Selectionne' },
+    { value: 'PROG_OPERATIONNELLE', label: 'Programmation technique finalisee' },
+    { value: 'PROG_FINANCIERE_VALIDE', label: 'Programmation financiere validee' },
+    { value: 'CREE', label: 'Cree' },
     { value: 'PIP_TECHNIQUE_EN_COURS', label: 'PIP technique en cours' },
     { value: 'PIP_TECHNIQUE_SOUMIS', label: 'PIP technique soumis' },
-    { value: 'PIP_TECHNIQUE_VALIDE', label: 'PIP technique validé' },
-    { value: 'PIP_TECHNIQUE_A_CORRIGER', label: 'PIP technique à corriger' },
-    { value: 'PIP_FINANCIER_CREE', label: 'PIP financier créé' },
+    { value: 'PIP_TECHNIQUE_VALIDE', label: 'PIP technique valide' },
+    { value: 'PIP_TECHNIQUE_A_CORRIGER', label: 'PIP technique a corriger' },
+    { value: 'PIP_FINANCIER_CREE', label: 'PIP financier cree' },
     { value: 'EN_ARBITRAGE', label: 'En arbitrage' },
     { value: 'ARBITRAGE_RETENU', label: 'Arbitrage retenu' },
-    { value: 'ARBITRAGE_AJOURNE', label: 'Arbitrage ajourné' },
-    { value: 'PIP_VALIDE', label: 'PIP validé' },
-    { value: 'EN_EXECUTION', label: 'En exécution' },
+    { value: 'ARBITRAGE_AJOURNE', label: 'Arbitrage ajourne' },
+    { value: 'PIP_VALIDE', label: 'Inscrit au PIP' },
+    { value: 'EN_EXECUTION', label: 'En execution' },
     { value: 'SUSPENDU', label: 'Suspendu' },
-    { value: 'CLOTURE', label: 'Clôturé' }
+    { value: 'CLOTURE', label: 'Cloture' }
   ];
 
   ngOnInit(): void {
@@ -131,6 +148,9 @@ export class ProjetsPIPComponent implements OnInit {
     this.ideesProjetService.getAll().subscribe({ next: (data) => this.ideesProjet.set(data) });
     this.pipAnnuelService.getAll().subscribe({ next: (data) => this.pipAnnuels.set(data) });
     this.utilisateursService.getAll().subscribe({ next: (data) => this.utilisateurs.set(data) });
+    if (this.isDgep()) {
+      this.loadMatureActions();
+    }
   }
 
   private resetForm(): Partial<ProjetEditResponseDTO> & { code?: string; titre?: string } {
@@ -139,10 +159,25 @@ export class ProjetsPIPComponent implements OnInit {
       ideeProjetId: undefined, objectifsStrategiques: '', objectifsOperationnel: '',
       coutTotal: 0,
       dateDebutPrevu: undefined, dateFinPrevu: undefined, dureeEnMois: undefined,
-      statut: 'CREE', financementBoucle: false, actif: true,
+      statut: 'MATURE', financementBoucle: false, actif: true,
       pipAnnuelId: undefined, sourceFinancement: undefined,
       chefProjetId: undefined, typeProjetPip: undefined, statutInscriptionPip: undefined
     };
+  }
+
+  isDgep(): boolean {
+    return this.authService.hasRole('DGEP');
+  }
+
+  canSelectPip(): boolean {
+    return this.matureActions().some(action =>
+      action.codeEtape === 'PIP_SELECTION' ||
+      action.etatCible === 'SELECTIONNE'
+    );
+  }
+
+  showMatureSelectionTab(): boolean {
+    return this.isDgep();
   }
 
   // Conversion des dates string en Date
@@ -155,18 +190,33 @@ export class ProjetsPIPComponent implements OnInit {
       dateFinPrevu: projet.dateFinPrevu ? new Date(projet.dateFinPrevu) : undefined,
       createdAt: projet.createdAt ? new Date(projet.createdAt) : new Date(),
       dateCreation: projet.dateCreation ? new Date(projet.dateCreation) : new Date(),
-      statut: projet.statut || 'CREE',
+      statut: projet.statut || 'MATURE',
       categorie: projet.categorie || 'CATEGORIE_1_ADMINISTRATION_DIRECTE'
     };
+  }
+
+  private loadMatureActions(): void {
+    this.loadingMatureActions.set(true);
+    this.workflowService.getMyActions('PROJET', 'MATURE').subscribe({
+      next: (actions) => {
+        this.matureActions.set(actions);
+        this.loadingMatureActions.set(false);
+      },
+      error: () => {
+        this.matureActions.set([]);
+        this.loadingMatureActions.set(false);
+      }
+    });
   }
 
   load(): void {
     this.projetsService.getAll().subscribe({
       next: (data) => {
         const adapted = data.map(this.adaptProjetDates);
-        console.log('Projets chargés adaptés :', adapted);
+        console.log('Projets charges adaptes :', adapted);
         this.items.set(adapted);
-        this.filteredItems.set(adapted);
+        this.matureItems.set(adapted.filter((item) => item.statut === 'MATURE'));
+        this.applyFilters();
         if (this.pendingEditId) {
           this.openEditById(this.pendingEditId);
         }
@@ -183,8 +233,13 @@ export class ProjetsPIPComponent implements OnInit {
 
 
   search(): void {
+    this.applyFilters();
+  }
+
+  private applyFilters(): void {
     const term = this.searchTerm.toLowerCase();
-    this.filteredItems.set(this.items().filter(i =>
+    const source = this.activeTab() === 'mature' ? this.matureItems() : this.items();
+    this.filteredItems.set(source.filter(i =>
       i.titre?.toLowerCase().includes(term) || i.code?.toLowerCase().includes(term) ||
       this.getMinistereNom(i.ministereId).toLowerCase().includes(term)
     ));
@@ -215,6 +270,72 @@ export class ProjetsPIPComponent implements OnInit {
       this.router.navigate([], { queryParams: { editId: null }, queryParamsHandling: 'merge' });
       this.pendingEditId = null;
     }
+  }
+
+  setActiveTab(tab: 'all' | 'mature'): void {
+    this.activeTab.set(tab);
+    this.selectedMatureProjectIds.set([]);
+    this.applyFilters();
+  }
+
+  isSelectedForPip(projetId: string): boolean {
+    return this.selectedMatureProjectIds().includes(projetId);
+  }
+
+  toggleMatureSelection(projetId: string, checked: boolean): void {
+    const selected = new Set(this.selectedMatureProjectIds());
+    if (checked) {
+      selected.add(projetId);
+    } else {
+      selected.delete(projetId);
+    }
+    this.selectedMatureProjectIds.set(Array.from(selected));
+  }
+
+  toggleSelectAllMatureProjects(checked: boolean): void {
+    this.selectedMatureProjectIds.set(
+      checked ? this.filteredItems().map((item) => item.id) : []
+    );
+  }
+
+  allVisibleMatureProjectsSelected(): boolean {
+    const visible = this.filteredItems();
+    return visible.length > 0 && visible.every((item) => this.isSelectedForPip(item.id));
+  }
+
+  selectMatureProjects(): void {
+    const userId = this.authService.currentUser()?.id;
+    const selectedIds = this.selectedMatureProjectIds();
+    if (!userId || selectedIds.length === 0) return;
+    if (!this.canSelectPip()) {
+      this.showToast('Vous n\'avez pas la permission de selectionner ces projets pour le PIP.', 'error');
+      return;
+    }
+
+    this.loadingSelection.set(true);
+    const requests = selectedIds.map((projetId) =>
+      this.projetsService.selectionnerPip(projetId, {
+        userId,
+        commentaire: this.selectionComment || 'Projet retenu comme projet structurant'
+      })
+    );
+
+    forkJoin(requests).subscribe({
+      next: () => {
+        this.loadingSelection.set(false);
+        this.selectedMatureProjectIds.set([]);
+        this.load();
+        this.showToast('Projet(s) selectionne(s) pour le PIP', 'success');
+      },
+      error: (err) => {
+        this.loadingSelection.set(false);
+        if (err?.status === 403) {
+          this.showToast('Vous n\'avez pas la permission de selectionner ces projets pour le PIP.', 'error');
+          return;
+        }
+        this.showToast(err?.message || 'Erreur lors de la selection des projets pour le PIP', 'error');
+      }
+    });
   }
 
    edit(item: Projet): void {
@@ -272,7 +393,7 @@ export class ProjetsPIPComponent implements OnInit {
       createdBy: this.formData.createdBy,
       actif: this.formData.actif
     };
-    // Supprimer les clés undefined ou null pour ne pas polluer le payload
+    // Supprimer les cles undefined ou null pour ne pas polluer le payload
     Object.keys(raw).forEach(k => { if (raw[k] === undefined || raw[k] === null) delete raw[k]; });
     console.log('UPDATE payload:', raw);
     return raw;
@@ -299,7 +420,7 @@ export class ProjetsPIPComponent implements OnInit {
         this.saving.set(false);
         this.closeModal();
         this.load();
-        this.showToast(this.editingItem() ? 'Projet modifié avec succès' : 'Projet créé avec succès', 'success');
+        this.showToast(this.editingItem() ? 'Projet modifie avec succes' : 'Projet cree avec succes', 'success');
       },
       error: (err) => { this.saving.set(false); console.error('Erreur update projet:', err); this.showToast(err?.message || 'Erreur lors de l\'enregistrement', 'error'); }
     });
@@ -308,14 +429,14 @@ export class ProjetsPIPComponent implements OnInit {
   confirmDelete(item: Projet): void {
     this.itemToDelete = item;
     this.confirmDialogTitle = 'Supprimer le projet';
-    this.confirmDialogMessage = `Êtes-vous sûr de vouloir supprimer le projet "${item.code} - ${item.titre}" ?`;
+    this.confirmDialogMessage = `Etes-vous sur de vouloir supprimer le projet "${item.code} - ${item.titre}" ?`;
     this.confirmDialogVisible.set(true);
   }
 
   onConfirmDelete(): void {
     if (this.itemToDelete) {
       this.projetsService.delete(this.itemToDelete.id).subscribe({
-        next: () => { this.load(); this.showToast('Projet supprimé avec succès', 'success'); },
+        next: () => { this.load(); this.showToast('Projet supprime avec succes', 'success'); },
         error: () => this.showToast('Erreur lors de la suppression', 'error')
       });
     }
@@ -371,12 +492,31 @@ export class ProjetsPIPComponent implements OnInit {
 
   getStatutLabel(statut: string | undefined): string {
     if (!statut) return '-';
+    const workflowLabels: Record<string, string> = {
+      'MATURE': 'Mature',
+      'SELECTIONNE': 'Selectionne',
+      'PROG_OPERATIONNELLE': 'Programmation technique finalisee',
+      'PROG_FINANCIERE': 'Programmation financiere validee',
+      'PROG_FINANCIERE_VALIDE': 'Programmation financiere validee',
+      'EN_ARBITRAGE': 'En arbitrage',
+      'ARBITRAGE_RETENU': 'Arbitrage retenu',
+      'ARBITRAGE_AJOURNE': 'Arbitrage ajourne',
+      'PIP_VALIDE': 'Inscrit au PIP'
+    };
+    if (workflowLabels[statut]) {
+      return workflowLabels[statut];
+    }
     return this.statuts.find(s => s.value === statut)?.label || statut;
   }
 
   getStatutBadgeClass(statut: string | undefined): string {
     if (!statut) return 'badge-secondary';
     const classes: Record<string, string> = {
+      'MATURE': 'badge-info',
+      'SELECTIONNE': 'badge-warning',
+      'PROG_OPERATIONNELLE': 'badge-primary',
+      'PROG_FINANCIERE': 'badge-success',
+      'PROG_FINANCIERE_VALIDE': 'badge-success',
       'CREE': 'badge-info',
       'PIP_TECHNIQUE_EN_COURS': 'badge-warning',
       'PIP_TECHNIQUE_SOUMIS': 'badge-info',
@@ -385,8 +525,8 @@ export class ProjetsPIPComponent implements OnInit {
       'PIP_FINANCIER_CREE': 'badge-info',
       'EN_ARBITRAGE': 'badge-warning',
       'ARBITRAGE_RETENU': 'badge-success',
-      'ARBITRAGE_AJOURNE': 'badge-secondary',
-      'PIP_VALIDE': 'badge-success',
+      'ARBITRAGE_AJOURNE': 'badge-warning',
+      'PIP_VALIDE': 'badge-primary',
       'EN_EXECUTION': 'badge-warning',
       'SUSPENDU': 'badge-danger',
       'CLOTURE': 'badge-secondary'

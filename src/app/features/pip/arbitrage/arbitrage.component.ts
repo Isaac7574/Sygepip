@@ -76,7 +76,7 @@ export class ArbitrageComponent implements OnInit {
   }
 
   private isProjetEligibleForArbitrage(projet: Projet): boolean {
-    return this.normalizeStatut(projet.statut) === 'PIP_FINANCIER_CREE';
+    return this.normalizeStatut(projet.statut) === 'EN_ARBITRAGE';
   }
 
   private normalizeStatut(statut: string | undefined): string {
