@@ -14,6 +14,10 @@ export class RegionsService {
     return this.api.get<Region[]>(this.endpoint, params);
   }
 
+  getActifs(): Observable<Region[]> {
+    return this.api.get<Region[]>(`${this.endpoint}/actifs`);
+  }
+
   getPaginated(params?: FilterParams): Observable<PaginatedResponse<Region>> {
     return this.api.getPaginated<Region>(this.endpoint, params);
   }

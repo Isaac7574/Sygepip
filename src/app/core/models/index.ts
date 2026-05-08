@@ -67,12 +67,13 @@ export interface Region {
   id: string;
   code: string;
   nom: string;
-  chefLieu?: string;
-  latitude?: number;
-  longitude?: number;
-  actif: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+  ancien_nom?: string;
+  geom?: string;
+  centroid?: string;
+  superficie?: number;
+  actif?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // === PROVINCES ===
@@ -82,10 +83,12 @@ export interface Province {
   nom: string;
   regionId: string;
   regionNom?: string;
-  chefLieu?: string;
-  actif: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+  geom?: string;
+  centroid?: string;
+  superficie?: number;
+  actif?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // === COMMUNES ===
@@ -100,9 +103,43 @@ export interface Commune {
   regionId?: string;
   regionNom?: string;
   typeCommune?: TypeCommune;
-  actif: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+  geom?: string;
+  centroid?: string;
+  superficie?: number;
+  actif?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ParsedGeoJsonObject {
+  type?: string;
+  [key: string]: unknown;
+}
+
+export interface MapEntity<T extends { geom?: string; centroid?: string }> {
+  raw: T;
+  geomObject?: ParsedGeoJsonObject;
+  centroidObject?: ParsedGeoJsonObject;
+}
+
+export function toMapEntity<T extends { geom?: string; centroid?: string }>(raw: T): MapEntity<T> {
+  return {
+    raw,
+    geomObject: parseGeoJsonString(raw.geom),
+    centroidObject: parseGeoJsonString(raw.centroid)
+  };
+}
+
+function parseGeoJsonString(value?: string): ParsedGeoJsonObject | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(value) as ParsedGeoJsonObject;
+  } catch {
+    return undefined;
+  }
 }
 
 // === VILLAGES ===
@@ -756,6 +793,30 @@ export interface LocaliteIntervention {
   updatedAt?: Date;
 }
 
+export type IdeeProjetTypeLocaliteIntervention = 'REGION' | 'PROVINCE' | 'COMMUNE';
+
+export interface IdeeProjetLocaliteIntervention {
+  id?: string;
+  ideeProjetId: string;
+  typeLocalite: IdeeProjetTypeLocaliteIntervention;
+  regionId?: string;
+  regionNom?: string;
+  provinceId?: string;
+  provinceNom?: string;
+  communeId?: string;
+  communeNom?: string;
+  ordreAffichage?: number;
+}
+
+export interface IdeeProjetLocaliteInterventionPayload {
+  ideeProjetId: string;
+  typeLocalite: IdeeProjetTypeLocaliteIntervention;
+  regionId?: string;
+  provinceId?: string;
+  communeId?: string;
+  ordreAffichage: number;
+}
+
 export interface Activite {
   id: number;
   projetId: number;
@@ -1107,6 +1168,38 @@ export interface IdeeProjetNoteConceptuelleResponse {
   porteurProjet?: string;
 }
 
+export type IdeeProjetImportType =
+  | 'IDEE_PROJET_INFOS_GENERALES'
+  | 'IDEE_PROJET_NOTE_CONCEPTUELLE'
+  | string;
+
+export type IdeeProjetImportRowStatus = 'SUCCESS' | 'ERROR' | string;
+
+export interface IdeeProjetImportInfosGeneralesPayload {
+  secteurId: string;
+  portee: IdeeProjet['portee'] | string;
+  ministereTutelleFinanciereId?: string;
+  statut?: StatutIdeeProjet | string;
+  actif?: boolean;
+}
+
+export interface IdeeProjetImportRowResult {
+  lineNumber: number;
+  status: IdeeProjetImportRowStatus;
+  message: string;
+  ideeProjetId?: string | null;
+  code?: string | null;
+}
+
+export interface IdeeProjetImportResult {
+  importType: IdeeProjetImportType;
+  fileName: string;
+  totalRows: number;
+  successCount: number;
+  errorCount: number;
+  rows: IdeeProjetImportRowResult[];
+}
+
 
 // === INSCRIPTION PIP ANNUEL ===
 export interface InscriptionPipAnnuel {
@@ -1265,18 +1358,68 @@ export interface GeoPoint {
   longitude: number;
 }
 
-export interface GeoJsonFeature {
+export interface DashboardGeoJsonFeature {
   type: 'Feature';
-  geometry: {
-    type: 'Point' | 'Polygon' | 'MultiPolygon';
-    coordinates: number[] | number[][] | number[][][];
-  };
-  properties: {
-    id: number;
-    nom: string;
-    [key: string]: any;
-  };
+  geometry: GeoJSON.Geometry | null;
+  properties: DashboardMapProperties;
 }
+
+export interface GeoJsonFeatureCollection {
+  type: 'FeatureCollection';
+  features: DashboardGeoJsonFeature[];
+}
+
+export interface RegionMapProperties {
+  niveau: 'REGION';
+  id: string;
+  code: string;
+  nom: string;
+  ancien_nom?: string;
+  superficie?: number;
+  centroid?: GeoJSON.Point | null;
+  nombreIdees: number;
+  coutEstimeIdees: number;
+  nombreProjets: number;
+  coutTotalProjets: number;
+}
+
+export interface ProvinceMapProperties {
+  niveau: 'PROVINCE';
+  id: string;
+  code: string;
+  nom: string;
+  regionId: string;
+  regionNom: string;
+  superficie?: number;
+  centroid?: GeoJSON.Point | null;
+  nombreIdees: number;
+  coutEstimeIdees: number;
+  nombreProjets: number;
+  coutTotalProjets: number;
+}
+
+export interface CommuneMapProperties {
+  niveau: 'COMMUNE';
+  id: string;
+  code: string;
+  nom: string;
+  typeCommune?: string;
+  provinceId: string;
+  provinceNom: string;
+  regionId: string;
+  regionNom: string;
+  superficie?: number;
+  centroid?: GeoJSON.Point | null;
+  nombreIdees: number;
+  coutEstimeIdees: number;
+  nombreProjets: number;
+  coutTotalProjets: number;
+}
+
+export type DashboardMapProperties =
+  | RegionMapProperties
+  | ProvinceMapProperties
+  | CommuneMapProperties;
 
 export interface HeatmapData {
   points: GeoPoint[];

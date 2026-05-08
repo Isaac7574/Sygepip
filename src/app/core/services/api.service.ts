@@ -69,17 +69,35 @@ export class ApiService {
   }
 
   // Upload file
-  upload(endpoint: string, file: File, additionalData?: any): Observable<any> {
+  upload<T>(endpoint: string, file: File, additionalData?: any): Observable<T> {
     const formData = new FormData();
     formData.append('file', file);
     
     if (additionalData) {
-      Object.keys(additionalData).forEach(key => {
-        formData.append(key, additionalData[key]);
+      Object.entries(additionalData).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === '') {
+          return;
+        }
+
+        if (Array.isArray(value)) {
+          value.forEach(item => {
+            if (item !== null && item !== undefined && item !== '') {
+              formData.append(key, String(item));
+            }
+          });
+          return;
+        }
+
+        if (value instanceof Blob) {
+          formData.append(key, value);
+          return;
+        }
+
+        formData.append(key, String(value));
       });
     }
 
-    return this.http.post(`${this.baseUrl}${endpoint}`, formData)
+    return this.http.post<T>(`${this.baseUrl}${endpoint}`, formData)
       .pipe(catchError(this.handleError));
   }
 

@@ -192,6 +192,13 @@
                 </svg>
                 Note conceptuelle
               </a>
+              <a [routerLink]="['/app/maturation/idees-projet', idee()!.id, 'localites']" class="btn-outline" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">
+                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 12.414a8 8 0 10-1.414 1.414l4.243 4.243a1 1 0 001.414-1.414z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10l2 2 4-4"/>
+                </svg>
+                Localités
+              </a>
               @if (canDownloadNoteConceptuellePdf()) {
                 <button type="button" (click)="downloadNoteConceptuellePdf()" class="btn-outline" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">
                   Télécharger le PDF

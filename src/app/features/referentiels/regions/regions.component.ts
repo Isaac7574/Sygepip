@@ -20,7 +20,7 @@ export class RegionsComponent implements OnInit {
   modalOpen = signal(false);
   editingItem = signal<Region | null>(null);
   saving = signal(false);
-  formData: Partial<Region> = { code: '', nom: '', chefLieu: '', actif: true };
+  formData: Partial<Region> = { code: '', nom: '', ancien_nom: '', superficie: undefined, actif: true };
 
   ngOnInit(): void { this.load(); }
 
@@ -34,12 +34,14 @@ export class RegionsComponent implements OnInit {
   search(): void {
     const term = this.searchTerm.toLowerCase();
     this.filteredItems.set(this.items().filter(i =>
-      i.nom?.toLowerCase().includes(term) || i.code?.toLowerCase().includes(term) || i.chefLieu?.toLowerCase().includes(term)
+      i.nom?.toLowerCase().includes(term)
+      || i.code?.toLowerCase().includes(term)
+      || i.ancien_nom?.toLowerCase().includes(term)
     ));
   }
 
   openModal(): void {
-    this.formData = { code: '', nom: '', chefLieu: '', actif: true };
+    this.formData = { code: '', nom: '', ancien_nom: '', superficie: undefined, actif: true };
     this.editingItem.set(null);
     this.modalOpen.set(true);
   }
@@ -53,7 +55,6 @@ export class RegionsComponent implements OnInit {
   }
 
   save(): void {
-     console.log(this.formData);
     this.saving.set(true);
     const obs = this.editingItem()
       ? this.regionsService.update(this.editingItem()!.id, this.formData)

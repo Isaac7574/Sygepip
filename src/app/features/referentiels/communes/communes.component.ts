@@ -62,7 +62,14 @@ export class CommunesComponent implements OnInit {
   }
 
   private getEmptyForm(): Partial<Commune> {
-    return { code: '', nom: '', provinceId: '', typeCommune: 'RURALE', actif: true };
+    return {
+      code: '',
+      nom: '',
+      provinceId: '',
+      typeCommune: 'RURALE',
+      superficie: undefined,
+      actif: true
+    };
   }
 
   loadRegions(): void {
@@ -252,5 +259,10 @@ export class CommunesComponent implements OnInit {
     this.toastMessage = message;
     this.toastType = type;
     this.toastVisible.set(true);
+  }
+
+  formatNumber(value: number | undefined): string {
+    if (value === undefined || value === null) return '-';
+    return value.toLocaleString('fr-FR');
   }
 }

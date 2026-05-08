@@ -1,6 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { LocaliteIntervention, FilterParams, PaginatedResponse } from '@core/models';
+import {
+  FilterParams,
+  IdeeProjetLocaliteIntervention,
+  IdeeProjetLocaliteInterventionPayload,
+  LocaliteIntervention,
+  PaginatedResponse
+} from '@core/models';
 import { ApiService } from '@core/services/api.service';
 
 @Injectable({
@@ -9,6 +15,7 @@ import { ApiService } from '@core/services/api.service';
 export class LocalitesInterventionService {
   private api = inject(ApiService);
   private endpoint = '/localiteintervention';
+  private ideeProjetEndpoint = '/ideeprojet';
 
   getAll(params?: FilterParams): Observable<LocaliteIntervention[]> {
     return this.api.get<LocaliteIntervention[]>(this.endpoint, params);
@@ -24,6 +31,22 @@ export class LocalitesInterventionService {
 
   getByProjet(projetId: string): Observable<LocaliteIntervention[]> {
     return this.api.get<LocaliteIntervention[]>(`${this.endpoint}/projet/${projetId}`);
+  }
+
+  getByIdeeProjet(ideeProjetId: string | number): Observable<IdeeProjetLocaliteIntervention[]> {
+    return this.api.get<IdeeProjetLocaliteIntervention[]>(
+      `${this.ideeProjetEndpoint}/${ideeProjetId}/localites-intervention`
+    );
+  }
+
+  replaceForIdeeProjet(
+    ideeProjetId: string | number,
+    data: IdeeProjetLocaliteInterventionPayload[]
+  ): Observable<IdeeProjetLocaliteIntervention[]> {
+    return this.api.putUrl<IdeeProjetLocaliteIntervention[]>(
+      `${this.ideeProjetEndpoint}/${ideeProjetId}/localites-intervention`,
+      data
+    );
   }
 
   create(data: Partial<LocaliteIntervention>): Observable<LocaliteIntervention> {

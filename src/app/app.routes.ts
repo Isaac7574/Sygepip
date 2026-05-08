@@ -68,6 +68,14 @@ export const routes: Routes = [
         path: 'maturation',
         children: [
           {
+            path: 'import',
+            loadComponent: () => import('./features/maturation/idee-projet-import/idee-projet-import.component').then(m => m.IdeeProjetImportComponent)
+          },
+          {
+            path: 'idees-projet/:ididee/localites',
+            loadComponent: () => import('./features/maturation/idee-projet-localites/idee-projet-localites.component').then(m => m.IdeeProjetLocalitesComponent)
+          },
+          {
             path: 'idees-projet/:ididee',
             loadComponent: () => import('./features/maturation/idee-projet-detail/idee-projet-detail.component').then(m => m.IdeeProjetDetailComponent)
           },

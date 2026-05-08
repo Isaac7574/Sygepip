@@ -46,7 +46,7 @@ export class ProvincesComponent implements OnInit {
   }
 
   private getEmptyForm(): Partial<Province> {
-    return { code: '', nom: '', regionId: '', chefLieu: '', actif: true };
+    return { code: '', nom: '', regionId: '', superficie: undefined, actif: true };
   }
 
   loadRegions(): void {
@@ -79,8 +79,7 @@ export class ProvincesComponent implements OnInit {
       const term = this.searchTerm.toLowerCase();
       result = result.filter(i =>
         i.nom?.toLowerCase().includes(term) ||
-        i.code?.toLowerCase().includes(term) ||
-        i.chefLieu?.toLowerCase().includes(term)
+        i.code?.toLowerCase().includes(term)
       );
     }
 
@@ -174,5 +173,10 @@ export class ProvincesComponent implements OnInit {
     this.toastMessage = message;
     this.toastType = type;
     this.toastVisible.set(true);
+  }
+
+  formatNumber(value: number | undefined): string {
+    if (value === undefined || value === null) return '-';
+    return value.toLocaleString('fr-FR');
   }
 }

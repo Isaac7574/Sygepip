@@ -9,7 +9,7 @@
       <div class="page-header-text">
         <h1>
           Provinces
-          <span class="page-header-badge">Référentiels</span>
+          <span class="page-header-badge">Referentiels</span>
         </h1>
         <p>Gestion des 45 provinces du Burkina Faso</p>
       </div>
@@ -21,7 +21,7 @@
       <div class="flex items-center gap-4 flex-1">
         <div class="w-48">
           <select [(ngModel)]="selectedRegionId" (ngModelChange)="onRegionFilterChange()" class="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-            <option value="">Toutes les régions</option>
+            <option value="">Toutes les regions</option>
             @for (r of regions(); track r.id) {
               <option [value]="r.id">{{ r.nom }}</option>
             }
@@ -38,7 +38,7 @@
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
-        Nouvelle Province
+        Nouvelle province
       </button>
     </div>
     <table class="w-full">
@@ -46,8 +46,8 @@
         <tr>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Région</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chef-lieu</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Region</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Superficie</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
           <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
         </tr>
@@ -58,7 +58,7 @@
             <td class="px-6 py-4 font-medium text-gray-900">{{ item.code }}</td>
             <td class="px-6 py-4 text-gray-900">{{ item.nom }}</td>
             <td class="px-6 py-4 text-gray-500">{{ item.regionNom || getRegionNom(item.regionId) }}</td>
-            <td class="px-6 py-4 text-gray-500">{{ item.chefLieu || '-' }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ formatNumber(item.superficie) }}</td>
             <td class="px-6 py-4">
               <span class="badge" [class.badge-success]="item.actif" [class.badge-secondary]="!item.actif">
                 {{ item.actif ? 'Actif' : 'Inactif' }}
@@ -75,7 +75,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="6" class="px-6 py-12 text-center text-gray-500">Aucune province trouvée</td>
+            <td colspan="6" class="px-6 py-12 text-center text-gray-500">Aucune province trouvee</td>
           </tr>
         }
       </tbody>
@@ -95,8 +95,6 @@
         </button>
       </div>
       <div class="modal-body space-y-6">
-
-        <!-- Identification -->
         <div>
           <div class="flex items-center gap-2 mb-4">
             <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
@@ -113,17 +111,16 @@
               <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: PRV-KAD">
             </div>
             <div class="form-group">
-              <label class="form-label">Chef-lieu</label>
-              <input type="text" [(ngModel)]="formData.chefLieu" class="form-input" placeholder="Chef-lieu de la province">
-            </div>
-            <div class="form-group col-span-2">
               <label class="form-label">Nom <span class="text-red-500">*</span></label>
               <input type="text" [(ngModel)]="formData.nom" class="form-input" placeholder="Nom de la province">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Superficie</label>
+              <input type="number" [(ngModel)]="formData.superficie" class="form-input" min="0" step="0.01" placeholder="Superficie en km2">
             </div>
           </div>
         </div>
 
-        <!-- Rattachement -->
         <div>
           <div class="flex items-center gap-2 mb-4">
             <div class="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
@@ -136,9 +133,9 @@
             <div class="flex-1 h-px bg-gray-200"></div>
           </div>
           <div class="form-group">
-            <label class="form-label">Région <span class="text-red-500">*</span></label>
+            <label class="form-label">Region <span class="text-red-500">*</span></label>
             <select [(ngModel)]="formData.regionId" class="form-input" required>
-              <option value="">-- Sélectionner une région --</option>
+              <option value="">-- Selectionner une region --</option>
               @for (r of regions(); track r.id) {
                 <option [value]="r.id">{{ r.nom }}</option>
               }
@@ -151,12 +148,11 @@
             </label>
           </div>
         </div>
-
       </div>
       <div class="modal-footer">
         <button (click)="closeModal()" class="btn-outline">Annuler</button>
         <button (click)="save()" [disabled]="saving()" class="btn-primary">
-          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer la province') }}
+          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Creer la province') }}
         </button>
       </div>
     </div>

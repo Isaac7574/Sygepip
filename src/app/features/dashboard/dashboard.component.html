@@ -1,548 +1,1025 @@
-﻿<div class="space-y-6">
+<div class="dashboard-shell" [class.space-y-3]="isLocalitesTabActive()" [class.space-y-6]="!isLocalitesTabActive()">
 
-  <!-- En-tête de page -->
-  <div class="page-header-section flex items-center justify-between">
-    <div class="page-header-left">
-      <div class="page-header-icon">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-        </svg>
+  @if (!isLocalitesTabActive()) {
+    <div class="page-header-section dashboard-page-header flex items-center justify-between">
+      <div class="page-header-left">
+        <div class="page-header-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+        </div>
+        <div class="page-header-text">
+          <h1>
+            Tableau de bord
+            <span class="page-header-badge">PIP</span>
+          </h1>
+          <p>Vue d'ensemble du Programme d'Investissement Public</p>
+        </div>
       </div>
-      <div class="page-header-text">
-        <h1>
-          Tableau de bord
-          <span class="page-header-badge">PIP</span>
-        </h1>
-        <p>Vue d'ensemble du Programme d'Investissement Public</p>
-      </div>
-    </div>
-    <div class="page-header-right flex items-center gap-2">
-      @if (canExportStats()) {
-        <button (click)="exportStatsToExcel()" [disabled]="exporting()" class="btn-outline btn-sm">
+      <div class="page-header-right flex items-center gap-2">
+        @if (canExportStats() && isGeneralTabActive()) {
+          <button (click)="exportStatsToExcel()" [disabled]="exporting()" class="btn-outline btn-sm">
+            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            {{ exporting() ? 'Export...' : 'Exporter Excel' }}
+          </button>
+          <button (click)="exportStatsToPdf()" [disabled]="exporting()" class="btn-outline btn-sm">
+            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            {{ exporting() ? 'Export...' : 'Exporter PDF' }}
+          </button>
+        }
+        <a routerLink="/app/maturation/idees-projet" class="btn-primary btn-sm">
           <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
-          {{ exporting() ? 'Export...' : 'Exporter Excel' }}
+          Nouveau Projet
+        </a>
+      </div>
+    </div>
+  }
+
+  @if (showAdminStatisticTabs()) {
+    <div class="card overflow-hidden dashboard-tabs-card">
+      <div class="flex flex-wrap border-b border-gray-200 bg-gray-50">
+        <button
+          type="button"
+          (click)="setTab('general')"
+          class="order-2 flex items-center gap-2 px-5 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px"
+          [class.border-blue-600]="activeTab() === 'general'"
+          [class.text-blue-700]="activeTab() === 'general'"
+          [class.border-transparent]="activeTab() !== 'general'"
+          [class.text-gray-500]="activeTab() !== 'general'">
+          Statistiques générales
         </button>
-        <button (click)="exportStatsToPdf()" [disabled]="exporting()" class="btn-outline btn-sm">
-          <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-          </svg>
-          {{ exporting() ? 'Export...' : 'Exporter PDF' }}
+        <button
+          type="button"
+          (click)="setTab('localites')"
+          class="order-1 flex items-center gap-2 px-5 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px"
+          [class.border-blue-600]="activeTab() === 'localites'"
+          [class.text-blue-700]="activeTab() === 'localites'"
+          [class.border-transparent]="activeTab() !== 'localites'"
+          [class.text-gray-500]="activeTab() !== 'localites'">
+          Statistiques par localité
         </button>
-      }
-      <a routerLink="/app/maturation/idees-projet" class="btn-primary btn-sm">
-        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        Nouveau Projet
-      </a>
-    </div>
-  </div>
-
-  <!-- KPI Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-
-    <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--blue group">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Total Idées</p>
-          <p class="text-4xl font-bold text-gray-900">{{ stats().totalIdees }}</p>
-        </div>
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-50 group-hover:bg-blue-100 transition-colors">
-          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-          </svg>
-        </div>
-      </div>
-      <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
-        <div class="w-2 h-2 rounded-full bg-blue-400"></div>
-        <span class="text-xs text-gray-500">Idées soumises au total</span>
       </div>
     </div>
+  }
 
-    <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--green group">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Total Projets</p>
-          <p class="text-4xl font-bold text-gray-900">{{ stats().totalProjets }}</p>
-        </div>
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-primary-50 group-hover:bg-primary-100 transition-colors">
-          <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-          </svg>
-        </div>
-      </div>
-      <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
-        <div class="w-2 h-2 rounded-full bg-primary-400"></div>
-        <span class="text-xs text-gray-500">Projets enregistrés</span>
-      </div>
-    </div>
+  @if (isGeneralTabActive()) {
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
 
-    <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--emerald group">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Projets Actifs</p>
-          <p class="text-4xl font-bold text-gray-900">{{ stats().totalProjetsActifs }}</p>
-        </div>
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-emerald-50 group-hover:bg-emerald-100 transition-colors">
-          <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-          </svg>
-        </div>
-      </div>
-      <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
-        <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
-        <span class="text-xs text-gray-500">En cours d'exécution</span>
-      </div>
-    </div>
-
-    <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--amber group">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Idées en Maturation</p>
-          <p class="text-4xl font-bold text-gray-900">{{ stats().ideesEnMaturation }}</p>
-        </div>
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-amber-50 group-hover:bg-amber-100 transition-colors">
-          <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        </div>
-      </div>
-      <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
-        <div class="w-2 h-2 rounded-full bg-amber-400"></div>
-        <span class="text-xs text-gray-500">En cours d'analyse</span>
-      </div>
-    </div>
-
-    <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--purple group">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">En Planification</p>
-          <p class="text-4xl font-bold text-gray-900">{{ stats().projetsEnPlanification }}</p>
-        </div>
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-purple-50 group-hover:bg-purple-100 transition-colors">
-          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-          </svg>
-        </div>
-      </div>
-      <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
-        <div class="w-2 h-2 rounded-full bg-purple-400"></div>
-        <span class="text-xs text-gray-500">Phase de préparation</span>
-      </div>
-    </div>
-
-    <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--teal group">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">En Exécution</p>
-          <p class="text-4xl font-bold text-gray-900">{{ stats().projetsEnExecution }}</p>
-        </div>
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-teal-50 group-hover:bg-teal-100 transition-colors">
-          <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        </div>
-      </div>
-      <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
-        <div class="w-2 h-2 rounded-full bg-teal-400"></div>
-        <span class="text-xs text-gray-500">Travaux en cours</span>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Taux : Donut Charts -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-    <div class="elevated-card">
-      <div class="flex items-center gap-3 mb-5">
-        <div class="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
-          <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-base font-semibold text-gray-900">Transformation Idées vers Projets</h3>
-          <p class="text-xs text-gray-500">Part des idées devenues projets</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-8">
-        <div class="relative w-32 h-32 flex-shrink-0">
-          <div class="absolute inset-0 rounded-full bg-gray-100"></div>
-          <div class="absolute inset-0 rounded-full"
-               [style.background]="'conic-gradient(#059669 ' + stats().tauxTransformationIdeesEnProjets + '%, #e5e7eb 0)'"></div>
-          <div class="absolute inset-3 rounded-full bg-white flex flex-col items-center justify-center">
-            <span class="text-xl font-bold text-emerald-600">{{ formatPercent(stats().tauxTransformationIdeesEnProjets) }}</span>
+      <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--blue group">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Total Idées</p>
+            <p class="text-4xl font-bold text-gray-900">{{ stats().totalIdees }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-50 group-hover:bg-blue-100 transition-colors">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
           </div>
         </div>
-        <div class="flex-1">
-          <div class="space-y-3">
-            <div class="flex items-center justify-between p-3 rounded-xl bg-emerald-50">
-              <span class="text-sm text-gray-600">Idées totales</span>
-              <span class="text-sm font-semibold text-gray-900">{{ stats().totalIdees }}</span>
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
+          <div class="w-2 h-2 rounded-full bg-blue-400"></div>
+          <span class="text-xs text-gray-500">Idées soumises au total</span>
+        </div>
+      </div>
+
+      <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--green group">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Total Projets</p>
+            <p class="text-4xl font-bold text-gray-900">{{ stats().totalProjets }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-primary-50 group-hover:bg-primary-100 transition-colors">
+            <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
+          <div class="w-2 h-2 rounded-full bg-primary-400"></div>
+          <span class="text-xs text-gray-500">Projets enregistrés</span>
+        </div>
+      </div>
+
+      <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--emerald group">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Projets Actifs</p>
+            <p class="text-4xl font-bold text-gray-900">{{ stats().totalProjetsActifs }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-emerald-50 group-hover:bg-emerald-100 transition-colors">
+            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
+          <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+          <span class="text-xs text-gray-500">En cours d'exécution</span>
+        </div>
+      </div>
+
+      <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--amber group">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Idées en Maturation</p>
+            <p class="text-4xl font-bold text-gray-900">{{ stats().ideesEnMaturation }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-amber-50 group-hover:bg-amber-100 transition-colors">
+            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
+          <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+          <span class="text-xs text-gray-500">En cours d'analyse</span>
+        </div>
+      </div>
+
+      <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--purple group">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">En Planification</p>
+            <p class="text-4xl font-bold text-gray-900">{{ stats().projetsEnPlanification }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-purple-50 group-hover:bg-purple-100 transition-colors">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
+          <div class="w-2 h-2 rounded-full bg-purple-400"></div>
+          <span class="text-xs text-gray-500">Phase de préparation</span>
+        </div>
+      </div>
+
+      <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--teal group">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">En Exécution</p>
+            <p class="text-4xl font-bold text-gray-900">{{ stats().projetsEnExecution }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-teal-50 group-hover:bg-teal-100 transition-colors">
+            <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
+          <div class="w-2 h-2 rounded-full bg-teal-400"></div>
+          <span class="text-xs text-gray-500">Travaux en cours</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+      <div class="elevated-card">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
+            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-gray-900">Transformation Idées vers Projets</h3>
+            <p class="text-xs text-gray-500">Part des idées devenues projets</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-8">
+          <div class="relative w-32 h-32 flex-shrink-0">
+            <div class="absolute inset-0 rounded-full bg-gray-100"></div>
+            <div class="absolute inset-0 rounded-full"
+                 [style.background]="'conic-gradient(#059669 ' + stats().tauxTransformationIdeesEnProjets + '%, #e5e7eb 0)'"></div>
+            <div class="absolute inset-3 rounded-full bg-white flex flex-col items-center justify-center">
+              <span class="text-xl font-bold text-emerald-600">{{ formatPercent(stats().tauxTransformationIdeesEnProjets) }}</span>
             </div>
-            <div class="flex items-center justify-between p-3 rounded-xl bg-gray-50">
-              <span class="text-sm text-gray-600">Projets créés</span>
-              <span class="text-sm font-semibold text-gray-900">{{ stats().totalProjets }}</span>
+          </div>
+          <div class="flex-1">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 rounded-xl bg-emerald-50">
+                <span class="text-sm text-gray-600">Idées totales</span>
+                <span class="text-sm font-semibold text-gray-900">{{ stats().totalIdees }}</span>
+              </div>
+              <div class="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                <span class="text-sm text-gray-600">Projets créés</span>
+                <span class="text-sm font-semibold text-gray-900">{{ stats().totalProjets }}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="elevated-card">
-      <div class="flex items-center gap-3 mb-5">
-        <div class="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center">
-          <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-base font-semibold text-gray-900">Taux de Rejet des Idées</h3>
-          <p class="text-xs text-gray-500">Pourcentage des idées rejetées</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-8">
-        <div class="relative w-32 h-32 flex-shrink-0">
-          <div class="absolute inset-0 rounded-full bg-gray-100"></div>
-          <div class="absolute inset-0 rounded-full"
-               [style.background]="'conic-gradient(#dc2626 ' + stats().tauxRejetIdees + '%, #e5e7eb 0)'"></div>
-          <div class="absolute inset-3 rounded-full bg-white flex flex-col items-center justify-center">
-            <span class="text-xl font-bold text-red-600">{{ formatPercent(stats().tauxRejetIdees) }}</span>
+      <div class="elevated-card">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center">
+            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-gray-900">Taux de Rejet des Idées</h3>
+            <p class="text-xs text-gray-500">Pourcentage des idées rejetées</p>
           </div>
         </div>
-        <div class="flex-1">
-          <div class="space-y-3">
-            <div class="flex items-center justify-between p-3 rounded-xl bg-red-50">
-              <span class="text-sm text-gray-600">Idées rejetées</span>
-              <span class="text-sm font-semibold text-gray-900">
-                {{ (stats().totalIdees * stats().tauxRejetIdees / 100) | number:'1.0-0' }}
-              </span>
+        <div class="flex items-center gap-8">
+          <div class="relative w-32 h-32 flex-shrink-0">
+            <div class="absolute inset-0 rounded-full bg-gray-100"></div>
+            <div class="absolute inset-0 rounded-full"
+                 [style.background]="'conic-gradient(#dc2626 ' + stats().tauxRejetIdees + '%, #e5e7eb 0)'"></div>
+            <div class="absolute inset-3 rounded-full bg-white flex flex-col items-center justify-center">
+              <span class="text-xl font-bold text-red-600">{{ formatPercent(stats().tauxRejetIdees) }}</span>
             </div>
-            <div class="flex items-center justify-between p-3 rounded-xl bg-gray-50">
-              <span class="text-sm text-gray-600">Idées totales</span>
-              <span class="text-sm font-semibold text-gray-900">{{ stats().totalIdees }}</span>
+          </div>
+          <div class="flex-1">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 rounded-xl bg-red-50">
+                <span class="text-sm text-gray-600">Idées rejetées</span>
+                <span class="text-sm font-semibold text-gray-900">
+                  {{ (stats().totalIdees * stats().tauxRejetIdees / 100) | number:'1.0-0' }}
+                </span>
+              </div>
+              <div class="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                <span class="text-sm text-gray-600">Idées totales</span>
+                <span class="text-sm font-semibold text-gray-900">{{ stats().totalIdees }}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
     </div>
 
-  </div>
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
 
-  <!-- Graphiques par PIP annuel & type -->
-  <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
-
-    <!-- Graphique en barres verticales : Projets par PIP Annuel -->
-    <div class="elevated-card">
-      <div class="flex items-center gap-3 mb-5">
-        <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center">
-          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-base font-semibold text-gray-900">Projets par PIP Annuel</h3>
-          <p class="text-xs text-gray-500">Nombre de projets par année</p>
-        </div>
-      </div>
-      @if (projetsParPipChart().length > 0) {
-        <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
-          @for (item of projetsParPipChart(); track item.label) {
-            <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
-              <span class="text-xs font-semibold text-blue-700">{{ item.formattedValue }}</span>
-              <div class="w-full rounded-t-md transition-all duration-700"
-                   style="background: linear-gradient(180deg, #3b82f6, #2563eb); min-height: 4px;"
-                   [style.height.%]="item.percent"></div>
-            </div>
-          }
-        </div>
-        <div class="flex justify-around gap-3 px-2">
-          @for (item of projetsParPipChart(); track item.label) {
-            <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
-          }
-        </div>
-      } @else {
-        <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
-      }
-    </div>
-
-    <!-- Graphique en barres verticales : Montant par PIP Annuel -->
-    <div class="elevated-card">
-      <div class="flex items-center gap-3 mb-5">
-        <div class="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
-          <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-base font-semibold text-gray-900">Montant par PIP Annuel</h3>
-          <p class="text-xs text-gray-500">Budget total engagé par année</p>
-        </div>
-      </div>
-      @if (montantParPipChart().length > 0) {
-        <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
-          @for (item of montantParPipChart(); track item.label) {
-            <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
-              <span class="text-xs font-semibold text-emerald-700">{{ item.formattedValue }}</span>
-              <div class="w-full rounded-t-md transition-all duration-700"
-                   style="background: linear-gradient(180deg, #10b981, #059669); min-height: 4px;"
-                   [style.height.%]="item.percent"></div>
-            </div>
-          }
-        </div>
-        <div class="flex justify-around gap-3 px-2">
-          @for (item of montantParPipChart(); track item.label) {
-            <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
-          }
-        </div>
-      } @else {
-        <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
-      }
-    </div>
-
-    <!-- Graphique en barres verticales : Répartition par Type PIP -->
-    <div class="elevated-card">
-      <div class="flex items-center gap-3 mb-5">
-        <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
-          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-base font-semibold text-gray-900">Répartition par Type PIP</h3>
-          <p class="text-xs text-gray-500">Distribution des types de projets</p>
-        </div>
-      </div>
-      @if (typeProjetChart().length > 0) {
-        <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
-          @for (item of typeProjetChart(); track item.label) {
-            <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
-              <span class="text-xs font-semibold text-amber-700">{{ item.formattedValue }}</span>
-              <div class="w-full rounded-t-md transition-all duration-700"
-                   style="background: linear-gradient(180deg, #f59e0b, #d97706); min-height: 4px;"
-                   [style.height.%]="item.percent"></div>
-            </div>
-          }
-        </div>
-        <div class="flex justify-around gap-3 px-2">
-          @for (item of typeProjetChart(); track item.label) {
-            <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
-          }
-        </div>
-      } @else {
-        <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
-      }
-    </div>
-
-    <!-- Graphique en barres verticales : Projets par Secteur -->
-    <div class="elevated-card">
-      <div class="flex items-center gap-3 mb-5">
-        <div class="w-9 h-9 rounded-xl bg-fuchsia-100 flex items-center justify-center">
-          <svg class="w-5 h-5 text-fuchsia-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-base font-semibold text-gray-900">Projets par Secteur</h3>
-          <p class="text-xs text-gray-500">Répartition sectorielle des projets</p>
-        </div>
-      </div>
-      @if (projetsParSecteurChart().length > 0) {
-        <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
-          @for (item of projetsParSecteurChart(); track item.label) {
-            <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
-              <span class="text-xs font-semibold text-fuchsia-700">{{ item.formattedValue }}</span>
-              <div class="w-full rounded-t-md transition-all duration-700"
-                   style="background: linear-gradient(180deg, #d946ef, #a21caf); min-height: 4px;"
-                   [style.height.%]="item.percent"></div>
-            </div>
-          }
-        </div>
-        <div class="flex justify-around gap-3 px-2">
-          @for (item of projetsParSecteurChart(); track item.label) {
-            <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
-          }
-        </div>
-      } @else {
-        <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
-      }
-    </div>
-
-  </div>
-
-  <!-- Montant par secteur (pleine largeur) -->
-  <div class="elevated-card">
-    <div class="flex items-center gap-3 mb-5">
-      <div class="w-9 h-9 rounded-xl bg-rose-100 flex items-center justify-center">
-        <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-        </svg>
-      </div>
-      <div>
-        <h3 class="text-base font-semibold text-gray-900">Montant par Secteur</h3>
-        <p class="text-xs text-gray-500">Enveloppes budgétaires par secteur d'activité</p>
-      </div>
-    </div>
-    @if (montantParSecteurChart().length > 0) {
-      <div class="flex items-end justify-around gap-3 h-52 px-2 border-b border-gray-200 mb-3">
-        @for (item of montantParSecteurChart(); track item.label) {
-          <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
-            <span class="text-xs font-semibold text-rose-700 text-center leading-tight">{{ item.formattedValue }}</span>
-            <div class="w-full rounded-t-md transition-all duration-700"
-                 style="background: linear-gradient(180deg, #fb7185, #e11d48); min-height: 4px;"
-                 [style.height.%]="item.percent"></div>
+      <div class="elevated-card">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
           </div>
+          <div>
+            <h3 class="text-base font-semibold text-gray-900">Projets par PIP Annuel</h3>
+            <p class="text-xs text-gray-500">Nombre de projets par année</p>
+          </div>
+        </div>
+        @if (projetsParPipChart().length > 0) {
+          <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
+            @for (item of projetsParPipChart(); track item.label) {
+              <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
+                <span class="text-xs font-semibold text-blue-700">{{ item.formattedValue }}</span>
+                <div class="w-full rounded-t-md transition-all duration-700"
+                     style="background: linear-gradient(180deg, #3b82f6, #2563eb); min-height: 4px;"
+                     [style.height.%]="item.percent"></div>
+              </div>
+            }
+          </div>
+          <div class="flex justify-around gap-3 px-2">
+            @for (item of projetsParPipChart(); track item.label) {
+              <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
+            }
+          </div>
+        } @else {
+          <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
         }
       </div>
-      <div class="flex justify-around gap-3 px-2">
-        @for (item of montantParSecteurChart(); track item.label) {
-          <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
+
+      <div class="elevated-card">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
+            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-gray-900">Montant par PIP Annuel</h3>
+            <p class="text-xs text-gray-500">Budget total engagé par année</p>
+          </div>
+        </div>
+        @if (montantParPipChart().length > 0) {
+          <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
+            @for (item of montantParPipChart(); track item.label) {
+              <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
+                <span class="text-xs font-semibold text-emerald-700">{{ item.formattedValue }}</span>
+                <div class="w-full rounded-t-md transition-all duration-700"
+                     style="background: linear-gradient(180deg, #10b981, #059669); min-height: 4px;"
+                     [style.height.%]="item.percent"></div>
+              </div>
+            }
+          </div>
+          <div class="flex justify-around gap-3 px-2">
+            @for (item of montantParPipChart(); track item.label) {
+              <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
+            }
+          </div>
+        } @else {
+          <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
         }
+      </div>
+
+      <div class="elevated-card">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
+            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-gray-900">Répartition par Type PIP</h3>
+            <p class="text-xs text-gray-500">Distribution des types de projets</p>
+          </div>
+        </div>
+        @if (typeProjetChart().length > 0) {
+          <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
+            @for (item of typeProjetChart(); track item.label) {
+              <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
+                <span class="text-xs font-semibold text-amber-700">{{ item.formattedValue }}</span>
+                <div class="w-full rounded-t-md transition-all duration-700"
+                     style="background: linear-gradient(180deg, #f59e0b, #d97706); min-height: 4px;"
+                     [style.height.%]="item.percent"></div>
+              </div>
+            }
+          </div>
+          <div class="flex justify-around gap-3 px-2">
+            @for (item of typeProjetChart(); track item.label) {
+              <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
+            }
+          </div>
+        } @else {
+          <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
+        }
+      </div>
+
+      <div class="elevated-card">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 rounded-xl bg-fuchsia-100 flex items-center justify-center">
+            <svg class="w-5 h-5 text-fuchsia-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-gray-900">Projets par Secteur</h3>
+            <p class="text-xs text-gray-500">Répartition sectorielle des projets</p>
+          </div>
+        </div>
+        @if (projetsParSecteurChart().length > 0) {
+          <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
+            @for (item of projetsParSecteurChart(); track item.label) {
+              <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
+                <span class="text-xs font-semibold text-fuchsia-700">{{ item.formattedValue }}</span>
+                <div class="w-full rounded-t-md transition-all duration-700"
+                     style="background: linear-gradient(180deg, #d946ef, #a21caf); min-height: 4px;"
+                     [style.height.%]="item.percent"></div>
+              </div>
+            }
+          </div>
+          <div class="flex justify-around gap-3 px-2">
+            @for (item of projetsParSecteurChart(); track item.label) {
+              <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
+            }
+          </div>
+        } @else {
+          <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
+        }
+      </div>
+
+    </div>
+
+    <div class="elevated-card dashboard-map-card">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-9 h-9 rounded-xl bg-rose-100 flex items-center justify-center">
+          <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-semibold text-gray-900">Montant par Secteur</h3>
+          <p class="text-xs text-gray-500">Enveloppes budgétaires par secteur d'activité</p>
+        </div>
+      </div>
+      @if (montantParSecteurChart().length > 0) {
+        <div class="flex items-end justify-around gap-3 h-52 px-2 border-b border-gray-200 mb-3">
+          @for (item of montantParSecteurChart(); track item.label) {
+            <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
+              <span class="text-xs font-semibold text-rose-700 text-center leading-tight">{{ item.formattedValue }}</span>
+              <div class="w-full rounded-t-md transition-all duration-700"
+                   style="background: linear-gradient(180deg, #fb7185, #e11d48); min-height: 4px;"
+                   [style.height.%]="item.percent"></div>
+            </div>
+          }
+        </div>
+        <div class="flex justify-around gap-3 px-2">
+          @for (item of montantParSecteurChart(); track item.label) {
+            <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
+          }
+        </div>
+      } @else {
+        <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
+      }
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+      <div class="elevated-card">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 rounded-xl bg-sky-100 flex items-center justify-center">
+            <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5V4H2v16h5m10 0v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4m10 0H7"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-gray-900">Idées par cible</h3>
+            <p class="text-xs text-gray-500">Répartition des idées par cible bénéficiaire</p>
+          </div>
+        </div>
+        @if (ideesParCibleChart().length > 0) {
+          <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
+            @for (item of ideesParCibleChart(); track item.label) {
+              <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
+                <span class="text-xs font-semibold text-sky-700">{{ item.formattedValue }}</span>
+                <div class="w-full rounded-t-md transition-all duration-700"
+                     style="background: linear-gradient(180deg, #38bdf8, #0284c7); min-height: 4px;"
+                     [style.height.%]="item.percent"></div>
+              </div>
+            }
+          </div>
+          <div class="flex justify-around gap-3 px-2">
+            @for (item of ideesParCibleChart(); track item.label) {
+              <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
+            }
+          </div>
+        } @else {
+          <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
+        }
+      </div>
+      <div class="elevated-card">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 rounded-xl bg-cyan-100 flex items-center justify-center">
+            <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v18m0 0h14m-14 0l4-4m10 4l-4-4M9 9h10M9 13h7"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-gray-900">Projets par cible</h3>
+            <p class="text-xs text-gray-500">Répartition des projets par cible bénéficiaire</p>
+          </div>
+        </div>
+        @if (projetsParCibleChart().length > 0) {
+          <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
+            @for (item of projetsParCibleChart(); track item.label) {
+              <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
+                <span class="text-xs font-semibold text-cyan-700">{{ item.formattedValue }}</span>
+                <div class="w-full rounded-t-md transition-all duration-700"
+                     style="background: linear-gradient(180deg, #22d3ee, #0891b2); min-height: 4px;"
+                     [style.height.%]="item.percent"></div>
+              </div>
+            }
+          </div>
+          <div class="flex justify-around gap-3 px-2">
+            @for (item of projetsParCibleChart(); track item.label) {
+              <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
+            }
+          </div>
+        } @else {
+          <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
+        }
+      </div>
+    </div>
+
+    <div class="elevated-table-container">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-gray-900">Projets Récents</h3>
+            <p class="text-xs text-gray-500">Derniers projets enregistrés</p>
+          </div>
+        </div>
+        <a routerLink="/app/pip/projets" class="text-sm font-medium text-primary-600 hover:text-primary-700 flex items-center gap-1">
+          Voir tout
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-100">
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Projet</th>
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ministère</th>
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Budget</th>
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Progression</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (projet of projets(); track projet.id) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4">
+                  <div class="font-semibold text-gray-900 text-sm">{{ getProjetTitre(projet) }}</div>
+                  <div class="text-xs text-gray-400 mt-0.5">{{ projet.code }}</div>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600">{{ getMinistereNom(projet) }}</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ formatBudget(projet.coutTotal) }}</td>
+                <td class="px-6 py-4">
+                  <span class="badge" [class]="getStatusClass(projet.statut)">{{ projet.statut }}</span>
+                </td>
+                <td class="px-6 py-4 min-w-[140px]">
+                  <div class="flex items-center gap-2">
+                    <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-500"
+                           style="background: linear-gradient(90deg, #00a550, #00843B)"
+                           [style.width.%]="getProgression(projet)"></div>
+                    </div>
+                    <span class="text-xs font-medium text-gray-600 w-10 text-right">{{ getProgression(projet) }}%</span>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="px-6 py-12 text-center text-gray-400 text-sm">
+                  <svg class="w-10 h-10 mx-auto text-gray-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                  </svg>
+                  Aucun projet récent
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  @if (isLocalitesTabActive()) {
+    <div class="elevated-card dashboard-map-card">
+      <div class="flex flex-col gap-4 mb-4 xl:flex-row xl:items-end xl:justify-between">
+        <div>
+          <h3 class="text-base font-semibold text-gray-900">Carte statistique du Burkina</h3>
+          <p class="text-xs text-gray-500">{{ currentMapScopeLabel() }} avec navigation par niveau territorial.</p>
+        </div>
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:min-w-[720px]">
+          <label class="block">
+            <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Statistique</span>
+            <select
+              class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              [value]="selectedMapMetric()"
+              (change)="onMapMetricChange($any($event.target).value)">
+              @for (option of mapMetricOptions; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          <label class="block">
+            <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Cible</span>
+            <select
+              class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              [value]="selectedCibleId()"
+              (change)="onCibleChange($any($event.target).value)">
+              <option value="ALL">Toutes les cibles</option>
+              @for (cible of cibles(); track cible.id) {
+                <option [value]="cible.id">{{ getCibleLabel(cible) }}</option>
+              }
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="mb-4 flex flex-wrap items-center gap-2">
+        <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+          {{ selectedMapLevel() }}
+        </span>
+        @if (selectedMapLevel() !== 'REGION') {
+          <button
+            type="button"
+            (click)="goToRegions()"
+            class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+            Regions
+          </button>
+        }
+        @if (selectedMapLevel() === 'COMMUNE') {
+          <button
+            type="button"
+            (click)="goToProvinces()"
+            class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+            Provinces de {{ selectedMapRegionName() || '-' }}
+          </button>
+        }
+      </div>
+
+      @if (loadingLocalites()) {
+        <div class="rounded-2xl border border-dashed border-gray-200 px-6 py-16 text-center text-sm text-gray-500">
+          Chargement des statistiques cartographiques...
+        </div>
+      } @else if (!hasMapFeatures()) {
+        <div class="rounded-2xl border border-dashed border-gray-200 px-6 py-16 text-center text-sm text-gray-500">
+          Aucune donnée cartographique disponible pour ce filtre.
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+          <div class="dashboard-map-shell">
+            <div #localiteMapHost class="dashboard-map-canvas"></div>
+            <div class="dashboard-map-region-strip">
+              <p class="dashboard-map-region-strip__title">{{ mapLegendTitle() }}</p>
+              <div class="dashboard-map-region-strip__items">
+                @for (item of mapLegendItems(); track item.id) {
+                  <div class="dashboard-map-region-strip__item">
+                    <span class="dashboard-map-region-strip__swatch" [style.background]="item.color"></span>
+                    <span class="dashboard-map-region-strip__label">{{ item.label }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+          <aside class="dashboard-map-sidepanel">
+            <div class="dashboard-map-sidepanel__section">
+              <p class="dashboard-map-sidepanel__eyebrow">Niveau courant</p>
+              <p class="dashboard-map-sidepanel__title">{{ currentMapScopeLabel() }}</p>
+              <p class="dashboard-map-sidepanel__meta">{{ selectedMapMetricLabel() }}</p>
+            </div>
+
+            @if (selectedMapFeature(); as feature) {
+              <div class="dashboard-map-sidepanel__section">
+                <p class="dashboard-map-sidepanel__eyebrow">Élément sélectionné</p>
+                <h4 class="dashboard-map-sidepanel__title">{{ feature.properties.nom }}</h4>
+                <div class="dashboard-map-sidepanel__grid">
+                  <div>
+                    <span class="dashboard-map-sidepanel__label">Code</span>
+                    <strong>{{ feature.properties.code || '-' }}</strong>
+                  </div>
+                  @if (hasAncienNom(feature)) {
+                    <div>
+                      <span class="dashboard-map-sidepanel__label">Ancien nom</span>
+                      <strong>{{ getAncienNom(feature) }}</strong>
+                    </div>
+                  }
+                  @if (isProvinceFeature(feature)) {
+                    <div>
+                      <span class="dashboard-map-sidepanel__label">Region</span>
+                      <strong>{{ getFeatureRegionNom(feature) }}</strong>
+                    </div>
+                  }
+                  @if (isCommuneFeature(feature)) {
+                    <div>
+                      <span class="dashboard-map-sidepanel__label">Province</span>
+                      <strong>{{ getFeatureProvinceNom(feature) }}</strong>
+                    </div>
+                  }
+                  @if (hasFeatureTypeCommune(feature)) {
+                    <div>
+                      <span class="dashboard-map-sidepanel__label">Type commune</span>
+                      <strong>{{ getFeatureTypeCommune(feature) }}</strong>
+                    </div>
+                  }
+                  <div>
+                    <span class="dashboard-map-sidepanel__label">Superficie</span>
+                    <strong>{{ formatSurface(feature.properties.superficie) }}</strong>
+                  </div>
+                  <div>
+                    <span class="dashboard-map-sidepanel__label">Nombre d'idées</span>
+                    <strong>{{ feature.properties.nombreIdees | number:'1.0-0' }}</strong>
+                  </div>
+                  <div>
+                    <span class="dashboard-map-sidepanel__label">Coût estimé des idées</span>
+                    <strong>{{ formatCurrency(feature.properties.coutEstimeIdees) }}</strong>
+                  </div>
+                  <div>
+                    <span class="dashboard-map-sidepanel__label">Nombre de projets</span>
+                    <strong>{{ feature.properties.nombreProjets | number:'1.0-0' }}</strong>
+                  </div>
+                  <div>
+                    <span class="dashboard-map-sidepanel__label">Coût total des projets</span>
+                    <strong>{{ formatCurrency(feature.properties.coutTotalProjets) }}</strong>
+                  </div>
+                </div>
+              </div>
+            } @else {
+              <div class="dashboard-map-sidepanel__section dashboard-map-sidepanel__section--empty">
+                Clique sur une zone de la carte pour afficher ses détails et, selon le niveau courant, descendre au niveau suivant.
+              </div>
+            }
+          </aside>
+        </div>
+      }
+    </div>
+
+    @if (false) {
+    <div class="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-4">
+      <h2 class="text-base font-semibold text-blue-900">Statistiques par localité</h2>
+      <p class="mt-1 text-sm text-blue-800">Lecture des localités d'intervention enregistrées pour suivre la couverture territoriale des projets.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+      <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--blue group">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Localités</p>
+            <p class="text-4xl font-bold text-gray-900">{{ totalLocalites() }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-50 group-hover:bg-blue-100 transition-colors">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
+          <div class="w-2 h-2 rounded-full bg-blue-400"></div>
+          <span class="text-xs text-gray-500">Occurrences enregistrées</span>
+        </div>
+      </div>
+
+      <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--emerald group">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Actives</p>
+            <p class="text-4xl font-bold text-gray-900">{{ totalLocalitesActives() }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-emerald-50 group-hover:bg-emerald-100 transition-colors">
+            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
+          <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+          <span class="text-xs text-gray-500">Localités actives</span>
+        </div>
+      </div>
+
+      <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--purple group">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Projets couverts</p>
+            <p class="text-4xl font-bold text-gray-900">{{ localitesDistinctProjects() }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-purple-50 group-hover:bg-purple-100 transition-colors">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
+          <div class="w-2 h-2 rounded-full bg-purple-400"></div>
+          <span class="text-xs text-gray-500">Projets distincts concernés</span>
+        </div>
+      </div>
+
+      <div class="elevated-stat-card dashboard-kpi-card dashboard-kpi-card--teal group">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Couverture</p>
+            <p class="text-4xl font-bold text-gray-900">{{ localitesDistinctRegions() }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-teal-50 group-hover:bg-teal-100 transition-colors">
+            <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5">
+          <div class="w-2 h-2 rounded-full bg-teal-400"></div>
+          <span class="text-xs text-gray-500">
+            {{ localitesDistinctRegions() }} régions, {{ localitesDistinctProvinces() }} provinces, {{ localitesDistinctCommunes() }} communes
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="elevated-card">
+      <div class="flex items-center justify-between gap-4 mb-5 flex-wrap">
+        <div>
+          <h3 class="text-base font-semibold text-gray-900">Carte du Burkina par région</h3>
+          <p class="text-xs text-gray-500">Choroplèthe inspirée de votre maquette HTML, colorée selon le volume de localités d'intervention.</p>
+        </div>
+        <div class="flex flex-wrap gap-2 text-xs text-gray-500">
+          <span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1">
+            {{ mappedRegionsCount() }} régions géométriques
+          </span>
+          <span class="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-3 py-1">
+            {{ regionsWithLocalitesCount() }} régions couvertes
+          </span>
+          <span class="inline-flex items-center rounded-full bg-amber-50 text-amber-700 px-3 py-1">
+            {{ regionsWithoutLocalitesCount() }} sans localité
+          </span>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.6fr)_340px] gap-5 items-start">
+        <div class="dashboard-map-shell">
+          <div #localiteMapHost class="dashboard-map-canvas"></div>
+        </div>
+        <div class="space-y-4">
+          <div class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4">
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">Lecture rapide</p>
+            <div class="space-y-3 text-sm text-gray-600">
+              <div class="flex items-center justify-between gap-3">
+                <span>Régions avec localités</span>
+                <strong class="text-gray-900">{{ regionsWithLocalitesCount() }}</strong>
+              </div>
+              <div class="flex items-center justify-between gap-3">
+                <span>Régions sans localités</span>
+                <strong class="text-gray-900">{{ regionsWithoutLocalitesCount() }}</strong>
+              </div>
+              <div class="flex items-center justify-between gap-3">
+                <span>Occurrences actives</span>
+                <strong class="text-gray-900">{{ totalLocalitesActives() }}</strong>
+              </div>
+              <div class="flex items-center justify-between gap-3">
+                <span>Projets distincts</span>
+                <strong class="text-gray-900">{{ localitesDistinctProjects() }}</strong>
+              </div>
+            </div>
+          </div>
+          <div class="rounded-2xl border border-gray-200 bg-white px-4 py-4">
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">Top régions sur la carte</p>
+            <div class="space-y-3">
+              @for (item of topMappedRegions(); track item.region.id) {
+                <div class="rounded-xl border border-gray-100 px-3 py-3 bg-gray-50/70">
+                  <div class="flex items-center justify-between gap-3">
+                    <div>
+                      <p class="text-sm font-semibold text-gray-900">{{ item.region.nom }}</p>
+                      <p class="text-xs text-gray-500">
+                        {{ item.localiteCount }} localités, {{ item.projectCount }} projets
+                      </p>
+                    </div>
+                    <span class="inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 px-2.5 py-1 text-xs font-semibold">
+                      {{ item.activeCount }} actives
+                    </span>
+                  </div>
+                </div>
+              } @empty {
+                <p class="text-sm text-gray-400">Aucune région couverte pour le moment.</p>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @if (loadingLocalites()) {
+      <div class="elevated-card p-8 text-center text-sm text-gray-500">
+        Chargement des statistiques par localité...
       </div>
     } @else {
-      <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
-    }
-  </div>
-
-  <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
-    <div class="elevated-card">
-      <div class="flex items-center gap-3 mb-5">
-        <div class="w-9 h-9 rounded-xl bg-sky-100 flex items-center justify-center">
-          <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5V4H2v16h5m10 0v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4m10 0H7"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-base font-semibold text-gray-900">Idées par cible</h3>
-          <p class="text-xs text-gray-500">Répartition des idées par cible bénéficiaire</p>
-        </div>
-      </div>
-      @if (ideesParCibleChart().length > 0) {
-        <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
-          @for (item of ideesParCibleChart(); track item.label) {
-            <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
-              <span class="text-xs font-semibold text-sky-700">{{ item.formattedValue }}</span>
-              <div class="w-full rounded-t-md transition-all duration-700"
-                   style="background: linear-gradient(180deg, #38bdf8, #0284c7); min-height: 4px;"
-                   [style.height.%]="item.percent"></div>
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        <div class="elevated-card">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2"/>
+              </svg>
             </div>
-          }
-        </div>
-        <div class="flex justify-around gap-3 px-2">
-          @for (item of ideesParCibleChart(); track item.label) {
-            <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
-          }
-        </div>
-      } @else {
-        <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
-      }
-    </div>
-    <div class="elevated-card">
-      <div class="flex items-center gap-3 mb-5">
-        <div class="w-9 h-9 rounded-xl bg-cyan-100 flex items-center justify-center">
-          <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v18m0 0h14m-14 0l4-4m10 4l-4-4M9 9h10M9 13h7"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-base font-semibold text-gray-900">Projets par cible</h3>
-          <p class="text-xs text-gray-500">Répartition des projets par cible bénéficiaire</p>
-        </div>
-      </div>
-      @if (projetsParCibleChart().length > 0) {
-        <div class="flex items-end justify-around gap-3 h-48 px-2 border-b border-gray-200 mb-3">
-          @for (item of projetsParCibleChart(); track item.label) {
-            <div class="flex flex-col items-center flex-1 gap-1 h-full justify-end">
-              <span class="text-xs font-semibold text-cyan-700">{{ item.formattedValue }}</span>
-              <div class="w-full rounded-t-md transition-all duration-700"
-                   style="background: linear-gradient(180deg, #22d3ee, #0891b2); min-height: 4px;"
-                   [style.height.%]="item.percent"></div>
+            <div>
+              <h3 class="text-base font-semibold text-gray-900">Répartition par type</h3>
+              <p class="text-xs text-gray-500">Volume de localités par niveau territorial</p>
             </div>
-          }
-        </div>
-        <div class="flex justify-around gap-3 px-2">
-          @for (item of projetsParCibleChart(); track item.label) {
-            <span class="flex-1 text-center text-xs font-medium text-gray-500 truncate">{{ item.label }}</span>
-          }
-        </div>
-      } @else {
-        <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
-      }
-    </div>
-  </div>
-
-  <!-- Projets récents -->
-  <div class="elevated-table-container">
-    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
-          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-base font-semibold text-gray-900">Projets Récents</h3>
-          <p class="text-xs text-gray-500">Derniers projets enregistrés</p>
-        </div>
-      </div>
-      <a routerLink="/app/pip/projets" class="text-sm font-medium text-primary-600 hover:text-primary-700 flex items-center gap-1">
-        Voir tout
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-        </svg>
-      </a>
-    </div>
-    <div class="overflow-x-auto">
-      <table class="w-full">
-        <thead>
-          <tr class="bg-gray-50 border-b border-gray-100">
-            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Projet</th>
-            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ministère</th>
-            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Budget</th>
-            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
-            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Progression</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100">
-          @for (projet of projets(); track projet.id) {
-            <tr class="hover:bg-gray-50 transition-colors">
-              <td class="px-6 py-4">
-                <div class="font-semibold text-gray-900 text-sm">{{ getProjetTitre(projet) }}</div>
-                <div class="text-xs text-gray-400 mt-0.5">{{ projet.code }}</div>
-              </td>
-              <td class="px-6 py-4 text-sm text-gray-600">{{ getMinistereNom(projet) }}</td>
-              <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ formatBudget(projet.coutTotal) }}</td>
-              <td class="px-6 py-4">
-                <span class="badge" [class]="getStatusClass(projet.statut)">{{ projet.statut }}</span>
-              </td>
-              <td class="px-6 py-4 min-w-[140px]">
-                <div class="flex items-center gap-2">
-                  <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div class="h-full rounded-full transition-all duration-500"
-                         style="background: linear-gradient(90deg, #00a550, #00843B)"
-                         [style.width.%]="getProgression(projet)"></div>
+          </div>
+          @if (localitesParTypeChart().length > 0) {
+            <div class="space-y-4">
+              @for (item of localitesParTypeChart(); track item.label) {
+                <div>
+                  <div class="flex items-center justify-between text-sm mb-1">
+                    <span class="font-medium text-gray-700">{{ item.label }}</span>
+                    <span class="text-gray-500">{{ item.formattedValue }}</span>
                   </div>
-                  <span class="text-xs font-medium text-gray-600 w-10 text-right">{{ getProgression(projet) }}%</span>
+                  <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div class="h-full rounded-full bg-blue-500" [style.width.%]="item.percent"></div>
+                  </div>
                 </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="5" class="px-6 py-12 text-center text-gray-400 text-sm">
-                <svg class="w-10 h-10 mx-auto text-gray-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                </svg>
-                Aucun projet récent
-              </td>
-            </tr>
+              }
+            </div>
+          } @else {
+            <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
           }
-        </tbody>
-      </table>
-    </div>
-  </div>
+        </div>
+
+        <div class="elevated-card">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-base font-semibold text-gray-900">Top régions</h3>
+              <p class="text-xs text-gray-500">Régions les plus citées dans les localités d'intervention</p>
+            </div>
+          </div>
+          @if (localitesParRegionChart().length > 0) {
+            <div class="space-y-4">
+              @for (item of localitesParRegionChart(); track item.label) {
+                <div>
+                  <div class="flex items-center justify-between text-sm mb-1 gap-4">
+                    <span class="font-medium text-gray-700 truncate">{{ item.label }}</span>
+                    <span class="text-gray-500 whitespace-nowrap">{{ item.formattedValue }}</span>
+                  </div>
+                  <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div class="h-full rounded-full bg-emerald-500" [style.width.%]="item.percent"></div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
+          }
+        </div>
+
+        <div class="elevated-card">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
+              <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4M9 7 3.553 4.276A1 1 0 002 5.17v13.212a1 1 0 00.553.894L9 22"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-base font-semibold text-gray-900">Top provinces</h3>
+              <p class="text-xs text-gray-500">Provinces les plus citées dans les localités d'intervention</p>
+            </div>
+          </div>
+          @if (localitesParProvinceChart().length > 0) {
+            <div class="space-y-4">
+              @for (item of localitesParProvinceChart(); track item.label) {
+                <div>
+                  <div class="flex items-center justify-between text-sm mb-1 gap-4">
+                    <span class="font-medium text-gray-700 truncate">{{ item.label }}</span>
+                    <span class="text-gray-500 whitespace-nowrap">{{ item.formattedValue }}</span>
+                  </div>
+                  <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div class="h-full rounded-full bg-amber-500" [style.width.%]="item.percent"></div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="text-center py-8 text-sm text-gray-400">Aucune donnée disponible.</div>
+          }
+        </div>
+      </div>
+
+      <div class="elevated-table-container">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div>
+            <h3 class="text-base font-semibold text-gray-900">Synthèse des localités</h3>
+            <p class="text-xs text-gray-500">Top localités par nombre d'occurrences et projets distincts</p>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-gray-50 border-b border-gray-100">
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Localité</th>
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Région</th>
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Province</th>
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Occurrences</th>
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Projets distincts</th>
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actives</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              @for (row of localiteSummaryRows(); track row.key) {
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-4">
+                    <div class="font-semibold text-gray-900 text-sm">{{ row.label }}</div>
+                    @if (row.communeNom !== '-' && row.typeLocalite !== 'COMMUNE') {
+                      <div class="text-xs text-gray-400 mt-0.5">{{ row.communeNom }}</div>
+                    }
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-600">{{ getTypeLocaliteLabel(row.typeLocalite) }}</td>
+                  <td class="px-6 py-4 text-sm text-gray-600">{{ row.regionNom }}</td>
+                  <td class="px-6 py-4 text-sm text-gray-600">{{ row.provinceNom }}</td>
+                  <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ row.occurrenceCount }}</td>
+                  <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ row.projectCount }}</td>
+                  <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ row.activeCount }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="7" class="px-6 py-12 text-center text-gray-400 text-sm">
+                    Aucune statistique de localité disponible
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+    }
+  }
 
 </div>

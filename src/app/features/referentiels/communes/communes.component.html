@@ -9,7 +9,7 @@
       <div class="page-header-text">
         <h1>
           Communes
-          <span class="page-header-badge">Référentiels</span>
+          <span class="page-header-badge">Referentiels</span>
         </h1>
         <p>Gestion des 351 communes du Burkina Faso</p>
       </div>
@@ -21,7 +21,7 @@
       <div class="flex items-center gap-4 flex-1">
         <div class="w-40">
           <select [(ngModel)]="selectedRegionId" (ngModelChange)="onRegionFilterChange()" class="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-            <option value="">Toutes régions</option>
+            <option value="">Toutes regions</option>
             @for (r of regions(); track r.id) {
               <option [value]="r.id">{{ r.nom }}</option>
             }
@@ -46,7 +46,7 @@
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
-        Nouvelle Commune
+        Nouvelle commune
       </button>
     </div>
     <table class="w-full">
@@ -55,6 +55,7 @@
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Province</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Superficie</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
           <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -66,6 +67,7 @@
             <td class="px-6 py-4 font-medium text-gray-900">{{ item.code }}</td>
             <td class="px-6 py-4 text-gray-900">{{ item.nom }}</td>
             <td class="px-6 py-4 text-gray-500">{{ item.provinceNom || getProvinceNom(item.provinceId) }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ formatNumber(item.superficie) }}</td>
             <td class="px-6 py-4">
               <span class="badge" [ngClass]="getTypeBadgeClass(item.typeCommune)">
                 {{ getTypeCommuneLabel(item.typeCommune) }}
@@ -87,7 +89,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="6" class="px-6 py-12 text-center text-gray-500">Aucune commune trouvée</td>
+            <td colspan="7" class="px-6 py-12 text-center text-gray-500">Aucune commune trouvee</td>
           </tr>
         }
       </tbody>
@@ -107,8 +109,6 @@
         </button>
       </div>
       <div class="modal-body space-y-6">
-
-        <!-- Identification -->
         <div>
           <div class="flex items-center gap-2 mb-4">
             <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
@@ -136,10 +136,13 @@
               <label class="form-label">Nom <span class="text-red-500">*</span></label>
               <input type="text" [(ngModel)]="formData.nom" class="form-input" placeholder="Nom de la commune">
             </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Superficie</label>
+              <input type="number" [(ngModel)]="formData.superficie" class="form-input" min="0" step="0.01" placeholder="Superficie en km2">
+            </div>
           </div>
         </div>
 
-        <!-- Rattachement -->
         <div>
           <div class="flex items-center gap-2 mb-4">
             <div class="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
@@ -153,9 +156,9 @@
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div class="form-group">
-              <label class="form-label">Région <span class="text-red-500">*</span></label>
+              <label class="form-label">Region <span class="text-red-500">*</span></label>
               <select [(ngModel)]="formRegionId" (ngModelChange)="onFormRegionChange()" class="form-input">
-                <option value="">-- Sélectionner une région --</option>
+                <option value="">-- Selectionner une region --</option>
                 @for (r of regions(); track r.id) {
                   <option [value]="r.id">{{ r.nom }}</option>
                 }
@@ -164,7 +167,7 @@
             <div class="form-group">
               <label class="form-label">Province <span class="text-red-500">*</span></label>
               <select [(ngModel)]="formData.provinceId" class="form-input" [disabled]="!formRegionId">
-                <option value="">-- Sélectionner une province --</option>
+                <option value="">-- Selectionner une province --</option>
                 @for (p of formProvinces(); track p.id) {
                   <option [value]="p.id">{{ p.nom }}</option>
                 }
@@ -178,12 +181,11 @@
             </label>
           </div>
         </div>
-
       </div>
       <div class="modal-footer">
         <button (click)="closeModal()" class="btn-outline">Annuler</button>
         <button (click)="save()" [disabled]="saving()" class="btn-primary">
-          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer la commune') }}
+          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Creer la commune') }}
         </button>
       </div>
     </div>

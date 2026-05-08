@@ -1,0 +1,323 @@
+<div class="space-y-6">
+
+  <div class="page-header-section flex items-center justify-between">
+    <div class="page-header-left">
+      <div class="page-header-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 8l-4-4m0 0L8 8m4-4v12"/>
+        </svg>
+      </div>
+      <div class="page-header-text">
+        <h1>
+          Import des idees de projet
+          <span class="page-header-badge">Maturation</span>
+        </h1>
+        <p>Importez les informations generales avec un formulaire commun, puis completez les donnees variables via un fichier CSV ou Excel.</p>
+      </div>
+    </div>
+    <div class="page-header-right">
+      <a [routerLink]="['/app/maturation/idees-projet']" class="btn-outline">
+        Retour aux idees
+      </a>
+    </div>
+  </div>
+
+  @if (!canAccess()) {
+    <div class="card p-6 border-l-4 border-amber-500">
+      <p class="font-semibold text-amber-800">Cet ecran d'import n'est pas disponible pour votre role.</p>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+      <div class="xl:col-span-2 space-y-6">
+        <div class="card overflow-hidden">
+          <div class="flex flex-wrap border-b border-gray-200 bg-gray-50">
+            <button
+              type="button"
+              (click)="setTab('infos-generales')"
+              class="flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition-colors border-b-2 -mb-px"
+              [class.border-blue-600]="activeTab() === 'infos-generales'"
+              [class.text-blue-700]="activeTab() === 'infos-generales'"
+              [class.border-transparent]="activeTab() !== 'infos-generales'"
+              [class.text-gray-500]="activeTab() !== 'infos-generales'">
+              Importer les informations generales
+            </button>
+            <button
+              type="button"
+              (click)="setTab('note-conceptuelle')"
+              class="flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition-colors border-b-2 -mb-px"
+              [class.border-blue-600]="activeTab() === 'note-conceptuelle'"
+              [class.text-blue-700]="activeTab() === 'note-conceptuelle'"
+              [class.border-transparent]="activeTab() !== 'note-conceptuelle'"
+              [class.text-gray-500]="activeTab() !== 'note-conceptuelle'">
+              Importer les notes conceptuelles
+            </button>
+          </div>
+
+          <div class="p-6 space-y-6">
+            <div class="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-4">
+              <h2 class="text-base font-semibold text-blue-900">{{ getHelpTitle() }}</h2>
+              <p class="mt-1 text-sm text-blue-800">{{ getHelpDescription() }}</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+              <button type="button" (click)="downloadTemplate()" class="btn-outline">
+                Telecharger un modele CSV
+              </button>
+              <span class="text-sm text-gray-500">Formats autorises : .csv, .xls, .xlsx</span>
+              <span class="text-sm text-gray-500">Taille max : 10 Mo</span>
+            </div>
+
+            @if (isInfosGeneralesTab()) {
+              <div class="rounded-2xl border border-gray-200 bg-white p-5 space-y-5">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Bloc 1</p>
+                    <h3 class="text-lg font-semibold text-gray-900">Informations generales du lot</h3>
+                    <p class="text-sm text-gray-500">Ces champs sont communs a toutes les lignes du fichier et seront fusionnes par le backend.</p>
+                  </div>
+                  <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 border border-blue-100">
+                    Endpoint: /api/ideeprojet/import/infos-generales
+                  </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="form-group">
+                    <label class="form-label">Secteur <span class="text-red-600">*</span></label>
+                    <select [(ngModel)]="infoGeneralesForm.secteurId" class="form-input">
+                      <option value="">-- Selectionner un secteur --</option>
+                      @for (secteur of secteurs(); track secteur.id) {
+                        <option [value]="secteur.id">{{ secteur.nom }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Portee <span class="text-red-600">*</span></label>
+                    <select [(ngModel)]="infoGeneralesForm.portee" class="form-input">
+                      <option value="">-- Selectionner une portee --</option>
+                      @for (portee of portees; track portee.value) {
+                        <option [value]="portee.value">{{ portee.label }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Ministere de tutelle financiere</label>
+                    <select [(ngModel)]="infoGeneralesForm.ministereTutelleFinanciereId" class="form-input">
+                      <option value="">-- Aucun --</option>
+                      @for (ministere of ministeres(); track ministere.id) {
+                        <option [value]="ministere.id">{{ getMinistereLabel(ministere) }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Statut</label>
+                    <select [(ngModel)]="infoGeneralesForm.statut" class="form-input">
+                      <option value="">-- Laisser vide --</option>
+                      @for (statut of statuts; track statut.value) {
+                        <option [value]="statut.value">{{ statut.label }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="form-group md:col-span-2">
+                    <label class="form-label">Actif</label>
+                    <select [(ngModel)]="infoGeneralesForm.actif" class="form-input">
+                      <option [ngValue]="null">-- Laisser vide --</option>
+                      <option [ngValue]="true">Oui</option>
+                      <option [ngValue]="false">Non</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <div class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4">
+              <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
+                @if (isInfosGeneralesTab()) {
+                  Colonnes attendues dans le fichier
+                } @else {
+                  Colonnes attendues dans le fichier de note conceptuelle
+                }
+              </p>
+              <div class="flex flex-wrap gap-2">
+                @for (column of getCurrentColumns(); track column) {
+                  <span class="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 border border-gray-200">
+                    {{ column }}
+                  </span>
+                }
+              </div>
+              @if (isInfosGeneralesTab()) {
+                <p class="mt-3 text-sm text-gray-500">Le fichier ne doit plus contenir les IDs communs comme <code>secteurId</code> ou <code>portee</code>.</p>
+              } @else {
+                <p class="mt-3 text-sm text-gray-500">Le fichier doit contenir au moins <code>ideeProjetId</code> ou <code>code</code>.</p>
+              }
+            </div>
+
+            <div class="rounded-2xl border border-dashed border-gray-300 p-5">
+              <div class="flex items-start justify-between gap-4 flex-wrap">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Bloc 2</p>
+                  <h3 class="text-lg font-semibold text-gray-900">Upload du fichier</h3>
+                  <p class="text-sm text-gray-500">
+                    @if (isInfosGeneralesTab()) {
+                      Le fichier transporte uniquement les donnees variables ligne par ligne.
+                    } @else {
+                      L'import de la note conceptuelle reste centre sur le fichier uniquement.
+                    }
+                  </p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                  <label class="btn-primary cursor-pointer">
+                    Choisir un fichier
+                    <input #fileInput type="file" class="hidden" accept=".csv,.xls,.xlsx" (change)="onFileSelected($event)">
+                  </label>
+                  <button type="button" (click)="clearFile(fileInput)" class="btn-outline" [disabled]="!selectedFile()">
+                    Reinitialiser
+                  </button>
+                  <button type="button" (click)="importFile()" class="btn-primary" [disabled]="!canImport()">
+                    {{ importing() ? 'Import en cours...' : 'Importer' }}
+                  </button>
+                </div>
+              </div>
+
+              @if (selectedFile()) {
+                <div class="mt-4 rounded-xl border border-gray-200 bg-white px-4 py-3">
+                  <p class="text-sm font-semibold text-gray-900">{{ selectedFile()!.name }}</p>
+                  <p class="text-xs text-gray-500">{{ (selectedFile()!.size / 1024).toFixed(1) }} Ko</p>
+                </div>
+              } @else {
+                <p class="mt-4 text-sm text-gray-500">Aucun fichier selectionne.</p>
+              }
+            </div>
+          </div>
+        </div>
+
+        @if (importResult()) {
+          <div class="card overflow-hidden">
+            <div class="p-6 border-b border-gray-200 bg-gray-50/50">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Bloc 3</p>
+                  <h3 class="text-base font-semibold text-gray-900">Resultat de l'import</h3>
+                  <p class="text-sm text-gray-500">Le detail ligne par ligne reste visible meme en cas d'erreurs metier.</p>
+                </div>
+                <label class="inline-flex items-center gap-2 text-sm text-gray-600">
+                  <input type="checkbox" class="form-checkbox" [checked]="showOnlyErrors()" (change)="showOnlyErrors.set(!showOnlyErrors())">
+                  Afficher seulement les erreurs
+                </label>
+              </div>
+            </div>
+
+            <div class="p-6">
+              <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="rounded-2xl border border-gray-200 bg-white px-4 py-4">
+                  <p class="text-xs text-gray-500 uppercase tracking-wide">Fichier</p>
+                  <p class="mt-1 text-sm font-semibold text-gray-900 break-all">{{ importResult()!.fileName }}</p>
+                </div>
+                <div class="rounded-2xl border border-gray-200 bg-white px-4 py-4">
+                  <p class="text-xs text-gray-500 uppercase tracking-wide">Lignes traitees</p>
+                  <p class="mt-1 text-2xl font-bold text-gray-900">{{ importResult()!.totalRows }}</p>
+                </div>
+                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+                  <p class="text-xs text-emerald-700 uppercase tracking-wide">Succes</p>
+                  <p class="mt-1 text-2xl font-bold text-emerald-900">{{ importResult()!.successCount }}</p>
+                </div>
+                <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-4">
+                  <p class="text-xs text-red-700 uppercase tracking-wide">Erreurs</p>
+                  <p class="mt-1 text-2xl font-bold text-red-900">{{ importResult()!.errorCount }}</p>
+                </div>
+                <div class="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-4">
+                  <p class="text-xs text-blue-700 uppercase tracking-wide">Type</p>
+                  <p class="mt-1 text-sm font-semibold text-blue-900 break-words">{{ importResult()!.importType }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ligne</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  @for (row of visibleRows(); track trackRow($index, row)) {
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-6 py-4 text-sm font-medium text-gray-800">{{ row.lineNumber }}</td>
+                      <td class="px-6 py-4 text-sm text-gray-600">{{ row.code || '-' }}</td>
+                      <td class="px-6 py-4">
+                        <span class="badge" [ngClass]="getStatusBadgeClass(row.status)">
+                          {{ getStatusLabel(row.status) }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 text-sm text-gray-700">{{ row.message }}</td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="4" class="px-6 py-10 text-center text-sm text-gray-500">
+                        Aucune ligne a afficher pour le filtre actuel.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="space-y-6">
+        <div class="card p-6">
+          <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Flux recommande</h3>
+          <div class="mt-4 space-y-3 text-sm text-gray-600">
+            @if (isInfosGeneralesTab()) {
+              <div class="rounded-xl border border-gray-200 px-4 py-3 bg-gray-50">
+                1. Choisir le secteur et la portee.
+              </div>
+              <div class="rounded-xl border border-gray-200 px-4 py-3 bg-gray-50">
+                2. Completer si besoin le ministere, le statut et actif.
+              </div>
+              <div class="rounded-xl border border-gray-200 px-4 py-3 bg-gray-50">
+                3. Selectionner le fichier puis lancer l'import.
+              </div>
+            } @else {
+              <div class="rounded-xl border border-gray-200 px-4 py-3 bg-gray-50">
+                1. Verifier que les idees existent deja.
+              </div>
+              <div class="rounded-xl border border-gray-200 px-4 py-3 bg-gray-50">
+                2. Fournir un fichier avec ideeProjetId ou code.
+              </div>
+              <div class="rounded-xl border border-gray-200 px-4 py-3 bg-gray-50">
+                3. Lancer l'import puis verifier le tableau de resultat.
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="card p-6">
+          <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Aide</h3>
+          <ul class="mt-4 space-y-3 text-sm text-gray-600">
+            <li>Le frontend envoie toujours un <code>multipart/form-data</code>.</li>
+            <li>Pour les informations generales, le champ <code>file</code> est accompagne de <code>secteurId</code>, <code>portee</code>, <code>ministereTutelleFinanciereId</code>, <code>statut</code> et <code>actif</code>.</li>
+            <li>Le tableau de resultat affiche le fichier, le nombre de lignes traitees, les succes et les erreurs.</li>
+            <li>Vous pouvez corriger le fichier et relancer un nouvel import immediatement.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<app-toast
+  [visible]="toastVisible()"
+  [message]="toastMessage"
+  [type]="toastType"
+  (close)="toastVisible.set(false)">
+</app-toast>

@@ -317,6 +317,10 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
     return this.isMesIdeesMode || this.isAdminRole();
   }
 
+  canImportIdeas(): boolean {
+    return !this.isInstructionRole() && !this.isCndpRole() && !this.isDgepRole();
+  }
+
   getCurrentInstructionTabLabel(): string {
     if (this.isCndpRole()) {
       return this.cndpTab() === 'rejetes' ? 'avis CNDP non favorables' : 'dossiers CNDP à examiner';
@@ -830,6 +834,7 @@ export class IdeesdeProjetComponent implements OnInit, OnDestroy {
         this.closeNoteModal();
         this.load();
         this.showToast('Note conceptuelle mise a jour avec succes', 'success');
+        this.router.navigate(['/app/maturation/idees-projet', ideeId, 'localites']);
       },
       error: () => {
         this.savingNote.set(false);
