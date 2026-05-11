@@ -239,6 +239,13 @@ export class ProjetDetailComponent implements OnInit {
     this.projetsService.getById(id).subscribe({
       next: (data) => {
         const p = this.adaptProjetDates(data);
+        if (!this.canAccessProjet(p)) {
+          this.projet.set(null);
+          this.error.set('Vous n avez acces qu aux projets de votre ministere.');
+          this.loading.set(false);
+          this.showToast('Acces refuse a ce projet.', 'error');
+          return;
+        }
         this.projet.set(p);
         this.loading.set(false);
         this.initPtForm(p);
@@ -318,6 +325,19 @@ export class ProjetDetailComponent implements OnInit {
 
   isInstructeur(): boolean {
     return this.authService.hasRole('INSTRUCTEUR');
+  }
+
+  private canAccessProjet(projet: Projet): boolean {
+    if (!this.authService.hasRole(['INSTRUCTEUR', 'INSTRUCTEUR_DGESS', 'DGESS'])) {
+      return true;
+    }
+
+    const currentMinistereId = this.authService.currentUser()?.ministereId;
+    if (!currentMinistereId || !projet.ministereId) {
+      return false;
+    }
+
+    return String(currentMinistereId) === String(projet.ministereId);
   }
 
   isDgep(): boolean {

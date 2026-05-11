@@ -38,7 +38,15 @@ export class ProjetsService {
     return this.api.delete<void>(this.endpoint, id);
   }
 
-  getByMinistere(ministereId: number): Observable<Projet[]> {
+  getMesProjetsInstructeur(filters?: {
+    statut?: string;
+    pipAnnuelId?: string;
+    actif?: boolean;
+  }): Observable<Projet[]> {
+    return this.api.get<Projet[]>(`${this.endpoint}/mes-projets-instructeur`, filters);
+  }
+
+  getByMinistere(ministereId: string | number): Observable<Projet[]> {
     return this.api.get<Projet[]>(this.endpoint, { ministereId });
   }
 

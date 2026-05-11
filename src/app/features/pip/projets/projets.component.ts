@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
 import { ProjetsService } from '@core/services/projets.service';
 import { AuthService } from '@core/services/auth.service';
 import { MinisteresService } from '@core/services/ministeres.service';
@@ -87,7 +87,6 @@ export class ProjetsPIPComponent implements OnInit {
   loadingSelection = signal(false);
   selectionComment = 'Projet retenu comme projet structurant';
   selectedMatureProjectIds = signal<string[]>([]);
-
   categories: { value: CategorieProjet; label: string }[] = [
     { value: 'CATEGORIE_1_ADMINISTRATION_DIRECTE', label: 'Categorie 1 - Administration directe' },
     { value: 'CATEGORIE_2_STRUCTURE_AUTONOME', label: 'Categorie 2 - Structure autonome' },
@@ -169,6 +168,10 @@ export class ProjetsPIPComponent implements OnInit {
     return this.authService.hasRole('DGEP');
   }
 
+  isInstructeurRole(): boolean {
+    return this.authService.hasRole('INSTRUCTEUR');
+  }
+
   canSelectPip(): boolean {
     return this.matureActions().some(action =>
       action.codeEtape === 'PIP_SELECTION' ||
@@ -210,7 +213,7 @@ export class ProjetsPIPComponent implements OnInit {
   }
 
   load(): void {
-    this.projetsService.getAll().subscribe({
+    this.getProjectsRequest().subscribe({
       next: (data) => {
         const adapted = data.map(this.adaptProjetDates);
         console.log('Projets charges adaptes :', adapted);
@@ -223,9 +226,25 @@ export class ProjetsPIPComponent implements OnInit {
       },
       error: (err) => {
         console.error('Erreur lors du chargement des projets :', err);
+        if (err?.status === 401) {
+          this.router.navigate(['/login']);
+          return;
+        }
+        if (err?.status === 403 && this.isInstructeurRole()) {
+          this.showToast('Acces reserve aux instructeurs.', 'error');
+          return;
+        }
         this.showToast('Erreur lors du chargement des projets', 'error');
       }
     });
+  }
+
+  private getProjectsRequest(): Observable<Projet[]> {
+    if (this.isInstructeurRole()) {
+      return this.projetsService.getMesProjetsInstructeur();
+    }
+
+    return this.projetsService.getAll();
   }
 
 

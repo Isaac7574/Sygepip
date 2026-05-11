@@ -288,33 +288,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     ?? this.mapMetricOptions[0].label
   );
 
-  currentMapScopeLabel = computed(() => {
-    if (this.selectedMapLevel() === 'COMMUNE') {
-      return this.selectedMapProvinceName()
-        ? `Communes de ${this.selectedMapProvinceName()}`
-        : 'Communes';
-    }
+  currentMapScopeLabel = computed(() => 'Regions du Burkina');
 
-    if (this.selectedMapLevel() === 'PROVINCE') {
-      return this.selectedMapRegionName()
-        ? `Provinces de ${this.selectedMapRegionName()}`
-        : 'Provinces';
-    }
-
-    return 'Regions du Burkina';
-  });
-
-  mapLegendTitle = computed(() => {
-    if (this.selectedMapLevel() === 'COMMUNE') {
-      return 'Communes';
-    }
-
-    if (this.selectedMapLevel() === 'PROVINCE') {
-      return 'Provinces';
-    }
-
-    return 'Regions';
-  });
+  mapLegendTitle = computed(() => 'Regions');
 
   hasMapFeatures = computed(() =>
     (this.mapFeatureCollection()?.features.length ?? 0) > 0
@@ -490,6 +466,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   loadCarteRegions(): void {
     this.loadingLocalites.set(true);
     this.selectedMapLevel.set('REGION');
+    this.selectedMapRegionId.set(null);
+    this.selectedMapRegionName.set(null);
+    this.selectedMapProvinceId.set(null);
+    this.selectedMapProvinceName.set(null);
+    this.selectedMapFeature.set(null);
     this.dashboardService.getCarteRegions(this.getSelectedCibleIdOrUndefined()).pipe(
       catchError(() => of({ type: 'FeatureCollection', features: [] } as GeoJsonFeatureCollection))
     ).subscribe({
@@ -503,12 +484,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   loadCarteProvinces(regionId: string): void {
     this.loadingLocalites.set(true);
+    const previousCollection = this.mapFeatureCollection();
+    const previousLevel = this.selectedMapLevel();
     this.selectedMapLevel.set('PROVINCE');
     this.dashboardService.getCarteProvinces(regionId, this.getSelectedCibleIdOrUndefined()).pipe(
       catchError(() => of({ type: 'FeatureCollection', features: [] } as GeoJsonFeatureCollection))
     ).subscribe({
       next: (data) => {
-        this.mapFeatureCollection.set(this.normalizeFeatureCollection(data));
+        const normalized = this.normalizeFeatureCollection(data);
+        if ((normalized.features?.length ?? 0) === 0) {
+          this.selectedMapLevel.set(previousLevel);
+          this.mapFeatureCollection.set(previousCollection);
+          this.loadingLocalites.set(false);
+          this.scheduleLocaliteMapRender();
+          return;
+        }
+
+        this.mapFeatureCollection.set(normalized);
         this.loadingLocalites.set(false);
         this.scheduleLocaliteMapRender();
       }
@@ -517,12 +509,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   loadCarteCommunes(provinceId: string): void {
     this.loadingLocalites.set(true);
+    const previousCollection = this.mapFeatureCollection();
+    const previousLevel = this.selectedMapLevel();
     this.selectedMapLevel.set('COMMUNE');
     this.dashboardService.getCarteCommunes(provinceId, this.getSelectedCibleIdOrUndefined()).pipe(
       catchError(() => of({ type: 'FeatureCollection', features: [] } as GeoJsonFeatureCollection))
     ).subscribe({
       next: (data) => {
-        this.mapFeatureCollection.set(this.normalizeFeatureCollection(data));
+        const normalized = this.normalizeFeatureCollection(data);
+        if ((normalized.features?.length ?? 0) === 0) {
+          this.selectedMapLevel.set(previousLevel);
+          this.mapFeatureCollection.set(previousCollection);
+          this.loadingLocalites.set(false);
+          this.scheduleLocaliteMapRender();
+          return;
+        }
+
+        this.mapFeatureCollection.set(normalized);
         this.loadingLocalites.set(false);
         this.scheduleLocaliteMapRender();
       }
@@ -1222,23 +1225,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private handleMapFeatureClick(feature: DashboardGeoJsonFeature): void {
     const properties = feature.properties;
     this.selectedMapFeature.set(feature);
-
-    if (properties.niveau === 'REGION') {
-      this.selectedMapRegionId.set(properties.id);
-      this.selectedMapRegionName.set(properties.nom);
-      this.selectedMapProvinceId.set(null);
-      this.selectedMapProvinceName.set(null);
-      this.loadCarteProvinces(properties.id);
-      return;
-    }
-
-    if (properties.niveau === 'PROVINCE') {
-      this.selectedMapRegionId.set(properties.regionId);
-      this.selectedMapRegionName.set(properties.regionNom);
-      this.selectedMapProvinceId.set(properties.id);
-      this.selectedMapProvinceName.set(properties.nom);
-      this.loadCarteCommunes(properties.id);
-    }
+    this.selectedMapRegionId.set(properties.niveau === 'REGION' ? properties.id : null);
+    this.selectedMapRegionName.set(properties.niveau === 'REGION' ? properties.nom : null);
+    this.selectedMapProvinceId.set(null);
+    this.selectedMapProvinceName.set(null);
   }
 
   private isRegionProperties(properties: DashboardMapProperties): properties is RegionMapProperties {
