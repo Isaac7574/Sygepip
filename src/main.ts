@@ -15,10 +15,9 @@ function initializeKeycloak(keycloak: KeycloakService) {
     keycloak.init({
       config: keycloakConfig,
       initOptions: {
-        onLoad: 'check-sso',
+        onLoad: 'login-required',
         pkceMethod: 'S256',
         checkLoginIframe: false,
-        silentCheckSsoRedirectUri: window.location.origin + '/assets/silent-check-sso.html',
         locale: 'fr'
       },
       enableBearerInterceptor: true,
@@ -32,7 +31,6 @@ function initializeKeycloak(keycloak: KeycloakService) {
       ]
     }).catch((err: unknown) => {
       console.warn('Keycloak initialization failed:', err);
-      throw err;
     });
 }
 
