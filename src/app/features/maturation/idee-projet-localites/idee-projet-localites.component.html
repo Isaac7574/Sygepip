@@ -94,11 +94,35 @@
           <h3 class="text-base font-semibold text-gray-900">Liste des localités</h3>
           <p class="text-sm text-gray-500">Renseignez une ou plusieurs lignes selon le niveau géographique concerné.</p>
         </div>
-        <button type="button" (click)="addRow()" [disabled]="saving() || !canEditLocalites()" class="btn-outline">
+        <button type="button" (click)="addRow()" [disabled]="saving() || !canEditLocalites() || couvreToutTerritoire()" class="btn-outline">
           Ajouter une ligne
         </button>
       </div>
 
+      <div class="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+        <label class="flex items-start gap-3">
+          <input
+            type="checkbox"
+            class="mt-1 h-4 w-4 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+            [ngModel]="couvreToutTerritoire()"
+            (ngModelChange)="onCouvreToutTerritoireChange($event)"
+            [disabled]="saving() || !canEditLocalites()">
+          <span>
+            <span class="block text-sm font-semibold text-emerald-900">Couvre tout le territoire</span>
+            <span class="block text-sm text-emerald-800">
+              Si cette case est cochée, le frontend enregistrera automatiquement toutes les régions actives.
+            </span>
+          </span>
+        </label>
+      </div>
+
+      @if (couvreToutTerritoire()) {
+        <div class="mb-5 rounded-2xl border border-dashed border-emerald-300 bg-white px-4 py-4 text-sm text-gray-600">
+          {{ regions().length }} région(s) active(s) seront enregistrées automatiquement pour cette idée de projet.
+        </div>
+      }
+
+      @if (!couvreToutTerritoire()) {
       <fieldset [disabled]="saving() || !canEditLocalites()" class="space-y-4">
         @for (row of rows(); track $index) {
           <div class="rounded-2xl border border-gray-200 p-4">
@@ -176,6 +200,7 @@
           </div>
         }
       </fieldset>
+      }
 
       <div class="flex flex-wrap items-center justify-between gap-3 mt-6 pt-5 border-t border-gray-200">
         <p class="text-sm text-gray-500">

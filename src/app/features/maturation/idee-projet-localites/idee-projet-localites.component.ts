@@ -49,6 +49,7 @@ export class IdeeProjetLocalitesComponent implements OnInit {
   idee = signal<IdeeProjet | null>(null);
   regions = signal<Region[]>([]);
   rows = signal<EditableLocaliteRow[]>([]);
+  couvreToutTerritoire = signal(false);
   loading = signal(true);
   saving = signal(false);
   error = signal<string | null>(null);
@@ -56,6 +57,7 @@ export class IdeeProjetLocalitesComponent implements OnInit {
   toastVisible = signal(false);
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
+  private manualRowsSnapshot: EditableLocaliteRow[] | null = null;
 
   readonly typeLocaliteOptions: { value: IdeeProjetTypeLocaliteIntervention; label: string }[] = [
     { value: 'REGION', label: 'Région' },
@@ -94,14 +96,40 @@ export class IdeeProjetLocalitesComponent implements OnInit {
   }
 
   addRow(): void {
+    if (this.couvreToutTerritoire()) {
+      return;
+    }
+
     this.rows.update(rows => [...rows, this.createEmptyRow()]);
   }
 
   removeRow(index: number): void {
+    if (this.couvreToutTerritoire()) {
+      return;
+    }
+
     this.rows.update(rows => {
       const nextRows = rows.filter((_, rowIndex) => rowIndex !== index);
       return nextRows.length > 0 ? nextRows : [this.createEmptyRow()];
     });
+  }
+
+  onCouvreToutTerritoireChange(checked: boolean): void {
+    this.couvreToutTerritoire.set(checked);
+
+    if (checked) {
+      this.manualRowsSnapshot = this.cloneRows(this.rows());
+      this.rows.set(this.buildAllTerritoryRows());
+      return;
+    }
+
+    if (this.manualRowsSnapshot && this.manualRowsSnapshot.length > 0) {
+      this.rows.set(this.cloneRows(this.manualRowsSnapshot));
+      this.manualRowsSnapshot = null;
+      return;
+    }
+
+    this.rows.set([this.createEmptyRow()]);
   }
 
   onTypeLocaliteChange(index: number): void {
@@ -176,13 +204,14 @@ export class IdeeProjetLocalitesComponent implements OnInit {
       return;
     }
 
-    const validationError = this.validateRows();
+    const effectiveRows = this.getEffectiveRowsForSave();
+    const validationError = this.validateRows(effectiveRows);
     if (validationError) {
       this.showToast(validationError, 'error');
       return;
     }
 
-    const payload: IdeeProjetLocaliteInterventionPayload[] = this.rows().map((row, index) => ({
+    const payload: IdeeProjetLocaliteInterventionPayload[] = effectiveRows.map((row, index) => ({
       ideeProjetId: String(idee.id),
       typeLocalite: row.typeLocalite,
       regionId: row.regionId,
@@ -231,7 +260,9 @@ export class IdeeProjetLocalitesComponent implements OnInit {
       next: ({ idee, regions, localites }) => {
         this.idee.set(idee);
         this.regions.set(regions);
-        this.rows.set(this.buildRows(localites));
+        const rows = this.buildRows(localites);
+        this.couvreToutTerritoire.set(this.isAllTerritoryRows(rows, regions));
+        this.rows.set(rows);
         this.hydrateCascadeData();
         this.loading.set(false);
       },
@@ -318,8 +349,10 @@ export class IdeeProjetLocalitesComponent implements OnInit {
     });
   }
 
-  private validateRows(): string | null {
-    const rows = this.rows();
+  private validateRows(rows: EditableLocaliteRow[]): string | null {
+    if (this.couvreToutTerritoire() && this.regions().length === 0) {
+      return 'Aucune region active disponible pour couvrir tout le territoire.';
+    }
 
     if (rows.length === 0) {
       return 'Ajoutez au moins une localité d’intervention.';
@@ -389,6 +422,45 @@ export class IdeeProjetLocalitesComponent implements OnInit {
       provinces: [],
       communes: []
     };
+  }
+
+  private getEffectiveRowsForSave(): EditableLocaliteRow[] {
+    return this.couvreToutTerritoire()
+      ? this.buildAllTerritoryRows()
+      : this.rows();
+  }
+
+  private buildAllTerritoryRows(): EditableLocaliteRow[] {
+    return this.regions().map(region => ({
+      typeLocalite: 'REGION' as const,
+      regionId: region.id,
+      provinceId: undefined,
+      communeId: undefined,
+      provinces: [],
+      communes: []
+    }));
+  }
+
+  private isAllTerritoryRows(rows: EditableLocaliteRow[], regions: Region[]): boolean {
+    if (rows.length === 0 || regions.length === 0 || rows.length !== regions.length) {
+      return false;
+    }
+
+    const activeRegionIds = new Set(regions.map(region => region.id));
+
+    return rows.every(row =>
+      row.typeLocalite === 'REGION'
+      && !!row.regionId
+      && activeRegionIds.has(row.regionId)
+    );
+  }
+
+  private cloneRows(rows: EditableLocaliteRow[]): EditableLocaliteRow[] {
+    return rows.map(row => ({
+      ...row,
+      provinces: [...row.provinces],
+      communes: [...row.communes]
+    }));
   }
 
   private showToast(message: string, type: 'success' | 'error'): void {
