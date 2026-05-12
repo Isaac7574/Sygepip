@@ -1,5 +1,7 @@
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { StatistiquesDashboard } from '@core/models';
+import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
 
 export interface Slide {
@@ -22,9 +24,11 @@ export interface Slide {
   styleUrl: './landing.component.scss'
 })
 export class LandingComponent implements OnInit, OnDestroy {
+  private apiService = inject(ApiService);
   private authService = inject(AuthService);
   currentYear = new Date().getFullYear();
   currentSlide = signal(0);
+  stats = signal<StatistiquesDashboard | null>(null);
   private timer: any;
 
   slides: Slide[] = [
@@ -91,6 +95,7 @@ export class LandingComponent implements OnInit, OnDestroy {
   ];
 
   ngOnInit(): void {
+    this.loadStats();
     this.startAutoPlay();
   }
 
@@ -116,6 +121,24 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   next(): void {
     this.goTo((this.currentSlide() + 1) % this.slides.length);
+  }
+
+  loadStats(): void {
+    this.apiService.get<StatistiquesDashboard>('/dashboard/statistiques').subscribe({
+      next: (data) => this.stats.set(data),
+      error: () => {
+        this.stats.set({
+          totalProjets: 0,
+          projetsEnCours: 0,
+          projetsTermines: 0,
+          budgetTotal: 0,
+          budgetExecute: 0,
+          tauxExecutionGlobal: 0,
+          alertesActives: 0,
+          ideesProjetsEnAttente: 0
+        });
+      }
+    });
   }
 
   login(): void {

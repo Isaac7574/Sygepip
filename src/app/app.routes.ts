@@ -46,6 +46,10 @@ export const routes: Routes = [
             loadComponent: () => import('./features/referentiels/secteurs/secteurs.component').then(m => m.SecteursComponent)
           },
           {
+            path: 'programmes/:id',
+            loadComponent: () => import('./features/referentiels/programmes/programmes.component').then(m => m.ProgrammesComponent)
+          },
+          {
             path: 'programmes',
             loadComponent: () => import('./features/referentiels/programmes/programmes.component').then(m => m.ProgrammesComponent)
           },

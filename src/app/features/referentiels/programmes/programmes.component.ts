@@ -1,19 +1,22 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { ProgrammesService } from '@core/services/programmes.service';
 import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
 import { Programme, Ministere, Secteur } from '@core/models';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-programmes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './programmes.component.html',
   styleUrl: './programmes.component.scss'
 })
 export class ProgrammesComponent implements OnInit {
+  private route = inject(ActivatedRoute);
   private programmesService = inject(ProgrammesService);
   private ministeresService = inject(MinisteresService);
   private secteursService = inject(SecteursService);
@@ -22,6 +25,10 @@ export class ProgrammesComponent implements OnInit {
   filteredItems = signal<Programme[]>([]);
   ministeres = signal<Ministere[]>([]);
   secteurs = signal<Secteur[]>([]);
+  detailMode = signal(false);
+  loadingDetail = signal(false);
+  errorMessage = signal('');
+  detailItem = signal<Programme | null>(null);
   searchTerm = '';
   modalOpen = signal(false);
   editingItem = signal<Programme | null>(null);
@@ -29,9 +36,39 @@ export class ProgrammesComponent implements OnInit {
   formData: Partial<Programme> = { code: '', nom: '', ministereId: undefined, secteurId: undefined, description: '', actif: true };
 
   ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+
+    if (id) {
+      this.detailMode.set(true);
+      this.loadDetail(id);
+      return;
+    }
+
     this.load();
     this.loadMinisteres();
     this.loadSecteurs();
+  }
+
+  loadDetail(id: string): void {
+    this.loadingDetail.set(true);
+    this.errorMessage.set('');
+
+    forkJoin({
+      programme: this.programmesService.getById(id),
+      ministeres: this.ministeresService.getAll(),
+      secteurs: this.secteursService.getAll()
+    }).subscribe({
+      next: ({ programme, ministeres, secteurs }) => {
+        this.detailItem.set(programme);
+        this.ministeres.set(ministeres);
+        this.secteurs.set(secteurs);
+        this.loadingDetail.set(false);
+      },
+      error: () => {
+        this.loadingDetail.set(false);
+        this.errorMessage.set('Impossible de charger le programme budgetaire.');
+      }
+    });
   }
 
   load(): void {
@@ -111,5 +148,22 @@ export class ProgrammesComponent implements OnInit {
     if (value >= 1000000000) return (value / 1000000000).toFixed(1) + ' Mds FCFA';
     if (value >= 1000000) return (value / 1000000).toFixed(1) + ' M FCFA';
     return value.toLocaleString('fr-FR') + ' FCFA';
+  }
+
+  getNiveauPrioriteLabel(value: Programme['niveauPriorite']): string {
+    switch (value) {
+      case 'PHARE':
+        return 'Phare';
+      case 'STRUCTURANT':
+        return 'Structurant';
+      case 'PRIORITAIRE':
+        return 'Prioritaire';
+      case 'NORMAL':
+        return 'Normal';
+      case 'DIFFERE':
+        return 'Differe';
+      default:
+        return '-';
+    }
   }
 }

@@ -1,0 +1,96 @@
+<div class="space-y-6">
+  <div class="page-header-section">
+    <div class="page-header-left">
+      <div class="page-header-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+      </div>
+      <div class="page-header-text">
+        <h1>
+          Vue Programme Budgetaire
+          <span class="page-header-badge">Referentiels</span>
+        </h1>
+        <p>Consultation detaillee d'un programme budgetaire</p>
+      </div>
+    </div>
+    <a [routerLink]="['/app/referentiels/programmes']" class="btn-outline">
+      Retour a la liste
+    </a>
+  </div>
+
+  @if (loading()) {
+    <div class="card p-8 text-center text-gray-500">
+      Chargement du programme budgetaire...
+    </div>
+  } @else if (errorMessage()) {
+    <div class="card p-8 text-center text-red-600">
+      {{ errorMessage() }}
+    </div>
+  } @else if (programme()) {
+    <div class="card space-y-6 p-6">
+      <div class="flex flex-wrap items-start justify-between gap-4 border-b border-gray-100 pb-5">
+        <div>
+          <div class="mb-2 flex items-center gap-2">
+            <span class="font-mono text-sm font-bold text-gray-500">{{ programme()!.code }}</span>
+            <span class="badge" [class.badge-success]="programme()!.actif" [class.badge-secondary]="!programme()!.actif">
+              {{ programme()!.actif ? 'Actif' : 'Inactif' }}
+            </span>
+          </div>
+          <h2 class="text-2xl font-bold text-gray-900">{{ programme()!.nom }}</h2>
+        </div>
+      </div>
+
+      <div class="grid gap-6 lg:grid-cols-2">
+        <div class="rounded-2xl border border-gray-100 bg-gray-50 p-5">
+          <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Rattachement</p>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <p class="text-xs text-gray-400">Ministere</p>
+              <p class="text-sm font-medium text-gray-900">{{ getMinistereNom(programme()!.ministereId) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400">Secteur</p>
+              <p class="text-sm font-medium text-gray-900">{{ getSecteurNom(programme()!.secteurId) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400">Niveau de priorite</p>
+              <p class="text-sm font-medium text-gray-900">{{ getNiveauPrioriteLabel(programme()!.niveauPriorite) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400">Statut</p>
+              <p class="text-sm font-medium text-gray-900">{{ programme()!.actif ? 'Actif' : 'Inactif' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-gray-100 bg-gray-50 p-5">
+          <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Temporalite</p>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <p class="text-xs text-gray-400">Date de debut</p>
+              <p class="text-sm font-medium text-gray-900">{{ programme()!.dateDebut ? (programme()!.dateDebut | date:'dd/MM/yyyy') : '-' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400">Date de fin</p>
+              <p class="text-sm font-medium text-gray-900">{{ programme()!.dateFin ? (programme()!.dateFin | date:'dd/MM/yyyy') : '-' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400">Cree le</p>
+              <p class="text-sm font-medium text-gray-900">{{ programme()!.createdAt ? (programme()!.createdAt | date:'dd/MM/yyyy HH:mm') : '-' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400">Mis a jour le</p>
+              <p class="text-sm font-medium text-gray-900">{{ programme()!.updatedAt ? (programme()!.updatedAt | date:'dd/MM/yyyy HH:mm') : '-' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-gray-100 bg-gray-50 p-5">
+        <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Description</p>
+        <p class="text-sm leading-6 text-gray-700 whitespace-pre-wrap">{{ programme()!.description || '-' }}</p>
+      </div>
+    </div>
+  }
+</div>

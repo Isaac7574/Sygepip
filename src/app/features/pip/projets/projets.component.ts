@@ -32,6 +32,15 @@ import {
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 
+type ProjectTab =
+  | 'all'
+  | 'mature'
+  | 'programmation-technique'
+  | 'programmation-financiere'
+  | 'arbitrage'
+  | 'inscription-pip'
+  | 'execution';
+
 @Component({
   selector: 'app-projets-pip',
   standalone: true,
@@ -81,7 +90,7 @@ export class ProjetsPIPComponent implements OnInit {
   toastVisible = signal(false);
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
-  activeTab = signal<'all' | 'mature'>('all');
+  activeTab = signal<ProjectTab>('all');
   matureActions = signal<WorkflowNextAction[]>([]);
   loadingMatureActions = signal(false);
   loadingSelection = signal(false);
@@ -183,6 +192,10 @@ export class ProjetsPIPComponent implements OnInit {
     return this.isDgep();
   }
 
+  showProjectTabs(): boolean {
+    return this.isDgep() || this.isInstructeurRole();
+  }
+
   // Conversion des dates string en Date
   private adaptProjetDates(projet: any): Projet {
     return {
@@ -257,7 +270,7 @@ export class ProjetsPIPComponent implements OnInit {
 
   private applyFilters(): void {
     const term = this.searchTerm.toLowerCase();
-    const source = this.activeTab() === 'mature' ? this.matureItems() : this.items();
+    const source = this.getItemsForActiveTab();
     this.filteredItems.set(source.filter(i =>
       i.titre?.toLowerCase().includes(term) || i.code?.toLowerCase().includes(term) ||
       this.getMinistereNom(i.ministereId).toLowerCase().includes(term)
@@ -291,7 +304,7 @@ export class ProjetsPIPComponent implements OnInit {
     }
   }
 
-  setActiveTab(tab: 'all' | 'mature'): void {
+  setActiveTab(tab: ProjectTab): void {
     this.activeTab.set(tab);
     this.selectedMatureProjectIds.set([]);
     this.applyFilters();
@@ -320,6 +333,56 @@ export class ProjetsPIPComponent implements OnInit {
   allVisibleMatureProjectsSelected(): boolean {
     const visible = this.filteredItems();
     return visible.length > 0 && visible.every((item) => this.isSelectedForPip(item.id));
+  }
+
+  getTabCount(tab: ProjectTab): number {
+    switch (tab) {
+      case 'mature':
+        return this.matureItems().length;
+      case 'programmation-technique':
+        return this.items().filter(item => item.statut === 'SELECTIONNE').length;
+      case 'programmation-financiere':
+        return this.items().filter(item => this.isProgrammationFinanciereStatus(item.statut)).length;
+      case 'arbitrage':
+        return this.items().filter(item => item.statut === 'EN_ARBITRAGE').length;
+      case 'inscription-pip':
+        return this.items().filter(item => item.statut === 'ARBITRAGE_RETENU').length;
+      case 'execution':
+        return this.items().filter(item => this.isExecutionStatus(item.statut)).length;
+      case 'all':
+      default:
+        return this.items().length;
+    }
+  }
+
+  private getItemsForActiveTab(): Projet[] {
+    switch (this.activeTab()) {
+      case 'mature':
+        return this.matureItems();
+      case 'programmation-technique':
+        return this.items().filter(item => item.statut === 'SELECTIONNE');
+      case 'programmation-financiere':
+        return this.items().filter(item => this.isProgrammationFinanciereStatus(item.statut));
+      case 'arbitrage':
+        return this.items().filter(item => item.statut === 'EN_ARBITRAGE');
+      case 'inscription-pip':
+        return this.items().filter(item => item.statut === 'ARBITRAGE_RETENU');
+      case 'execution':
+        return this.items().filter(item => this.isExecutionStatus(item.statut));
+      case 'all':
+      default:
+        return this.items();
+    }
+  }
+
+  private isProgrammationFinanciereStatus(statut: string | undefined): boolean {
+    return statut === 'PROG_OPERATIONNELLE'
+      || statut === 'PROG_FINANCIERE'
+      || statut === 'PROG_FINANCIERE_VALIDE';
+  }
+
+  private isExecutionStatus(statut: string | undefined): boolean {
+    return statut === 'PIP_VALIDE' || statut === 'EN_EXECUTION';
   }
 
   selectMatureProjects(): void {

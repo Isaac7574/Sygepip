@@ -270,6 +270,7 @@ export class ProjetDetailComponent implements OnInit {
   private loadAvailableActions(statut?: string, afterLoad?: () => void): void {
     if (!statut) {
       this.availableActions.set([]);
+      this.logArbitrageDebugContext(statut, []);
       afterLoad?.();
       return;
     }
@@ -277,10 +278,17 @@ export class ProjetDetailComponent implements OnInit {
     this.workflowService.getMyActions('PROJET', statut).subscribe({
       next: (actions) => {
         this.availableActions.set(actions);
+        this.logArbitrageDebugContext(statut, actions);
         afterLoad?.();
       },
-      error: () => {
+      error: (error) => {
         this.availableActions.set([]);
+        console.error('[ProjetDetail][Arbitrage] Echec chargement actions workflow', {
+          projetId: this.projet()?.id,
+          statut,
+          error
+        });
+        this.logArbitrageDebugContext(statut, []);
         afterLoad?.();
       }
     });
@@ -414,6 +422,44 @@ export class ProjetDetailComponent implements OnInit {
 
   showPasserArbitrageButton(): boolean {
     return this.isDgep() && this.canPasserArbitrage();
+  }
+
+  private logArbitrageDebugContext(
+    statut: string | undefined,
+    actions: WorkflowNextAction[]
+  ): void {
+    const currentUser = this.authService.currentUser();
+    const roles = currentUser?.roles ?? [];
+    const isDgep = this.authService.hasRole('DGEP');
+    const canPasserArbitrage = actions.some(action =>
+      action.codeEtape === 'PIP_PASSAGE_ARBITRAGE' ||
+      action.etatCible === 'EN_ARBITRAGE'
+    );
+
+    console.groupCollapsed('[ProjetDetail][Arbitrage] Diagnostic affichage bouton');
+    console.log('projetId:', this.projet()?.id);
+    console.log('statutProjet:', statut);
+    console.log('utilisateur:', currentUser?.username || currentUser?.email || '-');
+    console.log('roles:', roles);
+    console.log('isDgep:', isDgep);
+    console.log('actionsWorkflow:', actions);
+    console.log(
+      'actionsArbitrageDetectees:',
+      actions
+        .filter(action =>
+          action.codeEtape === 'PIP_PASSAGE_ARBITRAGE' ||
+          action.etatCible === 'EN_ARBITRAGE'
+        )
+        .map(action => ({
+          codeEtape: action.codeEtape,
+          nomEtape: action.nomEtape,
+          etatCible: action.etatCible,
+          roleRequis: action.roleRequis
+        }))
+    );
+    console.log('canPasserArbitrage:', canPasserArbitrage);
+    console.log('showPasserArbitrageButton:', isDgep && canPasserArbitrage);
+    console.groupEnd();
   }
 
   showRetenirArbitrageButton(): boolean {

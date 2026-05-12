@@ -17,7 +17,7 @@
   </div>
 
   <div class="card overflow-hidden">
-    @if (showMatureSelectionTab()) {
+    @if (showProjectTabs()) {
       <div class="border-b border-gray-200 bg-white px-4 pt-4">
         <div class="flex flex-wrap gap-2">
           <button (click)="setActiveTab('all')"
@@ -26,19 +26,80 @@
                   [class.text-white]="activeTab() === 'all'"
                   [class.bg-gray-100]="activeTab() !== 'all'"
                   [class.text-gray-600]="activeTab() !== 'all'">
-            Tous les projets
-          </button>
-          <button (click)="setActiveTab('mature')"
-                  class="rounded-t-xl px-4 py-2 text-sm font-semibold transition-colors"
-                  [class.bg-blue-600]="activeTab() === 'mature'"
-                  [class.text-white]="activeTab() === 'mature'"
-                  [class.bg-blue-50]="activeTab() !== 'mature'"
-                  [class.text-blue-700]="activeTab() !== 'mature'">
-            Projets matures
-            <span class="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-white/80 px-1.5 text-xs font-bold text-blue-700">
-              {{ matureItems().length }}
+            {{ isInstructeurRole() ? 'Projets du Ministere' : 'Banque Integree des Projets' }}
+            <span class="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-white/80 px-1.5 text-xs font-bold text-gray-700">
+              {{ getTabCount('all') }}
             </span>
           </button>
+          @if (isInstructeurRole()) {
+            <button (click)="setActiveTab('programmation-technique')"
+                    class="rounded-t-xl px-4 py-2 text-sm font-semibold transition-colors"
+                    [class.bg-blue-600]="activeTab() === 'programmation-technique'"
+                    [class.text-white]="activeTab() === 'programmation-technique'"
+                    [class.bg-blue-50]="activeTab() !== 'programmation-technique'"
+                    [class.text-blue-700]="activeTab() !== 'programmation-technique'">
+              Programmation technique
+              <span class="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-white/80 px-1.5 text-xs font-bold text-blue-700">
+                {{ getTabCount('programmation-technique') }}
+              </span>
+            </button>
+          } @else {
+            <button (click)="setActiveTab('mature')"
+                    class="rounded-t-xl px-4 py-2 text-sm font-semibold transition-colors"
+                    [class.bg-blue-600]="activeTab() === 'mature'"
+                    [class.text-white]="activeTab() === 'mature'"
+                    [class.bg-blue-50]="activeTab() !== 'mature'"
+                    [class.text-blue-700]="activeTab() !== 'mature'">
+              Projets matures
+              <span class="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-white/80 px-1.5 text-xs font-bold text-blue-700">
+                {{ getTabCount('mature') }}
+              </span>
+            </button>
+            <button (click)="setActiveTab('programmation-financiere')"
+                    class="rounded-t-xl px-4 py-2 text-sm font-semibold transition-colors"
+                    [class.bg-emerald-600]="activeTab() === 'programmation-financiere'"
+                    [class.text-white]="activeTab() === 'programmation-financiere'"
+                    [class.bg-emerald-50]="activeTab() !== 'programmation-financiere'"
+                    [class.text-emerald-700]="activeTab() !== 'programmation-financiere'">
+              Programmation financiere
+              <span class="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-white/80 px-1.5 text-xs font-bold text-emerald-700">
+                {{ getTabCount('programmation-financiere') }}
+              </span>
+            </button>
+            <button (click)="setActiveTab('arbitrage')"
+                    class="rounded-t-xl px-4 py-2 text-sm font-semibold transition-colors"
+                    [class.bg-indigo-600]="activeTab() === 'arbitrage'"
+                    [class.text-white]="activeTab() === 'arbitrage'"
+                    [class.bg-indigo-50]="activeTab() !== 'arbitrage'"
+                    [class.text-indigo-700]="activeTab() !== 'arbitrage'">
+              Arbitrage
+              <span class="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-white/80 px-1.5 text-xs font-bold text-indigo-700">
+                {{ getTabCount('arbitrage') }}
+              </span>
+            </button>
+            <button (click)="setActiveTab('inscription-pip')"
+                    class="rounded-t-xl px-4 py-2 text-sm font-semibold transition-colors"
+                    [class.bg-cyan-600]="activeTab() === 'inscription-pip'"
+                    [class.text-white]="activeTab() === 'inscription-pip'"
+                    [class.bg-cyan-50]="activeTab() !== 'inscription-pip'"
+                    [class.text-cyan-700]="activeTab() !== 'inscription-pip'">
+              Inscription au PIP
+              <span class="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-white/80 px-1.5 text-xs font-bold text-cyan-700">
+                {{ getTabCount('inscription-pip') }}
+              </span>
+            </button>
+            <button (click)="setActiveTab('execution')"
+                    class="rounded-t-xl px-4 py-2 text-sm font-semibold transition-colors"
+                    [class.bg-orange-600]="activeTab() === 'execution'"
+                    [class.text-white]="activeTab() === 'execution'"
+                    [class.bg-orange-50]="activeTab() !== 'execution'"
+                    [class.text-orange-700]="activeTab() !== 'execution'">
+              Execution
+              <span class="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-white/80 px-1.5 text-xs font-bold text-orange-700">
+                {{ getTabCount('execution') }}
+              </span>
+            </button>
+          }
         </div>
       </div>
     }
@@ -133,12 +194,6 @@
               <a [routerLink]="['/app/pip/projets', item.id]" class="text-bf-green-600 hover:text-bf-green-800 mr-2 inline-flex" title="Voir detail">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
               </a>
-              <button (click)="edit(item)" class="text-primary-600 hover:text-primary-800 mr-2" title="Modifier">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-              </button>
-              <button (click)="confirmDelete(item)" class="text-bf-red-600 hover:text-bf-red-800" title="Supprimer">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-              </button>
             </td>
           </tr>
         } @empty {
@@ -172,11 +227,6 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <button (click)="closeDetail(); edit(viewingItem()!)" class="text-primary-600 hover:text-primary-800" title="Modifier">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-            </svg>
-          </button>
           <button (click)="closeDetail()" class="text-gray-400 hover:text-gray-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -299,12 +349,6 @@
       </div>
       <div class="modal-footer">
         <button (click)="closeDetail()" class="btn-outline">Fermer</button>
-        <button (click)="closeDetail(); edit(viewingItem()!)" class="btn-primary">
-          <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-          </svg>
-          Modifier
-        </button>
       </div>
     </div>
   </div>
@@ -605,5 +649,3 @@
   [type]="toastType"
   (close)="toastVisible.set(false)">
 </app-toast>
-
-

@@ -27,7 +27,7 @@ export class AccueilComponent implements OnInit {
     this.apiService.get<StatistiquesDashboard>('/dashboard/statistiques').subscribe({
       next: (data) => this.stats.set(data),
       error: () => {
-        this.stats.set({ totalProjets: 245, projetsEnCours: 120, projetsTermines: 85, budgetTotal: 1500000000000, budgetExecute: 750000000000, tauxExecutionGlobal: 65, alertesActives: 12, ideesProjetsEnAttente: 45 });
+        this.stats.set({ totalProjets: 0, projetsEnCours: 0, projetsTermines: 0, budgetTotal: 0, budgetExecute: 0, tauxExecutionGlobal: 0, alertesActives: 0, ideesProjetsEnAttente: 0 });
       }
     });
   }

@@ -55,9 +55,9 @@
 
           <div class="hero-visual">
             <div class="floating-card floating-card--metric">
-              <p class="floating-card__eyebrow">Nombres de projets adoptés</p>
+              <p class="floating-card__eyebrow">Nombres de projets crées</p>
               <div class="floating-card__metric-row">
-                <strong>20</strong>
+                <strong>{{ stats()?.totalProjets ?? 0 }}</strong>
                   <span></span>
               </div>
               <div class="floating-card__progress">
@@ -75,9 +75,9 @@
             </div>
 
             <div class="floating-card floating-card--alert">
-              <p class="floating-card__eyebrow">Alerte</p>
-              <strong>12 projets a valider</strong>
-              <span>Mise a jour il y a 5 min</span>
+              <p class="floating-card__eyebrow"></p>
+              <strong></strong>
+              <span></span>
             </div>
           </div>
         </div>

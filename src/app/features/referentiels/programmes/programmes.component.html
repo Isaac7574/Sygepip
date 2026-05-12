@@ -1,163 +1,260 @@
-<div class="space-y-6">
-  <div class="page-header-section">
-    <div class="page-header-left">
-      <div class="page-header-icon">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-        </svg>
-      </div>
-      <div class="page-header-text">
-        <h1>
-          Programmes
-          <span class="page-header-badge">Référentiels</span>
-        </h1>
-        <p>Gestion des programmes d'investissement</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="card overflow-hidden">
-    <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50/50">
-      <div class="relative w-full max-w-sm">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher un programme..." class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-      </div>
-      <button (click)="openModal()" class="btn-primary">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        Nouveau Programme
-      </button>
-    </div>
-    <table class="w-full">
-      <thead class="bg-gray-50">
-        <tr>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ministère</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Secteur</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
-          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-100">
-        @for (item of filteredItems(); track item.id) {
-          <tr class="hover:bg-gray-50">
-            <td class="px-6 py-4 font-medium text-gray-900">{{ item.code }}</td>
-            <td class="px-6 py-4 text-gray-900">{{ item.nom }}</td>
-            <td class="px-6 py-4 text-gray-500">{{ getMinistereNom(item.ministereId) }}</td>
-            <td class="px-6 py-4 text-gray-500">{{ getSecteurNom(item.secteurId) }}</td>
-            <td class="px-6 py-4">
-              <span class="badge" [class.badge-success]="item.actif" [class.badge-secondary]="!item.actif">
-                {{ item.actif ? 'Actif' : 'Inactif' }}
-              </span>
-            </td>
-            <td class="px-6 py-4 text-right">
-              <button (click)="edit(item)" class="text-primary-600 hover:text-primary-800 mr-2" title="Modifier">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-              </button>
-              <button (click)="confirmDelete(item)" class="text-bf-red-600 hover:text-bf-red-800" title="Supprimer">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-              </button>
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="7" class="px-6 py-12 text-center text-gray-500">Aucun programme trouvé</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- Modal -->
-@if (modalOpen()) {
-  <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-content-fit max-w-3xl" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier le programme' : 'Nouveau programme' }}</h3>
-        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+@if (detailMode()) {
+  <div class="space-y-6">
+    <div class="page-header-section">
+      <div class="page-header-left">
+        <div class="page-header-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
           </svg>
+        </div>
+        <div class="page-header-text">
+          <h1>
+            Vue Programme Budgetaire
+            <span class="page-header-badge">Referentiels</span>
+          </h1>
+          <p>Consultation detaillee d'un programme budgetaire</p>
+        </div>
+      </div>
+      <a [routerLink]="['/app/referentiels/programmes']" class="btn-outline">
+        Retour a la liste
+      </a>
+    </div>
+
+    @if (loadingDetail()) {
+      <div class="card p-8 text-center text-gray-500">
+        Chargement du programme budgetaire...
+      </div>
+    } @else if (errorMessage()) {
+      <div class="card p-8 text-center text-red-600">
+        {{ errorMessage() }}
+      </div>
+    } @else if (detailItem()) {
+      <div class="card space-y-6 p-6">
+        <div class="flex flex-wrap items-start justify-between gap-4 border-b border-gray-100 pb-5">
+          <div>
+            <div class="mb-2 flex items-center gap-2">
+              <span class="font-mono text-sm font-bold text-gray-500">{{ detailItem()!.code }}</span>
+              <span class="badge" [class.badge-success]="detailItem()!.actif" [class.badge-secondary]="!detailItem()!.actif">
+                {{ detailItem()!.actif ? 'Actif' : 'Inactif' }}
+              </span>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900">{{ detailItem()!.nom }}</h2>
+          </div>
+        </div>
+
+        <div class="grid gap-6 lg:grid-cols-2">
+          <div class="rounded-2xl border border-gray-100 bg-gray-50 p-5">
+            <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Rattachement</p>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <p class="text-xs text-gray-400">Ministere</p>
+                <p class="text-sm font-medium text-gray-900">{{ getMinistereNom(detailItem()!.ministereId) }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400">Secteur</p>
+                <p class="text-sm font-medium text-gray-900">{{ getSecteurNom(detailItem()!.secteurId) }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400">Niveau de priorite</p>
+                <p class="text-sm font-medium text-gray-900">{{ getNiveauPrioriteLabel(detailItem()!.niveauPriorite) }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400">Statut</p>
+                <p class="text-sm font-medium text-gray-900">{{ detailItem()!.actif ? 'Actif' : 'Inactif' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-gray-100 bg-gray-50 p-5">
+            <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Temporalite</p>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <p class="text-xs text-gray-400">Date de debut</p>
+                <p class="text-sm font-medium text-gray-900">{{ detailItem()!.dateDebut ? (detailItem()!.dateDebut | date:'dd/MM/yyyy') : '-' }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400">Date de fin</p>
+                <p class="text-sm font-medium text-gray-900">{{ detailItem()!.dateFin ? (detailItem()!.dateFin | date:'dd/MM/yyyy') : '-' }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400">Cree le</p>
+                <p class="text-sm font-medium text-gray-900">{{ detailItem()!.createdAt ? (detailItem()!.createdAt | date:'dd/MM/yyyy HH:mm') : '-' }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400">Mis a jour le</p>
+                <p class="text-sm font-medium text-gray-900">{{ detailItem()!.updatedAt ? (detailItem()!.updatedAt | date:'dd/MM/yyyy HH:mm') : '-' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-gray-100 bg-gray-50 p-5">
+          <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Description</p>
+          <p class="text-sm leading-6 text-gray-700 whitespace-pre-wrap">{{ detailItem()!.description || '-' }}</p>
+        </div>
+      </div>
+    }
+  </div>
+} @else {
+  <div class="space-y-6">
+    <div class="page-header-section">
+      <div class="page-header-left">
+        <div class="page-header-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+        </div>
+        <div class="page-header-text">
+          <h1>
+            Programmes Budgetaires
+            <span class="page-header-badge">Referentiels</span>
+          </h1>
+          <p>Gestion des programmes budgetaires</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card overflow-hidden">
+      <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50/50">
+        <div class="relative w-full max-w-sm">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="search()" placeholder="Rechercher un programme budgetaire..." class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+        </div>
+        <button (click)="openModal()" class="btn-primary">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Nouveau Programme Budgetaire
         </button>
       </div>
-      <div class="modal-body space-y-6">
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ministere</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Secteur</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (item of filteredItems(); track item.id) {
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-4 font-medium text-gray-900">{{ item.code }}</td>
+              <td class="px-6 py-4 text-gray-900">{{ item.nom }}</td>
+              <td class="px-6 py-4 text-gray-500">{{ getMinistereNom(item.ministereId) }}</td>
+              <td class="px-6 py-4 text-gray-500">{{ getSecteurNom(item.secteurId) }}</td>
+              <td class="px-6 py-4">
+                <span class="badge" [class.badge-success]="item.actif" [class.badge-secondary]="!item.actif">
+                  {{ item.actif ? 'Actif' : 'Inactif' }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <a [routerLink]="['/app/referentiels/programmes', item.id]" class="text-bf-green-600 hover:text-bf-green-800 mr-2 inline-flex" title="Voir">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </a>
+                <button (click)="edit(item)" class="text-primary-600 hover:text-primary-800 mr-2" title="Modifier">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </button>
+                <button (click)="confirmDelete(item)" class="text-bf-red-600 hover:text-bf-red-800" title="Supprimer">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="px-6 py-12 text-center text-gray-500">Aucun programme trouve</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-        <!-- Identification -->
-        <div>
-          <div class="flex items-center gap-2 mb-4">
-            <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-              <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-              </svg>
+  @if (modalOpen()) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-content-fit max-w-3xl" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="text-lg font-semibold">{{ editingItem() ? 'Modifier le programme' : 'Nouveau programme' }}</h3>
+          <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body space-y-6">
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                </svg>
+              </div>
+              <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identification</span>
+              <div class="flex-1 h-px bg-gray-200"></div>
             </div>
-            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identification</span>
-            <div class="flex-1 h-px bg-gray-200"></div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-group">
+                <label class="form-label">Code <span class="text-red-500">*</span></label>
+                <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: PRG-001">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Secteur</label>
+                <select [(ngModel)]="formData.secteurId" class="form-input">
+                  <option [ngValue]="undefined">-- Selectionner --</option>
+                  @for (s of secteurs(); track s.id) {
+                    <option [ngValue]="s.id">{{ s.nom }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-group col-span-2">
+                <label class="form-label">Nom <span class="text-red-500">*</span></label>
+                <input type="text" [(ngModel)]="formData.nom" class="form-input" placeholder="Nom du programme">
+              </div>
+            </div>
           </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="form-group">
-              <label class="form-label">Code <span class="text-red-500">*</span></label>
-              <input type="text" [(ngModel)]="formData.code" class="form-input" placeholder="Ex: PRG-001">
+
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              <div class="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+              </div>
+              <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Rattachement</span>
+              <div class="flex-1 h-px bg-gray-200"></div>
             </div>
             <div class="form-group">
-              <label class="form-label">Secteur</label>
-              <select [(ngModel)]="formData.secteurId" class="form-input">
-                <option [ngValue]="undefined">-- Sélectionner --</option>
-                @for (s of secteurs(); track s.id) {
-                  <option [ngValue]="s.id">{{ s.nom }}</option>
+              <label class="form-label">Ministere <span class="text-red-500">*</span></label>
+              <select [(ngModel)]="formData.ministereId" class="form-input">
+                <option [ngValue]="undefined">-- Selectionner --</option>
+                @for (m of ministeres(); track m.id) {
+                  <option [ngValue]="m.id">{{ m.sigle || m.nom }}</option>
                 }
               </select>
             </div>
-            <div class="form-group col-span-2">
-              <label class="form-label">Nom <span class="text-red-500">*</span></label>
-              <input type="text" [(ngModel)]="formData.nom" class="form-input" placeholder="Nom du programme">
+            <div class="form-group mt-4">
+              <label class="form-label">Description</label>
+              <textarea [(ngModel)]="formData.description" class="form-input" rows="2" placeholder="Description du programme"></textarea>
+            </div>
+            <div class="form-group mt-4">
+              <label class="flex items-center">
+                <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
+                <span class="ml-2">Programme actif</span>
+              </label>
             </div>
           </div>
         </div>
-
-        <!-- Rattachement -->
-        <div>
-          <div class="flex items-center gap-2 mb-4">
-            <div class="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
-              <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-              </svg>
-            </div>
-            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Rattachement</span>
-            <div class="flex-1 h-px bg-gray-200"></div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Ministère <span class="text-red-500">*</span></label>
-            <select [(ngModel)]="formData.ministereId" class="form-input">
-              <option [ngValue]="undefined">-- Sélectionner --</option>
-              @for (m of ministeres(); track m.id) {
-                <option [ngValue]="m.id">{{ m.sigle || m.nom }}</option>
-              }
-            </select>
-          </div>
-          <div class="form-group mt-4">
-            <label class="form-label">Description</label>
-            <textarea [(ngModel)]="formData.description" class="form-input" rows="2" placeholder="Description du programme"></textarea>
-          </div>
-          <div class="form-group mt-4">
-            <label class="flex items-center">
-              <input type="checkbox" [(ngModel)]="formData.actif" class="form-checkbox">
-              <span class="ml-2">Programme actif</span>
-            </label>
-          </div>
+        <div class="modal-footer">
+          <button (click)="closeModal()" class="btn-outline">Annuler</button>
+          <button (click)="save()" [disabled]="saving()" class="btn-primary">
+            {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Creer le programme') }}
+          </button>
         </div>
-
-      </div>
-      <div class="modal-footer">
-        <button (click)="closeModal()" class="btn-outline">Annuler</button>
-        <button (click)="save()" [disabled]="saving()" class="btn-primary">
-          {{ saving() ? 'Enregistrement...' : (editingItem() ? 'Enregistrer' : 'Créer le programme') }}
-        </button>
       </div>
     </div>
-  </div>
+  }
 }

@@ -382,7 +382,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   showAdminStatisticTabs(): boolean {
-    return this.authService.hasRole('ADMIN');
+    return this.authService.hasRole(['ADMIN', 'DGEP']);
   }
 
   setTab(tab: DashboardTab): void {
