@@ -15,7 +15,7 @@ function initializeKeycloak(keycloak: KeycloakService) {
     keycloak.init({
       config: keycloakConfig,
       initOptions: {
-        onLoad: 'login-required',
+        onLoad: 'check-sso',
         pkceMethod: 'S256',
         checkLoginIframe: false,
         locale: 'fr'
