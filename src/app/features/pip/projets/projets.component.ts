@@ -631,7 +631,10 @@ export class ProjetsPIPComponent implements OnInit {
   calculerDuree(): void {
     const debut = this.formData.dateDebutPrevu;
     const fin = this.formData.dateFinPrevu;
-    if (!debut || !fin) return;
+    if (!debut || !fin) {
+      this.formData.dureeEnMois = undefined;
+      return;
+    }
     const d = new Date(debut);
     const f = new Date(fin);
     if (f <= d) { this.formData.dureeEnMois = 0; return; }

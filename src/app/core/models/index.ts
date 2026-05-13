@@ -1178,6 +1178,7 @@ export type IdeeProjetImportRowStatus = 'SUCCESS' | 'ERROR' | string;
 export interface IdeeProjetImportInfosGeneralesPayload {
   secteurId: string;
   portee: IdeeProjet['portee'] | string;
+  modeFinancement?: ModeFinancement;
   ministereTutelleFinanciereId?: string;
   statut?: StatutIdeeProjet | string;
   actif?: boolean;

@@ -661,6 +661,28 @@ export class ProjetDetailComponent implements OnInit {
     this.ptForm.dureeEnMois    = p.dureeEnMois    ?? null;
     this.ptForm.typeProjetPip        = (p.typeProjetPip as TypeProjetPip) ?? '';
     this.ptForm.statutInscriptionPip = (p.statutInscriptionPip as StatutInscriptionPip) ?? '';
+    this.calculerPtDuree();
+  }
+
+  calculerPtDuree(): void {
+    const debut = this.ptForm.dateDebutPrevu;
+    const fin = this.ptForm.dateFinPrevu;
+
+    if (!debut || !fin) {
+      this.ptForm.dureeEnMois = null;
+      return;
+    }
+
+    const d = new Date(debut);
+    const f = new Date(fin);
+
+    if (f <= d) {
+      this.ptForm.dureeEnMois = 0;
+      return;
+    }
+
+    const mois = (f.getFullYear() - d.getFullYear()) * 12 + (f.getMonth() - d.getMonth());
+    this.ptForm.dureeEnMois = mois;
   }
 
   //  Sauvegarde PT 

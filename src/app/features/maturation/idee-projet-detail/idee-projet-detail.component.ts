@@ -16,6 +16,7 @@ import { PlanFinancementIdeeProjetService } from '@core/services/plan-financemen
 import {
   Cible,
   IdeeProjet,
+  IdeeProjetNoteConceptuelleRequest,
   IdeeProjetNoteConceptuelleResponse,
   Ministere,
   ModeFinancement,
@@ -57,6 +58,7 @@ const DOSSIER_DOCUMENT_LABELS: Record<DossierProjetTypeDocument, string> = {
   styleUrl: './idee-projet-detail.component.scss'
 })
 export class IdeeProjetDetailComponent implements OnInit {
+  private readonly maxImportFileSizeBytes = 10 * 1024 * 1024;
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private ideesService = inject(IdeesProjetService);
@@ -74,6 +76,9 @@ export class IdeeProjetDetailComponent implements OnInit {
   note = signal<Partial<IdeeProjetNoteConceptuelleResponse>>({});
   loading = signal(true);
   loadingNote = signal(false);
+  importNoteModalOpen = signal(false);
+  importingNote = signal(false);
+  importBeneficiairesOpen = signal(false);
   error = signal<string | null>(null);
   documents = signal<DocumentIdeeProjetResponseDTO[]>([]);
   dossierProjet = signal<DossierProjetIdee | null>(null);
@@ -164,6 +169,30 @@ export class IdeeProjetDetailComponent implements OnInit {
   toastVisible = signal(false);
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
+  selectedImportNoteFile = signal<File | null>(null);
+  selectedImportCibleIds: string[] = [];
+  importCibleSearch = '';
+  importNoteModeFinancement: ModeFinancement | '' = '';
+
+  readonly acceptedImportExtensions = ['.csv', '.xls', '.xlsx'];
+  readonly noteConceptuelleImportColumns = [
+    'contexte',
+    'alignementStrategique',
+    'resultatsAttendus',
+    'indicateursPreliminaires',
+    'descriptionSolution',
+    'composantesProjet',
+    'approcheMiseEnOeuvre',
+    'contraintesRisques',
+    'hypotheses',
+    'prerequis',
+    'chronogrammeSynthese',
+    'impactSocioEconomique',
+    'impactEnvironnementalSocial',
+    'durabilite',
+    'coutEstime',
+    'dureeEstimeeMois'
+  ];
 
   getIdeesListRoute(): string {
     return this.authService.hasRole('AGENT')
@@ -210,6 +239,10 @@ export class IdeeProjetDetailComponent implements OnInit {
 
   canDownloadNoteConceptuellePdf(): boolean {
     return this.idee()?.statut === 'CONCEPTION_VALIDEE';
+  }
+
+  canImportNoteConceptuelle(): boolean {
+    return this.canEditNoteConceptuelle();
   }
 
   canValidateFaisabilite(): boolean {
@@ -439,6 +472,153 @@ export class IdeeProjetDetailComponent implements OnInit {
     this.fetchIdee(id);
   }
 
+  openImportNoteConceptuelleModal(): void {
+    if (!this.canImportNoteConceptuelle()) {
+      this.showToast('Vous ne pouvez pas importer la note conceptuelle a ce statut.', 'error');
+      return;
+    }
+
+    this.selectedImportNoteFile.set(null);
+    this.selectedImportCibleIds = [...(this.note().cibleIds ?? [])];
+    this.importCibleSearch = '';
+    this.importNoteModeFinancement = this.note().modeFinancement ?? this.idee()?.modeFinancement ?? '';
+    this.importBeneficiairesOpen.set(false);
+    this.importNoteModalOpen.set(true);
+  }
+
+  closeImportNoteConceptuelleModal(fileInput?: HTMLInputElement): void {
+    this.importNoteModalOpen.set(false);
+    this.importBeneficiairesOpen.set(false);
+    this.selectedImportNoteFile.set(null);
+    this.selectedImportCibleIds = [];
+    this.importCibleSearch = '';
+    this.importNoteModeFinancement = '';
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  onImportNoteFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.[0] ?? null;
+
+    if (!file) {
+      this.selectedImportNoteFile.set(null);
+      return;
+    }
+
+    const validationError = this.validateImportFile(file);
+    if (validationError) {
+      this.selectedImportNoteFile.set(null);
+      if (input) {
+        input.value = '';
+      }
+      this.showToast(validationError, 'error');
+      return;
+    }
+
+    this.selectedImportNoteFile.set(file);
+  }
+
+  clearImportNoteFile(fileInput?: HTMLInputElement): void {
+    this.selectedImportNoteFile.set(null);
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  toggleImportCibleSelection(cibleId: string): void {
+    if (this.selectedImportCibleIds.includes(cibleId)) {
+      this.selectedImportCibleIds = this.selectedImportCibleIds.filter(id => id !== cibleId);
+      return;
+    }
+
+    this.selectedImportCibleIds = [...this.selectedImportCibleIds, cibleId];
+  }
+
+  removeImportSelectedCible(cibleId: string): void {
+    this.selectedImportCibleIds = this.selectedImportCibleIds.filter(id => id !== cibleId);
+  }
+
+  isImportCibleSelected(cibleId: string): boolean {
+    return this.selectedImportCibleIds.includes(cibleId);
+  }
+
+  toggleImportBeneficiairesOpen(): void {
+    this.importBeneficiairesOpen.update(open => !open);
+  }
+
+  closeImportBeneficiairesOpen(): void {
+    this.importBeneficiairesOpen.set(false);
+  }
+
+  getImportSelectedCibles(): Cible[] {
+    return this.cibles().filter(cible => this.selectedImportCibleIds.includes(cible.id));
+  }
+
+  getFilteredImportCibles(): Cible[] {
+    const term = this.importCibleSearch.trim().toLowerCase();
+    if (!term) {
+      return this.cibles();
+    }
+
+    return this.cibles().filter((cible) => this.getCibleLabel(cible).toLowerCase().includes(term));
+  }
+
+  downloadNoteConceptuelleImportTemplate(): void {
+    const csvContent = `${this.noteConceptuelleImportColumns.join(';')}\n`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'modele-import-note-conceptuelle.csv';
+    link.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  async importNoteConceptuelleFromFile(fileInput?: HTMLInputElement): Promise<void> {
+    const idee = this.idee();
+    const file = this.selectedImportNoteFile();
+
+    if (!idee || !file) {
+      this.showToast('Selectionnez un fichier avant de lancer l\'import.', 'error');
+      return;
+    }
+
+    if (this.selectedImportCibleIds.length === 0) {
+      this.showToast('Selectionnez au moins une cible avant l\'import.', 'error');
+      return;
+    }
+
+    if (!this.importNoteModeFinancement) {
+      this.showToast('Selectionnez le mode de financement souhaite avant l\'import.', 'error');
+      return;
+    }
+
+    this.importingNote.set(true);
+
+    try {
+      const row = await this.readImportNoteRow(file);
+      const payload = this.buildImportedNotePayload(idee, row);
+
+      this.ideesService.updateNoteConceptuelle(idee.id, payload).subscribe({
+        next: (note) => {
+          this.importingNote.set(false);
+          this.note.set(note);
+          this.closeImportNoteConceptuelleModal(fileInput);
+          this.showToast('Note conceptuelle importee avec succes.', 'success');
+        },
+        error: () => {
+          this.importingNote.set(false);
+          this.showToast('Erreur lors de l\'import de la note conceptuelle.', 'error');
+        }
+      });
+    } catch (error: any) {
+      this.importingNote.set(false);
+      this.showToast(error?.message || 'Impossible de lire le fichier de note conceptuelle.', 'error');
+    }
+  }
+
   private resetPlanFinancementForm() {
     return {
       sourceFinancementId: '',
@@ -599,6 +779,195 @@ export class IdeeProjetDetailComponent implements OnInit {
       next: (data) => this.cibles.set(data),
       error: () => {}
     });
+  }
+
+  private buildImportedNotePayload(
+    idee: IdeeProjet,
+    row: Record<string, string>
+  ): IdeeProjetNoteConceptuelleRequest {
+    const currentNote = this.note();
+
+    return {
+      ideeProjetId: idee.id,
+      contexte: this.pickImportText(row, 'contexte', currentNote.contexte),
+      alignementStrategique: this.pickImportText(row, 'alignementStrategique', currentNote.alignementStrategique),
+      cibleIds: [...this.selectedImportCibleIds],
+      beneficiairesEstimes: idee.beneficiairesEstimes ?? currentNote.beneficiairesEstimes,
+      coutEstime: this.parseOptionalNumber(row['coutEstime'], currentNote.coutEstime, 'coutEstime'),
+      resultatsAttendus: this.pickImportText(row, 'resultatsAttendus', currentNote.resultatsAttendus),
+      indicateursPreliminaires: this.pickImportText(row, 'indicateursPreliminaires', currentNote.indicateursPreliminaires),
+      descriptionSolution: this.pickImportText(row, 'descriptionSolution', currentNote.descriptionSolution),
+      composantesProjet: this.pickImportText(row, 'composantesProjet', currentNote.composantesProjet),
+      approcheMiseEnOeuvre: this.pickImportText(row, 'approcheMiseEnOeuvre', currentNote.approcheMiseEnOeuvre),
+      contraintesRisques: this.pickImportText(row, 'contraintesRisques', currentNote.contraintesRisques),
+      hypotheses: this.pickImportText(row, 'hypotheses', currentNote.hypotheses),
+      prerequis: this.pickImportText(row, 'prerequis', currentNote.prerequis),
+      modeFinancement: this.importNoteModeFinancement || undefined,
+      dureeEstimeeMois: this.parseOptionalInteger(row['dureeEstimeeMois'], currentNote.dureeEstimeeMois, 'dureeEstimeeMois'),
+      chronogrammeSynthese: this.pickImportText(row, 'chronogrammeSynthese', currentNote.chronogrammeSynthese),
+      impactSocioEconomique: this.pickImportText(row, 'impactSocioEconomique', currentNote.impactSocioEconomique),
+      impactEnvironnementalSocial: this.pickImportText(row, 'impactEnvironnementalSocial', currentNote.impactEnvironnementalSocial),
+      durabilite: this.pickImportText(row, 'durabilite', currentNote.durabilite)
+    };
+  }
+
+  private pickImportText(
+    row: Record<string, string>,
+    key: string,
+    fallback?: string
+  ): string | undefined {
+    const value = row[key]?.trim();
+    return value ? value : fallback;
+  }
+
+  private parseOptionalInteger(rawValue: string | undefined, fallback: number | undefined, field: string): number | undefined {
+    const value = rawValue?.trim();
+    if (!value) {
+      return fallback;
+    }
+
+    if (!/^\d+$/.test(value)) {
+      throw new Error(`La colonne ${field} doit contenir un nombre entier.`);
+    }
+
+    return Number(value);
+  }
+
+  private parseOptionalNumber(rawValue: string | undefined, fallback: number | undefined, field: string): number | undefined {
+    const value = rawValue?.trim();
+    if (!value) {
+      return fallback;
+    }
+
+    const normalized = value.replace(/\s/g, '').replace(',', '.');
+    const parsed = Number(normalized);
+
+    if (Number.isNaN(parsed)) {
+      throw new Error(`La colonne ${field} doit contenir un nombre valide.`);
+    }
+
+    return parsed;
+  }
+
+  private async readImportNoteRow(file: File): Promise<Record<string, string>> {
+    const extension = this.getFileExtension(file.name);
+
+    if (extension === '.csv') {
+      const text = await file.text();
+      return this.parseCsvNoteRow(text);
+    }
+
+    if (extension === '.xls' || extension === '.xlsx') {
+      return this.parseSpreadsheetNoteRow(file);
+    }
+
+    throw new Error('Format non autorise. Utilisez un fichier .csv, .xls ou .xlsx.');
+  }
+
+  private parseCsvNoteRow(content: string): Record<string, string> {
+    const lines = content
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean);
+
+    if (lines.length < 2) {
+      throw new Error('Le fichier doit contenir un en-tete et au moins une ligne de donnees.');
+    }
+
+    const delimiter = this.detectCsvDelimiter(lines[0]);
+    const headers = this.parseCsvLine(lines[0], delimiter).map(value => value.trim());
+    const values = this.parseCsvLine(lines[1], delimiter);
+
+    const row: Record<string, string> = {};
+    headers.forEach((header, index) => {
+      row[header] = values[index]?.trim() ?? '';
+    });
+
+    return row;
+  }
+
+  private async parseSpreadsheetNoteRow(file: File): Promise<Record<string, string>> {
+    const XLSX = await import('xlsx');
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, {
+      defval: '',
+      raw: false
+    });
+
+    if (rows.length === 0) {
+      throw new Error('Le fichier ne contient aucune ligne de donnees.');
+    }
+
+    const rawRow = rows[0];
+    const row: Record<string, string> = {};
+    Object.keys(rawRow).forEach((key) => {
+      row[key] = String(rawRow[key] ?? '').trim();
+    });
+
+    return row;
+  }
+
+  private detectCsvDelimiter(headerLine: string): ';' | ',' {
+    const semicolons = (headerLine.match(/;/g) ?? []).length;
+    const commas = (headerLine.match(/,/g) ?? []).length;
+    return semicolons >= commas ? ';' : ',';
+  }
+
+  private parseCsvLine(line: string, delimiter: ';' | ','): string[] {
+    const values: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let index = 0; index < line.length; index += 1) {
+      const char = line[index];
+      const next = line[index + 1];
+
+      if (char === '"') {
+        if (inQuotes && next === '"') {
+          current += '"';
+          index += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+        continue;
+      }
+
+      if (char === delimiter && !inQuotes) {
+        values.push(current);
+        current = '';
+        continue;
+      }
+
+      current += char;
+    }
+
+    values.push(current);
+    return values;
+  }
+
+  private validateImportFile(file: File): string | null {
+    if (file.size <= 0) {
+      return 'Le fichier selectionne est vide.';
+    }
+
+    const extension = this.getFileExtension(file.name);
+    if (!this.acceptedImportExtensions.includes(extension)) {
+      return 'Format non autorise. Utilisez un fichier .csv, .xls ou .xlsx.';
+    }
+
+    if (file.size > this.maxImportFileSizeBytes) {
+      return 'Le fichier depasse la taille maximale autorisee de 10 Mo.';
+    }
+
+    return null;
+  }
+
+  private getFileExtension(fileName: string): string {
+    const dotIndex = fileName.lastIndexOf('.');
+    return dotIndex >= 0 ? fileName.slice(dotIndex).toLowerCase() : '';
   }
 
   hasRequiredDocuments(): boolean {
@@ -1355,6 +1724,10 @@ export class IdeeProjetDetailComponent implements OnInit {
       default:
         return '';
     }
+  }
+
+  getCibleLabel(cible: Cible): string {
+    return cible.libelle || cible.nom || `${cible.annee ?? ''}` || '-';
   }
 
   getSourceFinancementLabel(id: string | undefined): string {

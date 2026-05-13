@@ -7,6 +7,7 @@ import {
   IdeeProjetImportResult,
   IdeeProjetImportRowResult,
   Ministere,
+  ModeFinancement,
   Secteur,
   StatutIdeeProjet
 } from '@core/models';
@@ -16,14 +17,11 @@ import { MinisteresService } from '@core/services/ministeres.service';
 import { SecteursService } from '@core/services/secteurs.service';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 
-type ImportTab = 'infos-generales' | 'note-conceptuelle';
-
 type ImportInfosGeneralesFormValue = {
   secteurId: string;
   portee: string;
+  modeFinancement: ModeFinancement | '';
   ministereTutelleFinanciereId: string;
-  statut: string;
-  actif: boolean | null;
 };
 
 @Component({
@@ -41,7 +39,6 @@ export class IdeeProjetImportComponent implements OnInit {
   private secteursService = inject(SecteursService);
   private ministeresService = inject(MinisteresService);
 
-  activeTab = signal<ImportTab>('infos-generales');
   selectedFile = signal<File | null>(null);
   importing = signal(false);
   importResult = signal<IdeeProjetImportResult | null>(null);
@@ -65,24 +62,10 @@ export class IdeeProjetImportComponent implements OnInit {
     { value: 'LOCALE', label: 'Locale' }
   ];
 
-  readonly statuts: { value: StatutIdeeProjet; label: string }[] = [
-    { value: 'IDEE_BROUILLON', label: 'Brouillon' },
-    { value: 'IDEE_SOUMISE', label: 'Soumise' },
-    { value: 'IDEE_SOMMAIRE_SELECTIONNEE', label: 'Sommaire selectionnee' },
-    { value: 'IDEE_SOMMAIRE_REJETEE', label: 'Sommaire rejetee' },
-    { value: 'IDEE_ARCHIVEE', label: 'Archivee' },
-    { value: 'IDEE_CONCEPTION_BROUILLON', label: 'Conception brouillon' },
-    { value: 'CONCEPTION_SOUMISE', label: 'Conception soumise' },
-    { value: 'CONCEPTION_VALIDEE', label: 'Conception validee' },
-    { value: 'RAPPORT_FAISABILITE_VALIDE', label: 'Faisabilite validee' },
-    { value: 'PRODOC_SOUMIS', label: 'ProDoc soumis' },
-    { value: 'PRODOC_VALIDE', label: 'ProDoc valide' },
-    { value: 'AVIS_CNDP_FAVORABLE', label: 'Avis CNDP favorable' },
-    { value: 'AVIS_CNDP_REJETE', label: 'Avis CNDP non favorable' },
-    { value: 'IDENTIFICATION_FINANCEMENT', label: 'Financement identifie' },
-    { value: 'SOUMISSION_DOSSIER_PROJET', label: 'Dossier projet soumis' },
-    { value: 'DOSSIER_PROJET_VALIDE', label: 'Dossier projet valide' },
-    { value: 'DOSSIER_PROJET_RETOURNE', label: 'Dossier projet retourne' }
+  readonly modesFinancement: { value: ModeFinancement; label: string }[] = [
+    { value: 'CONTREPARTIE', label: 'Contrepartie' },
+    { value: 'SUBVENTION', label: 'Subvention' },
+    { value: 'PRET', label: 'Pret' }
   ];
 
   readonly visibleRows = computed(() => {
@@ -105,40 +88,10 @@ export class IdeeProjetImportComponent implements OnInit {
     'problematique',
     'objectifGeneral',
     'objectifsSpecifiques',
-    'beneficiairesCibles',
     'beneficiairesEstimes',
-    'zoneIntervention',
-    'coutEstime',
-    'modeFinancement',
-    'dureeEstimeeMois',
-    'porteurProjet',
     'pointFocalNom',
     'pointFocalEmail',
-    'pointFocalTelephone',
-    'dateSoumission'
-  ];
-
-  readonly noteConceptuelleColumns = [
-    'ideeProjetId',
-    'code',
-    'contexte',
-    'alignementStrategique',
-    'resultatsAttendus',
-    'indicateursPreliminaires',
-    'descriptionSolution',
-    'composantesProjet',
-    'approcheMiseEnOeuvre',
-    'contraintesRisques',
-    'hypotheses',
-    'prerequis',
-    'modeFinancement',
-    'chronogrammeSynthese',
-    'impactSocioEconomique',
-    'impactEnvironnementalSocial',
-    'durabilite',
-    'beneficiairesEstimes',
-    'coutEstime',
-    'dureeEstimeeMois'
+    'pointFocalTelephone'
   ];
 
   ngOnInit(): void {
@@ -155,7 +108,7 @@ export class IdeeProjetImportComponent implements OnInit {
   }
 
   isInfosGeneralesTab(): boolean {
-    return this.activeTab() === 'infos-generales';
+    return true;
   }
 
   canImport(): boolean {
@@ -163,18 +116,7 @@ export class IdeeProjetImportComponent implements OnInit {
       return false;
     }
 
-    if (!this.isInfosGeneralesTab()) {
-      return true;
-    }
-
-    return !!this.infoGeneralesForm.secteurId && !!this.infoGeneralesForm.portee;
-  }
-
-  setTab(tab: ImportTab): void {
-    this.activeTab.set(tab);
-    this.selectedFile.set(null);
-    this.importResult.set(null);
-    this.showOnlyErrors.set(false);
+    return !!this.infoGeneralesForm.secteurId && !!this.infoGeneralesForm.portee && !!this.infoGeneralesForm.modeFinancement;
   }
 
   onFileSelected(event: Event): void {
@@ -219,20 +161,14 @@ export class IdeeProjetImportComponent implements OnInit {
       return;
     }
 
-    if (this.isInfosGeneralesTab()) {
-      const formError = this.validateInfoGeneralesForm();
-      if (formError) {
-        this.showToast(formError, 'error');
-        return;
-      }
+    const formError = this.validateInfoGeneralesForm();
+    if (formError) {
+      this.showToast(formError, 'error');
+      return;
     }
 
-    const request$ = this.isInfosGeneralesTab()
-      ? this.importService.importInfosGenerales(file, this.buildInfoGeneralesPayload())
-      : this.importService.importNoteConceptuelle(file);
-
     this.importing.set(true);
-    request$.subscribe({
+    this.importService.importInfosGenerales(file, this.buildInfoGeneralesPayload()).subscribe({
       next: (result) => {
         this.importing.set(false);
         this.importResult.set(result);
@@ -247,40 +183,26 @@ export class IdeeProjetImportComponent implements OnInit {
   }
 
   downloadTemplate(): void {
-    const headers = this.isInfosGeneralesTab()
-      ? this.infoGeneralesColumns
-      : this.noteConceptuelleColumns;
-
-    const fileName = this.isInfosGeneralesTab()
-      ? 'modele-import-idees-infos-generales.csv'
-      : 'modele-import-idees-note-conceptuelle.csv';
-
-    const csvContent = `${headers.join(';')}\n`;
+    const csvContent = `${this.infoGeneralesColumns.join(';')}\n`;
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = fileName;
+    link.download = 'modele-import-idees-infos-generales.csv';
     link.click();
     window.URL.revokeObjectURL(url);
   }
 
   getHelpTitle(): string {
-    return this.isInfosGeneralesTab()
-      ? 'Import des informations generales'
-      : 'Import des notes conceptuelles';
+    return 'Import des informations generales';
   }
 
   getHelpDescription(): string {
-    return this.isInfosGeneralesTab()
-      ? 'Le frontend envoie les champs communs du lot, puis le fichier apporte les donnees variables ligne par ligne.'
-      : 'Le fichier doit contenir au minimum ideeProjetId ou code, puis les colonnes de la note conceptuelle.';
+    return 'Le frontend envoie le secteur, la portee et le mode de financement souhaite, puis le fichier apporte les donnees variables ligne par ligne.';
   }
 
   getCurrentColumns(): string[] {
-    return this.isInfosGeneralesTab()
-      ? this.infoGeneralesColumns
-      : this.noteConceptuelleColumns;
+    return this.infoGeneralesColumns;
   }
 
   getStatusBadgeClass(status: string): string {
@@ -303,9 +225,8 @@ export class IdeeProjetImportComponent implements OnInit {
     return {
       secteurId: '',
       portee: '',
+      modeFinancement: '',
       ministereTutelleFinanciereId: '',
-      statut: '',
-      actif: null
     };
   }
 
@@ -318,7 +239,10 @@ export class IdeeProjetImportComponent implements OnInit {
 
   private loadMinisteres(): void {
     this.ministeresService.getAll().subscribe({
-      next: (data) => this.ministeres.set(data),
+      next: (data) => {
+        this.ministeres.set(data);
+        this.infoGeneralesForm.ministereTutelleFinanciereId = this.resolveMinistereTutelleFinanciereId(data);
+      },
       error: () => this.showToast('Impossible de charger la liste des ministeres.', 'error')
     });
   }
@@ -332,28 +256,41 @@ export class IdeeProjetImportComponent implements OnInit {
       return 'La portee est obligatoire pour importer les informations generales.';
     }
 
+    if (!this.infoGeneralesForm.modeFinancement) {
+      return 'Le mode de financement souhaite est obligatoire pour importer les informations generales.';
+    }
+
     return null;
   }
 
   private buildInfoGeneralesPayload(): IdeeProjetImportInfosGeneralesPayload {
     const payload: IdeeProjetImportInfosGeneralesPayload = {
       secteurId: this.infoGeneralesForm.secteurId,
-      portee: this.infoGeneralesForm.portee
+      portee: this.infoGeneralesForm.portee,
+      statut: 'IDEE_BROUILLON' as StatutIdeeProjet,
+      actif: true
     };
+
+    if (this.infoGeneralesForm.modeFinancement) {
+      payload.modeFinancement = this.infoGeneralesForm.modeFinancement;
+    }
 
     if (this.infoGeneralesForm.ministereTutelleFinanciereId) {
       payload.ministereTutelleFinanciereId = this.infoGeneralesForm.ministereTutelleFinanciereId;
     }
 
-    if (this.infoGeneralesForm.statut) {
-      payload.statut = this.infoGeneralesForm.statut;
-    }
-
-    if (this.infoGeneralesForm.actif !== null) {
-      payload.actif = this.infoGeneralesForm.actif;
-    }
-
     return payload;
+  }
+
+  private resolveMinistereTutelleFinanciereId(items: Ministere[]): string {
+    const match = items.find((item) => {
+      const label = `${item.sigle ?? ''} ${item.nom ?? ''}`.toLowerCase();
+      return (
+        label.includes('economie') && label.includes('finance')
+      ) || label.includes('finances');
+    });
+
+    return match ? String(match.id) : '';
   }
 
   private validateFile(file: File): string | null {

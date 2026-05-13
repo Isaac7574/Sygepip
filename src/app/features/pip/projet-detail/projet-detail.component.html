@@ -552,19 +552,19 @@
               <!-- Date debut -->
               <div class="form-group">
                 <label class="form-label">Date de debut prevue</label>
-                <input type="datetime-local" [(ngModel)]="ptForm.dateDebutPrevu" class="form-input">
+                <input type="datetime-local" [(ngModel)]="ptForm.dateDebutPrevu" (ngModelChange)="calculerPtDuree()" class="form-input">
               </div>
 
               <!-- Date fin -->
               <div class="form-group">
                 <label class="form-label">Date de fin prevue</label>
-                <input type="datetime-local" [(ngModel)]="ptForm.dateFinPrevu" class="form-input">
+                <input type="datetime-local" [(ngModel)]="ptForm.dateFinPrevu" (ngModelChange)="calculerPtDuree()" class="form-input">
               </div>
 
               <!-- Duree -->
               <div class="form-group">
                 <label class="form-label">Duree (mois)</label>
-                <input type="number" [(ngModel)]="ptForm.dureeEnMois" class="form-input" min="1" placeholder="Ex: 24">
+                <input type="number" [(ngModel)]="ptForm.dureeEnMois" class="form-input" min="0" placeholder="Calcul automatique" readonly>
               </div>
 
               <!-- Objectifs strategiques -->

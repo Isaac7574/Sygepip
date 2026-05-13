@@ -4,6 +4,114 @@
   gap: 0.75rem;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content-fit {
+  width: min(100%, 72rem);
+  margin: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  max-height: calc(100vh - 13rem);
+  overflow-y: auto;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.beneficiaires-select {
+  position: relative;
+}
+
+.beneficiaires-trigger {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.beneficiaires-placeholder {
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+.beneficiaires-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.beneficiaire-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid #d1fae5;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.beneficiaire-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background: #fef2f2;
+  color: #dc2626;
+  transition: background-color 0.2s ease;
+}
+
+.beneficiaire-tag-remove:hover {
+  background: #fee2e2;
+}
+
+.beneficiaires-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  cursor: pointer;
+}
+
+.beneficiaires-option:hover {
+  background: #f9fafb;
+}
+
 .note-notebook {
   position: relative;
   padding: 1.25rem 1.25rem 1.25rem 2.5rem;
