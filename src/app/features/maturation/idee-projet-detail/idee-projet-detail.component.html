@@ -902,12 +902,12 @@
               }
 
               @case ('IDENTIFICATION_FINANCEMENT') {
-                @if (canManagePlanFinancement()) {
+                @if (canSoumettreDossierProjet()) {
                 <div class="flex flex-wrap gap-2">
-                  <button (click)="onFinaliserDossierProjet()"
-                          [disabled]="actionInProgress() || !canFinaliserDossierProjet()"
+                  <button (click)="onSoumettreDossierProjet()"
+                          [disabled]="actionInProgress() || !canSoumettreDossierProjet()"
                           class="btn-sm btn-primary">
-                    Valider le dossier et creer le projet
+                    Soumettre le dossier a la DGEP
                   </button>
                 </div>
                 } @else {
@@ -918,10 +918,10 @@
               @case ('SOUMISSION_DOSSIER_PROJET') {
                 @if (canValiderDossierProjet()) {
                 <div class="flex flex-wrap gap-2">
-                  <button (click)="onFinaliserDossierProjet()"
-                          [disabled]="actionInProgress() || !canFinaliserDossierProjet()"
+                  <button (click)="onValiderDossierProjet()"
+                          [disabled]="actionInProgress() || !canValiderDossierProjet()"
                           class="btn-sm btn-primary">
-                    Valider le dossier et creer le projet
+                    Valider avec avis motive et creer le projet
                   </button>
                   <button (click)="onRetournerDossierProjet()"
                           [disabled]="actionInProgress()"
@@ -935,12 +935,12 @@
               }
 
               @case ('DOSSIER_PROJET_RETOURNE') {
-                @if (canManagePlanFinancement()) {
+                @if (canSoumettreDossierProjet()) {
                 <div class="flex flex-wrap gap-2">
-                  <button (click)="onFinaliserDossierProjet()"
-                          [disabled]="actionInProgress() || !canFinaliserDossierProjet()"
+                  <button (click)="onSoumettreDossierProjet()"
+                          [disabled]="actionInProgress() || !canSoumettreDossierProjet()"
                           class="btn-sm btn-primary">
-                    Valider le dossier et creer le projet
+                    Corriger et soumettre a la DGEP
                   </button>
                 </div>
                 } @else {

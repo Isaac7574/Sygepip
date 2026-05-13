@@ -349,8 +349,14 @@ export class IdeeProjetDetailComponent implements OnInit {
   }
 
   canSoumettreDossierProjet(): boolean {
-    return this.canManagePlanFinancement()
-      && (this.idee()?.statut === 'IDENTIFICATION_FINANCEMENT' || this.idee()?.statut === 'DOSSIER_PROJET_RETOURNE');
+    const statut = this.idee()?.statut;
+    if (!this.canManageProdoc() || !this.isDossierProjetStatus(statut) || !this.hasRequiredDocuments()) {
+      return false;
+    }
+
+    return this.hasDossierProjetSubmissionAction()
+      || statut === 'IDENTIFICATION_FINANCEMENT'
+      || statut === 'DOSSIER_PROJET_RETOURNE';
   }
 
   canValiderDossierProjet(): boolean {
@@ -361,16 +367,7 @@ export class IdeeProjetDetailComponent implements OnInit {
   }
 
   canFinaliserDossierProjet(): boolean {
-    const statut = this.idee()?.statut;
-    if (!this.canManagePlanFinancement() || !this.isDossierProjetStatus(statut) || !this.hasRequiredDocuments()) {
-      return false;
-    }
-
-    if (statut === 'SOUMISSION_DOSSIER_PROJET') {
-      return this.hasDossierProjetValidationAction();
-    }
-
-    return this.hasDossierProjetSubmissionAction() || statut === 'IDENTIFICATION_FINANCEMENT' || statut === 'DOSSIER_PROJET_RETOURNE';
+    return this.canValiderDossierProjet();
   }
 
   private hasValidationNoteConceptuelleAction(): boolean {
@@ -1219,7 +1216,7 @@ export class IdeeProjetDetailComponent implements OnInit {
 
   canUploadDocumentType(type: TypeDocumentProjet): boolean {
     if (this.isDossierProjetStatus(this.idee()?.statut) && this.isDossierProjetDocumentType(type)) {
-      return this.isDgepRole() && this.dossierProjet()?.statut !== 'VALIDE';
+      return this.canManageProdoc() && this.dossierProjet()?.statut !== 'VALIDE';
     }
 
     if (type === 'AVIS_CNDP' && !this.isCndpRole()) {
@@ -1234,7 +1231,7 @@ export class IdeeProjetDetailComponent implements OnInit {
       const dgepDocuments: TypeDocumentProjet[] = [
         ...DOSSIER_PROJET_REQUIRED_TYPES
       ];
-      if (dgepDocuments.includes(type) && !this.isDgepRole()) {
+      if (dgepDocuments.includes(type) && !this.canManageProdoc()) {
         return false;
       }
     }
@@ -1246,7 +1243,7 @@ export class IdeeProjetDetailComponent implements OnInit {
     const item = this.idee();
     if (!item) return;
     if (!this.canSoumettreDossierProjet()) {
-      this.showToast('Seul le role DGEP peut soumettre le dossier a cette etape', 'error');
+      this.showToast('Seul l\'instructeur du ministere peut soumettre le dossier a cette etape', 'error');
       return;
     }
 
@@ -1260,7 +1257,7 @@ export class IdeeProjetDetailComponent implements OnInit {
     this.ideesService.soumettreDossierProjet(item.id, this.buildActionPayload()).subscribe({
       next: () => {
         this.actionInProgress.set(false);
-        this.showToast('Dossier de creation de projet soumis avec succes', 'success');
+        this.showToast('Dossier de creation de projet soumis a la DGEP avec succes', 'success');
         this.refreshIdee(item.id);
       },
       error: (err: any) => {
@@ -1289,51 +1286,6 @@ export class IdeeProjetDetailComponent implements OnInit {
         this.actionInProgress.set(false);
         this.showToast('Dossier valide. Le projet a ete cree automatiquement.', 'success');
         this.refreshIdee(item.id, () => this.router.navigate(['/app/pip/projets']));
-      },
-      error: (err: any) => {
-        this.actionInProgress.set(false);
-        this.handleDossierError(err);
-      }
-    });
-  }
-
-  onFinaliserDossierProjet(): void {
-    const item = this.idee();
-    if (!item) return;
-    if (!this.canFinaliserDossierProjet()) {
-      this.showToast('Seul le role DGEP peut valider un dossier complet a cette etape', 'error');
-      return;
-    }
-
-    if (!this.hasRequiredDocuments()) {
-      this.showToast(this.getMissingRequiredDocumentsMessage(), 'error');
-      return;
-    }
-
-    const payload = this.buildDossierActionPayload();
-    const call = item.statut === 'SOUMISSION_DOSSIER_PROJET'
-      ? this.ideesService.validerDossierProjet(item.id, payload)
-      : this.ideesService.soumettreDossierProjet(item.id, payload).pipe(
-          switchMap(() => this.ideesService.validerDossierProjet(item.id, payload))
-        );
-
-    this.actionInProgress.set(true);
-    call.pipe(
-      switchMap(() => forkJoin({
-        idee: this.ideesService.getById(item.id),
-        dossier: this.dossierProjetIdeeService.getDossier(item.id)
-      }))
-    ).subscribe({
-      next: ({ idee, dossier }) => {
-        this.actionInProgress.set(false);
-        this.idee.set(idee);
-        this.dossierProjet.set(dossier);
-        this.requiredDocumentTypes.set(this.getRequiredDocumentTypes(idee.statut));
-        this.loadDocuments(idee.id);
-        this.loadPlanFinancement(idee.id);
-        this.loadAvailableActions(idee.statut);
-        this.showToast('Dossier valide. Le projet a ete cree automatiquement.', 'success');
-        this.router.navigate(['/app/pip/projets']);
       },
       error: (err: any) => {
         this.actionInProgress.set(false);
@@ -1604,14 +1556,6 @@ export class IdeeProjetDetailComponent implements OnInit {
 
   private getUserId(): string | undefined {
     return this.authService.currentUser()?.id;
-  }
-
-  private buildDossierActionPayload(): { userId?: string; commentaire?: string } {
-    const payload = this.buildActionPayload();
-    return {
-      userId: payload.userId,
-      commentaire: payload.commentaire ?? 'Validation du dossier de creation de projet par la DGEP'
-    };
   }
 
   private isDgepEligibleStatus(statut?: string): boolean {
